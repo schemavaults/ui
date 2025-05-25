@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.pkg.json",
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "allowJs": false,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "rootDir": ".",
+    "paths": {
+      "@/*": ["./src"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "old_ui", "dist"]
+}
