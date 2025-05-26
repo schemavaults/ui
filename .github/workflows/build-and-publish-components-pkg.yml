@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  packages: write
+
 jobs:
   build-and-publish-components:
     name: "Build & publish @schemavaults/ui React components package"
