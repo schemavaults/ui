@@ -1,9 +1,13 @@
-name: Build & Publish '@schemavaults/ui' Package
+name: Build & Publish '@schemavaults/ui' Storybook.js Site
 
 on:
   push:
     branches:
       - main
+
+permissions:
+  pages: write
+  id-token: write
 
 jobs:
   build-and-and-publish:
@@ -21,10 +25,16 @@ jobs:
         env:
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER }}
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN }}
-      - name: Build package with Bun
-        run: bun run build
-      - name: Publish package to GitHub NPM registry
-        run: bun publish
-        env:
-          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER }}
-          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN }}
+      - name: Build Storybook.js site
+        run: bun run build:storybook
+      - name: Upload Storybook.js site static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          name: storybookjs-github-pages-site
+          path: storybook-static/
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: "storybookjs-github-pages-site"
