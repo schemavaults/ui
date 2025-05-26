@@ -1,4 +1,4 @@
-name: Build & Publish '@schemavaults/ui' Package
+name: Build & Publish '@schemavaults/ui' Package & Preview Site
 
 on:
   push:
