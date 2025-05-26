@@ -37,3 +37,5 @@ tsconfig.pkg.tsbuildinfo
 tailwind.config.ts
 postcss.config.cjs
 .babelrc
+
+storybook-assets/

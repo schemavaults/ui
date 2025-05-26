@@ -2,6 +2,11 @@ import type { StorybookConfig } from "@storybook/react-webpack5";
 import type { Options } from "@swc/core";
 import { resolve } from "path";
 
+const storybookAssetsDirectory: string = resolve(
+  __dirname,
+  "../storybook-assets",
+);
+
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
   addons: [
@@ -9,6 +14,7 @@ const config: StorybookConfig = {
     "@storybook/addon-onboarding",
     "@storybook/addon-webpack5-compiler-swc",
   ],
+  staticDirs: [storybookAssetsDirectory],
   core: {
     disableTelemetry: true,
   },
