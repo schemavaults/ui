@@ -4,6 +4,6 @@ export default create({
   base: "light",
   brandTitle: "@schemavaults/ui",
   brandUrl: "https://ui.schemavaults.com",
-  brandImage: "https://ui.schemavaults.com/media/logo.png",
+  brandImage: "https://ui.schemavaults.com/media/icon.png",
   brandTarget: "_self",
 });
