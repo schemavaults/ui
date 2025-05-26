@@ -19,8 +19,8 @@ jobs:
       - name: Install dependencies with Bun
         run: bun install
         env:
-          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER }}
-          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN }}
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_PUBLIC_REGISTRY_READ_ACCESS_GITHUB_USER }}
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_PUBLIC_REGISTRY_READ_ACCESS_GITHUB_TOKEN }}
 
       - name: Build package with Bun
         run: bun run build
@@ -44,8 +44,8 @@ jobs:
       - name: Install dependencies with Bun
         run: bun install
         env:
-          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER }}
-          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN }}
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_PUBLIC_REGISTRY_READ_ACCESS_GITHUB_USER }}
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_PUBLIC_REGISTRY_READ_ACCESS_GITHUB_TOKEN }}
       - name: Build Storybook.js site
         run: bun run build:storybook
       - name: Upload Storybook.js site static files as artifact
@@ -58,4 +58,4 @@ jobs:
         id: deploy-static-files-artifact-as-site
         uses: actions/deploy-pages@v4
         with:
-          artifact_name: "storybookjs-github-pages-site"
+          artifact_name: storybookjs-github-pages-site
