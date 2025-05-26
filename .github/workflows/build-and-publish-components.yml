@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-and-publish:
+  build-and-publish-components:
     name: "Build & publish @schemavaults/ui React components package"
     runs-on: ubuntu-latest
     steps:
@@ -18,6 +18,10 @@ jobs:
           bun-version: 1.2.11
       - name: Install dependencies with Bun
         run: bun install
+        env:
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER }}
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN }}
+
       - name: Build package with Bun
         run: bun run build
       - name: Write .npmrc file to specify how to publish to GitHub NPM registry
@@ -34,3 +38,32 @@ jobs:
         env:
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER }}
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN }}
+  build-and-publish-storybook:
+    name: "Build & publish @schemavaults/ui Storybook.js Site"
+    runs-on: ubuntu-latest
+    needs: build-and-publish-components
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.11
+      - name: Install dependencies with Bun
+        run: bun install
+        env:
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER }}
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN }}
+      - name: Build Storybook.js site
+        run: bun run build:storybook
+      - name: Upload Storybook.js site static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          name: storybookjs-github-pages-site
+          path: storybook-static/
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: "storybookjs-github-pages-site"
