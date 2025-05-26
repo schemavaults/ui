@@ -18,13 +18,19 @@ jobs:
           bun-version: 1.2.11
       - name: Install dependencies with Bun
         run: bun install
-        env:
-          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER }}
-          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN }}
       - name: Build package with Bun
         run: bun run build
+      - name: Write .npmrc file to specify how to publish to GitHub NPM registry
+        run: |
+          SCHEMAVAULTS_REGISTRY_TO_PUBLISH=$(cat << EOF
+          @schemavaults:registry=https://npm.pkg.github.com
+          //https://npm.pkg.github.com/:username=${SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER}
+          //https://npm.pkg.github.com/:_authToken=${SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN}
+          EOF
+          )
+          echo "$SCHEMAVAULTS_REGISTRY_TO_PUBLISH" >> .npmrc
       - name: Publish package to GitHub NPM registry
-        run: bun publish
+        run: bun publish --registry=https://npm.pkg.github.com
         env:
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER }}
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN }}
