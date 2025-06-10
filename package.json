@@ -1,6 +1,6 @@
 {
   "name": "@schemavaults/ui",
-  "version": "0.11.15",
+  "version": "0.11.16",
   "private": false,
   "license": "UNLICENSED",
   "description": "React.js UI components for SchemaVaults frontend applications",
@@ -27,7 +27,6 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "^1.0.0",
-    "cookies-next": "^4.1.0",
     "eslint": "9.17.0",
     "framer-motion": "12.16.0",
     "lucide-react": "0.479.0",
@@ -43,9 +42,10 @@
     "@storybook/addon-essentials": "8.6.14",
     "@storybook/addon-onboarding": "8.6.14",
     "@storybook/addon-webpack5-compiler-swc": "3.0.0",
-    "@storybook/blocks": "^8.6.14",
+    "@storybook/blocks": "8.6.14",
     "@storybook/react-webpack5": "8.6.14",
     "@storybook/react": "8.6.14",
+    "@storybook/test": "8.6.14",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "bun-types": "1.2.11",
@@ -60,7 +60,7 @@
     "autoprefixer": "10.4.21"
   },
   "scripts": {
-    "build:pkg": "tsc --project tsconfig.pkg.json && tsc-alias -p tsconfig.pkg.json",
+    "build:pkg": "tsc --project tsconfig.pkg.json && tsc-alias --project tsconfig.pkg.json",
     "build:storybook": "storybook build",
     "build": "bun run build:pkg",
     "prebuild": "bun run clean",
@@ -69,11 +69,16 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
-    "./dist/": {
-      "import": "./dist/",
-      "require": "./dist/"
+    "./*": {
+      "import": "./dist/*",
+      "require": "./dist/*"
+    },
+    "./dist": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
     }
   },
   "main": "dist/index.js",
