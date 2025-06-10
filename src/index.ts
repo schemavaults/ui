@@ -1,3 +1,5 @@
+"use client";
+
 // UI Utilities
 export * from "./lib/utils";
 export type * from "./lib/utils";
