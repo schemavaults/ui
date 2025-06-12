@@ -1,7 +1,10 @@
 "use client";
 
 export { useForm } from "react-hook-form";
-export type { UseFormReturn } from "react-hook-form";
+export type {
+  UseFormReturn,
+  ControllerRenderProps as FormControllerRenderProps,
+} from "react-hook-form";
 
 import {
   type ReactElement,
