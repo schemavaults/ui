@@ -16,6 +16,7 @@
     "paths": {
       "@/*": ["./src"],
       "@/components/*": ["./src/components/*"],
+      "@/hooks/*": ["./src/components/hooks/*"],
       "@/lib/*": ["./src/lib/*"]
     }
   },
