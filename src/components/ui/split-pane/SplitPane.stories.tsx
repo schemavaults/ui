@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
+// import { fn } from "@storybook/test";
 import SplitPane, { type SplitPaneProps } from "./split-pane";
 import type { ReactElement } from "react";
 import {
@@ -34,7 +34,6 @@ const meta = {
       const handleSplitChange = (newSplit: number): void => {
         console.log("[handleSplitChange] newSplit: ", newSplit);
         setArgs({ splitPercentage: newSplit });
-        fn();
       };
 
       return (
