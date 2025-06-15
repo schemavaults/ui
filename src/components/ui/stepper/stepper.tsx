@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactElement } from "react";
 
-import { Separator } from "../separator";
+import { Separator } from "@/components/ui/separator";
 import type { Step } from "./step_definition";
 import { StepperProvider, type StepperProviderProps } from "./stepper-provider";
 import { type FooterDecorator, StepperFooter } from "./stepper-footer";
