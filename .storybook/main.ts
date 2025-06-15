@@ -11,7 +11,6 @@ const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
   addons: [
     "@storybook/addon-essentials",
-    "@storybook/addon-onboarding",
     "@storybook/addon-webpack5-compiler-swc",
   ],
   staticDirs: [storybookAssetsDirectory],
@@ -56,6 +55,7 @@ const config: StorybookConfig = {
         alias: {
           ...config.resolve?.alias,
           "@/components": resolve(__dirname, "../src/components"),
+          "@/hooks": resolve(__dirname, "../src/components/hooks"),
           "@/lib": resolve(__dirname, "../src/lib"),
           "@/lib/utils": resolve(__dirname, "../src/lib/utils"),
           "@/providers": resolve(__dirname, "../src/providers"),
