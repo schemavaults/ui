@@ -32,7 +32,9 @@ const meta = {
       // Use the wrapper component instead of modifying Story args
 
       const handleSplitChange = (newSplit: number): void => {
-        console.log("[handleSplitChange] newSplit: ", newSplit);
+        if (process.env.NODE_ENV === "development") {
+          console.log("[handleSplitChange] newSplit: ", newSplit);
+        }
         setArgs({ splitPercentage: newSplit });
       };
 
