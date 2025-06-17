@@ -17,7 +17,9 @@
       "@/*": ["./src"],
       "@/components/*": ["./src/components/*"],
       "@/hooks/*": ["./src/components/hooks/*"],
-      "@/lib/*": ["./src/lib/*"]
+      "@/lib/*": ["./src/lib/*"],
+      "@/stories/*": ["./src/stories/*"],
+      "@/framer-motion": ["./src/framer-motion"]
     }
   },
   "include": ["src"],

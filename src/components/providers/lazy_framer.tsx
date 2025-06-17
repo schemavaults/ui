@@ -1,9 +1,9 @@
 "use client";
 
-import { domAnimation, LazyMotion } from "framer-motion";
+import { domAnimation, LazyMotion } from "@/framer-motion";
 import type { PropsWithChildren, ReactElement } from "react";
 
-export { LazyMotion } from "framer-motion";
+export { LazyMotion } from "@/framer-motion";
 
 export function LazyFramerMotionProvider({
   children,

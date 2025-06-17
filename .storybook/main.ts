@@ -59,6 +59,8 @@ const config: StorybookConfig = {
           "@/lib": resolve(__dirname, "../src/lib"),
           "@/lib/utils": resolve(__dirname, "../src/lib/utils"),
           "@/providers": resolve(__dirname, "../src/providers"),
+          "@/stories": resolve(__dirname, "../src/stories"),
+          "@/framer-motion": resolve(__dirname, "../src/framer-motion"),
         },
       },
     };

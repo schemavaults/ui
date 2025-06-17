@@ -1,6 +1,11 @@
+"use client";
+
+import { getScreenWidthBreakpoint } from "@/lib/getTailwindThemeScreenBreakpoint";
 import { useEffect, useState } from "react";
 
-export function useIsMobile(mobileBreakpoint: number = 768): boolean {
+export function useIsMobile(
+  mobileBreakpoint: number = getScreenWidthBreakpoint("md"),
+): boolean {
   const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {

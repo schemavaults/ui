@@ -1,0 +1,62 @@
+"use client";
+
+import type { PropsWithChildren, ReactElement, ReactNode } from "react";
+
+import { SidebarContent } from "@/components/ui/sidebar";
+import DashboardSidebarItemRenderer from "./dashboard-sidebar-item-renderer";
+import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
+import type { DashboardSidebarItemGroupDefinition } from "./dashboard-sidebar-item-group";
+import DashboardSidebarItemGroupRenderer from "./dashboard-sidebar-item-group-renderer";
+import { useDashboardSidebarItemsAndGroups } from "./useDashboardSidebarItemsAndGroups";
+
+export interface DashboardLayoutSidebarContentProps {
+  Link: (
+    props: PropsWithChildren<{ href: string; className?: string }>,
+  ) => ReactElement;
+}
+
+export function DashboardSidebarContent({
+  Link,
+}: DashboardLayoutSidebarContentProps): ReactElement {
+  const sidebarItems: readonly (
+    | DashboardSidebarItemDefinition
+    | DashboardSidebarItemGroupDefinition
+  )[] = useDashboardSidebarItemsAndGroups();
+  return (
+    <SidebarContent className="bg-background">
+      {sidebarItems.map(
+        (
+          itemOrGroup:
+            | DashboardSidebarItemDefinition
+            | DashboardSidebarItemGroupDefinition,
+        ): ReactNode => {
+          if (itemOrGroup.type === "dashboard-sidebar-item-definition") {
+            const item: DashboardSidebarItemDefinition = itemOrGroup;
+            return (
+              <DashboardSidebarItemRenderer
+                item={item}
+                Link={Link}
+                key={`sidebar-item-[${item.title}]`}
+              />
+            );
+          } else if (itemOrGroup.type === "dashboard-sidebar-item-group") {
+            const group: DashboardSidebarItemGroupDefinition = itemOrGroup;
+            return (
+              <DashboardSidebarItemGroupRenderer
+                group={group}
+                Link={Link}
+                key={`sidebar-group-[${group.title}]`}
+              />
+            );
+          } else {
+            throw new Error(
+              "Invalid 'type' for sidebar content item in render list!",
+            );
+          }
+        },
+      )}
+    </SidebarContent>
+  );
+}
+
+export default DashboardSidebarContent;
