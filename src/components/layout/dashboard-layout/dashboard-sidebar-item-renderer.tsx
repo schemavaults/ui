@@ -1,33 +1,13 @@
 "use client";
 
-import type { PropsWithChildren, ReactElement, ReactNode } from "react";
+import type { PropsWithChildren, ReactElement } from "react";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
-import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
-import { useSidebar } from "@/components/ui/sidebar";
 import { AnimatePresence, m } from "@/framer-motion";
 import toggleDashboardLayoutCollapsedTransitionTime from "./toggle-dashboard-layout-collapsed-transition-time";
 import { cn } from "@/lib/utils";
-
-function SidebarMenuItemTitle({
-  item,
-}: {
-  item: DashboardSidebarItemDefinition;
-}): ReactElement {
-  return (
-    <m.span
-      key={`sidebar-menu-item-title-container-[${item.title}]`}
-      initial={{ opacity: 1, scale: 1 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0 }}
-      transition={{
-        duration: toggleDashboardLayoutCollapsedTransitionTime,
-      }}
-    >
-      {item.title}
-    </m.span>
-  );
-}
+import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
+import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
 
 export function DashboardSidebarItemRenderer({
   item,
@@ -38,38 +18,86 @@ export function DashboardSidebarItemRenderer({
     props: PropsWithChildren<{ href: string; className?: string }>,
   ) => ReactElement;
 }): ReactElement {
-  const { state, open, isMobile } = useSidebar();
+  const { open, mobile } = useDashboardSidebarOpenState();
+  const sizes = useDashboardSidebarSizing();
 
-  const collapsed: boolean = !open || state === "collapsed";
-  const showItemLabel: boolean = isMobile || !collapsed;
+  const showItemLabel: boolean = mobile || open;
 
-  function TitleComponent(): ReactNode {
-    if (!showItemLabel) {
-      return null;
-    }
-    return <SidebarMenuItemTitle key={item.title} item={item} />;
+  const IconComponent = item.icon;
+
+  function SidebarMenuItemTitle(): ReactElement {
+    return (
+      <m.span
+        key={`sidebar-menu-item-title-container-[${item.title}]`}
+        initial={{
+          opacity: 1,
+          scale: 1,
+          transitionEnd: {
+            display: "none",
+          },
+          paddingLeft: 0,
+        }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          display: "block",
+          paddingLeft: sizes.sidebar_menu_item_icon_gap,
+        }}
+        exit={{
+          opacity: 0,
+          scale: 0,
+          transitionEnd: {
+            display: "none",
+          },
+          paddingLeft: 0,
+        }}
+        transition={{
+          duration: toggleDashboardLayoutCollapsedTransitionTime,
+        }}
+      >
+        {item.title}
+      </m.span>
+    );
   }
 
   return (
-    <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton asChild>
-        <Link
-          href={item.url}
+    <m.li key={item.title} className={cn("w-full")}>
+      <Link
+        href={item.url}
+        className={cn(
+          "flex flex-row",
+          "w-full",
+          "hover:bg-gray-200",
+          "rounded-md",
+          "p-1 md:p-2",
+        )}
+      >
+        <m.div
+          layout
           className={cn(
-            "flex flex-row",
-            "gap-2",
-            "justify-start group-data-[collapsible=icon]:justify-center",
-            "items-center flex-nowrap",
+            "w-full",
+            "flex flex-row flex-nowrap",
+            "justify-start items-center",
+            "text-nowrap",
           )}
+          variants={{
+            expanded: {
+              justifyContent: "start",
+            },
+            collapsed: {
+              justifyContent: "center",
+            },
+          }}
+          animate={mobile ? "expanded" : open ? "expanded" : "collapsed"}
         >
-          {item.icon}
+          <IconComponent className="h-6 w-6" />
 
           <AnimatePresence>
-            <TitleComponent />
+            {showItemLabel && <SidebarMenuItemTitle key={item.title} />}
           </AnimatePresence>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
+        </m.div>
+      </Link>
+    </m.li>
   );
 }
 

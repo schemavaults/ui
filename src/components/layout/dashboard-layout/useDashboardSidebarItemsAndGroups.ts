@@ -9,5 +9,9 @@ export function useDashboardSidebarItemsAndGroups(): readonly (
   | DashboardSidebarItemDefinition
   | DashboardSidebarItemGroupDefinition
 )[] {
-  return useContext(DashboardSidebarItemsAndGroupsContext);
+  const sidebarItems = useContext(DashboardSidebarItemsAndGroupsContext);
+  if (!Array.isArray(sidebarItems) || sidebarItems.length === 0) {
+    throw new Error();
+  }
+  return sidebarItems;
 }

@@ -1,15 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react";
 // import { fn } from "@storybook/test";
 
-import type { ReactElement, ReactNode } from "react";
+import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 
 import DashboardLayout, { type DashboardLayoutProps } from "./dashboard-layout";
 import LoremIpsumText from "@/stories/LoremImpsumText";
 import { PageColumnContainer } from "@/components/layout/page-column-container";
-import { AlarmClock, Plane, Tornado } from "lucide-react";
+import { AlarmClock, Plane, Share2, Tornado } from "lucide-react";
 import { LazyFramerMotionProvider } from "@/components/providers";
-import { Wordmark } from "@/components/ui";
-import { useArgs, useCallback, useMemo } from "@storybook/preview-api";
+import { Button, Wordmark } from "@/components/ui";
+import { AnimatePresence, m } from "@/framer-motion";
+import { cn } from "@/lib/utils";
+import { Settings } from "lucide-react";
+import DashboardLayoutContextProvider from "./dashboard-layout-context-provider";
+import { DashboardSidebarItemsAndGroupsDefinitions } from "./dashboard-sidebar-items-and-groups-context";
+import { ICustomizableDashboardLayoutComponentProps } from "./customizable-dashboard-component-type";
 
 function ExampleChildrenForContainer(): ReactNode {
   return (
@@ -19,11 +24,80 @@ function ExampleChildrenForContainer(): ReactNode {
   );
 }
 
+const exampleSidebarItems = [
+  {
+    type: "dashboard-sidebar-item-group",
+    title: "Sidebar Group",
+    items: [
+      {
+        type: "dashboard-sidebar-item-definition",
+        title: "Menu Item 1",
+        url: "#",
+        icon: ({ className }) => <Tornado className={className} />,
+      },
+      {
+        type: "dashboard-sidebar-item-definition",
+        title: "Menu Item 2",
+        url: "#",
+        icon: ({ className }) => <AlarmClock className={className} />,
+      },
+      {
+        type: "dashboard-sidebar-item-definition",
+        title: "Menu Item 3",
+        url: "#",
+        icon: ({ className }) => <Plane className={className} />,
+      },
+    ],
+  },
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
 function ExapleDashboardPageContent(): ReactElement {
   return (
     <PageColumnContainer>
       <ExampleChildrenForContainer />
     </PageColumnContainer>
+  );
+}
+
+function Link({
+  href,
+  children,
+  className,
+}: PropsWithChildren<{ href: string; className?: string }>): ReactElement {
+  return (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  );
+}
+
+function ExampleFooterContent({
+  useDashboardSidebarOpenState,
+}: ICustomizableDashboardLayoutComponentProps): ReactElement {
+  const { open, mobile } = useDashboardSidebarOpenState();
+  const showLabel: boolean = mobile || open;
+
+  return (
+    <Link
+      className={cn(
+        "w-full",
+        "flex flex-row text-gray-400 gap-2",
+        "justify-center",
+        "p-2",
+      )}
+      href="#"
+    >
+      <Settings />
+      <AnimatePresence>{showLabel && <m.p>Settings</m.p>}</AnimatePresence>
+    </Link>
+  );
+}
+
+function ExampleHeaderButtonsContent({}: ICustomizableDashboardLayoutComponentProps): ReactElement {
+  return (
+    <Button variant={"secondary"}>
+      <Share2 className="h-6 w-6 pr-2" /> Share
+    </Button>
   );
 }
 
@@ -42,19 +116,6 @@ const meta = {
     children: {
       control: {},
       description: "React children to render within container component",
-      table: {
-        disable: true,
-      },
-    },
-    open: {
-      control: {
-        type: "boolean",
-      },
-      type: "boolean",
-      defaultValue: false,
-    },
-    onOpenChange: {
-      description: "Modify the state when the user closes the sidebar",
       table: {
         disable: true,
       },
@@ -79,26 +140,12 @@ const meta = {
   args: {
     children: <ExapleDashboardPageContent />,
     brandHref: "https://ui.schemavaults.com",
-    Link: ({ href, children, className }): ReactElement => {
-      return (
-        <a href={href} className={className}>
-          {children}
-        </a>
-      );
-    },
+    Link,
     logo: <img src="/media/icon.png" width={40} height={40} />,
     wordmark: <Wordmark />,
-    open: false,
-    onOpenChange: () => {
-      if (process.env.NODE_ENV === "development") {
-        console.error(
-          "[DashboardLayout.stories.tsx] This should be overwritten by the decorator!",
-        );
-      }
-      throw new Error(
-        "[onOpenChange] This should be overwritten by a Storybook.js decorator that controls the open/closed state of the layout sidebar!",
-      );
-    },
+    topBarTitle: "Page Title",
+    sidebarFooterContent: ExampleFooterContent,
+    topBarButtons: ExampleHeaderButtonsContent,
   },
   decorators: [
     // Wrap in Framer Motion Provider
@@ -112,30 +159,13 @@ const meta = {
         </LazyFramerMotionProvider>
       );
     },
-    // Connect 'open'/'onOpenChange' props to Storybook.js Controls
+    // Wrap in items/groups provider context
     (Story, context): ReactElement => {
-      const [args, setArgs] = useArgs<DashboardLayoutProps>();
-      // Use the wrapper component instead of modifying Story args
-
-      const open = useMemo(() => args.open, [args.open]);
-
-      const onOpenChange = useCallback(
-        (newOpenState: boolean): void => {
-          if (process.env.NODE_ENV === "development") {
-            console.log("[onOpenChange] newOpenState: ", newOpenState);
-          }
-          setArgs({ open: newOpenState });
-        },
-        [setArgs],
+      return (
+        <DashboardLayoutContextProvider sidebarItems={exampleSidebarItems}>
+          <Story {...context} />
+        </DashboardLayoutContextProvider>
       );
-
-      if (process.env.NODE_ENV === "development") {
-        console.log(
-          "[DashboardLayout.stories.tsx] rendering sidebar open state controller decorator...",
-        );
-      }
-
-      return <Story {...context} args={{ ...args, open, onOpenChange }} />;
     },
   ],
 } satisfies Meta<typeof DashboardLayout>;
@@ -143,36 +173,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const exampleSidebarItems = [
-  {
-    type: "dashboard-sidebar-item-group",
-    title: "Sidebar Group",
-    items: [
-      {
-        type: "dashboard-sidebar-item-definition",
-        title: "Menu Item 1",
-        url: "#",
-        icon: <Tornado />,
-      },
-      {
-        type: "dashboard-sidebar-item-definition",
-        title: "Menu Item 2",
-        url: "#",
-        icon: <AlarmClock />,
-      },
-      {
-        type: "dashboard-sidebar-item-definition",
-        title: "Menu Item 3",
-        url: "#",
-        icon: <Plane />,
-      },
-    ],
-  },
-] satisfies DashboardLayoutProps["sidebarItems"];
-
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const LayoutPreview: Story = {
-  args: {
-    sidebarItems: exampleSidebarItems,
-  } satisfies Partial<DashboardLayoutProps>,
+  args: {} satisfies Partial<DashboardLayoutProps>,
 };

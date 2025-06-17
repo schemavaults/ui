@@ -2,10 +2,15 @@
 
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 
-import { Sidebar, SidebarRail } from "@/components/ui/sidebar";
 import DashboardSidebarHeader from "./dashboard-sidebar-header";
 import DashboardSidebarContent from "./dashboard-sidebar-content";
 import DashboardSidebarFooter from "./dashboard-sidebar-footer";
+import { cn } from "@/lib/utils";
+import { m } from "@/framer-motion";
+import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
+import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
+import { Separator } from "@/components/ui";
+import toggleDashboardLayoutCollapsedTransitionTime from "./toggle-dashboard-layout-collapsed-transition-time";
 
 export interface DashboardLayoutSidebarProps {
   wordmark: ReactNode;
@@ -22,12 +27,48 @@ export function DashboardLayoutSidebar({
   Link,
   brandHref,
 }: DashboardLayoutSidebarProps): ReactElement {
+  const size = useDashboardSidebarSizing();
+  const openState = useDashboardSidebarOpenState();
+
   return (
-    <Sidebar
-      side="left"
-      collapsible="icon"
-      variant="sidebar"
-      className="transition-[width] ease-linear"
+    <m.menu
+      className={cn(
+        "h-screen",
+        !openState.mobile ? "absolute" : undefined,
+        "transition-[width] ease-linear",
+        "flex flex-col justify-between items-stretch",
+        "border-r",
+        "p-0",
+      )}
+      layout
+      variants={{
+        expanded: {
+          width: openState.mobile
+            ? size.mobile_expanded
+            : size.desktop_expanded,
+          opacity: 1,
+        },
+        collapsed: {
+          width: size.desktop_collapsed,
+          opacity: 1,
+        },
+        exit: {
+          width: size.desktop_collapsed,
+          opacity: 0,
+        },
+      }}
+      initial={openState.mobile ? "expanded" : "collapsed"}
+      animate={
+        openState.mobile
+          ? "expanded"
+          : openState.open
+            ? "expanded"
+            : "collapsed"
+      }
+      exit={openState.mobile ? "expanded" : "exit"}
+      transition={{
+        duration: toggleDashboardLayoutCollapsedTransitionTime,
+      }}
     >
       <DashboardSidebarHeader
         wordmark={wordmark}
@@ -35,10 +76,11 @@ export function DashboardLayoutSidebar({
         Link={Link}
         brandHref={brandHref}
       />
+      <Separator />
       <DashboardSidebarContent Link={Link} />
+      <Separator />
       <DashboardSidebarFooter Link={Link} />
-      <SidebarRail />
-    </Sidebar>
+    </m.menu>
   );
 }
 

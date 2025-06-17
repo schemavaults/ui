@@ -2,12 +2,13 @@
 
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 
-import { SidebarContent } from "@/components/ui/sidebar";
 import DashboardSidebarItemRenderer from "./dashboard-sidebar-item-renderer";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
 import type { DashboardSidebarItemGroupDefinition } from "./dashboard-sidebar-item-group";
 import DashboardSidebarItemGroupRenderer from "./dashboard-sidebar-item-group-renderer";
 import { useDashboardSidebarItemsAndGroups } from "./useDashboardSidebarItemsAndGroups";
+import { m } from "@/framer-motion";
+import { cn } from "@/lib/utils";
 
 export interface DashboardLayoutSidebarContentProps {
   Link: (
@@ -23,7 +24,14 @@ export function DashboardSidebarContent({
     | DashboardSidebarItemGroupDefinition
   )[] = useDashboardSidebarItemsAndGroups();
   return (
-    <SidebarContent className="bg-background">
+    <m.nav
+      className={cn(
+        "bg-background grow w-full",
+        "flex flex-col items-stretch justify-start",
+        "p-2",
+        "overflow-x-hidden overflow-y-scroll",
+      )}
+    >
       {sidebarItems.map(
         (
           itemOrGroup:
@@ -55,7 +63,7 @@ export function DashboardSidebarContent({
           }
         },
       )}
-    </SidebarContent>
+    </m.nav>
   );
 }
 
