@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, type ReactElement, FC } from "react";
+import { type ReactNode, type ReactElement, FC, useContext } from "react";
 import DashboardLayoutSidebar from "./dashboard-sidebar";
 import type { DashboardLayoutProps } from "./DashboardLayoutProps";
 import { Separator } from "@/components/ui/separator";
@@ -9,6 +9,8 @@ import DashboardLayoutSidebarTrigger from "./dashboard-layout-sidebar-trigger";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
 import type { ICustomizableDashboardLayoutComponentProps } from "./customizable-dashboard-component-type";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { DashboardSidebarOpenStateDispatchContext } from "./dashboard-sidebar-open-state";
 
 export type { DashboardLayoutProps };
 
@@ -44,18 +46,53 @@ export function DashboardLayout({
     }
   }
 
+  function Sidebar(): ReactElement {
+    const openState = useDashboardSidebarOpenState();
+    const setOpen = useContext(DashboardSidebarOpenStateDispatchContext);
+    if (openState.mobile) {
+      return (
+        <Sheet
+          open={openState.open}
+          onOpenChange={(newOpenState: boolean) => {
+            setOpen(newOpenState);
+          }}
+          defaultOpen={openState.open}
+        >
+          <SheetContent
+            side="left"
+            style={{
+              width: size.mobile_expanded,
+              zIndex: 1000,
+            }}
+          >
+            <DashboardLayoutSidebar
+              logo={logo}
+              wordmark={wordmark}
+              Link={Link}
+              brandHref={brandHref}
+            />
+          </SheetContent>
+        </Sheet>
+      );
+    } else {
+      return (
+        <DashboardLayoutSidebar
+          logo={logo}
+          wordmark={wordmark}
+          Link={Link}
+          brandHref={brandHref}
+        />
+      );
+    }
+  }
+
   const TopBarButtonsComponent:
     | FC<ICustomizableDashboardLayoutComponentProps>
     | undefined = props.topBarButtons;
 
   return (
     <div className="w-screen min-h-screen">
-      <DashboardLayoutSidebar
-        logo={logo}
-        wordmark={wordmark}
-        Link={Link}
-        brandHref={brandHref}
-      />
+      <Sidebar />
       <DashboardLayoutMainContentContainer>
         <header
           className="flex shrink-0 items-center gap-2 transition-[width,height] ease-linear"

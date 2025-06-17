@@ -19,7 +19,19 @@ export function DashboardSidebarOpenStateProvider({
 
   return (
     <DashboardSidebarOpenStateContext.Provider value={{ open, mobile }}>
-      <DashboardSidebarOpenStateDispatchContext.Provider value={setOpen}>
+      <DashboardSidebarOpenStateDispatchContext.Provider
+        value={function dispatchSetSidebarOpen(
+          newSidebarOpenState: boolean,
+        ): void {
+          if (process.env.NODE_ENV === "development") {
+            console.log(
+              "[dispatchSetSidebarOpen] new open state: ",
+              newSidebarOpenState,
+            );
+          }
+          setOpen(newSidebarOpenState);
+        }}
+      >
         {children}
       </DashboardSidebarOpenStateDispatchContext.Provider>
     </DashboardSidebarOpenStateContext.Provider>
