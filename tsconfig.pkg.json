@@ -28,5 +28,11 @@
     "rootDir": "src"
   },
   "include": ["src"],
-  "exclude": ["node_modules", "old_ui", "dist", "**/**.stories.tsx"]
+  "exclude": [
+    "node_modules",
+    "old_ui",
+    "dist",
+    "**/**.stories.tsx",
+    "**/**.stories.ts"
+  ]
 }
