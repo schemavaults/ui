@@ -6,7 +6,7 @@ import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 import DashboardLayout, { type DashboardLayoutProps } from "./dashboard-layout";
 import LoremIpsumText from "@/stories/LoremImpsumText";
 import { PageColumnContainer } from "@/components/layout/page-column-container";
-import { AlarmClock, Plane, Share2, Tornado } from "lucide-react";
+import { AlarmClock, Lock, Plane, Share2, Tornado, Users } from "lucide-react";
 import { LazyFramerMotionProvider } from "@/components/providers";
 import { Button, Wordmark } from "@/components/ui";
 import { AnimatePresence, m } from "@/framer-motion";
@@ -150,21 +150,10 @@ const meta = {
   decorators: [
     // Wrap in Framer Motion Provider
     (Story, context): ReactElement => {
-      console.log(
-        "[DashboardLayout.stories.tsx] rendering sidebar lazy framer motion decorator...",
-      );
       return (
         <LazyFramerMotionProvider>
           <Story {...context} />
         </LazyFramerMotionProvider>
-      );
-    },
-    // Wrap in items/groups provider context
-    (Story, context): ReactElement => {
-      return (
-        <DashboardLayoutContextProvider sidebarItems={exampleSidebarItems}>
-          <Story {...context} />
-        </DashboardLayoutContextProvider>
       );
     },
   ],
@@ -175,5 +164,34 @@ type Story = StoryObj<typeof meta>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const LayoutPreview: Story = {
-  args: {} satisfies Partial<DashboardLayoutProps>,
+  args: {
+    sidebarItems: exampleSidebarItems,
+  } satisfies Partial<DashboardLayoutProps>,
+};
+
+export const WithAdminOnlyLinks: Story = {
+  args: {
+    sidebarItems: [
+      ...exampleSidebarItems,
+      {
+        type: "dashboard-sidebar-item-group",
+        adminOnly: true,
+        title: "Admin Links",
+        items: [
+          {
+            type: "dashboard-sidebar-item-definition",
+            title: "Admin Item 1",
+            url: "#",
+            icon: ({ className }) => <Lock className={className} />,
+          },
+          {
+            type: "dashboard-sidebar-item-definition",
+            title: "Admin Item 2",
+            url: "#",
+            icon: ({ className }) => <Users className={className} />,
+          },
+        ],
+      },
+    ],
+  } satisfies Partial<DashboardLayoutProps>,
 };

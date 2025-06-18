@@ -1,37 +1,30 @@
 "use client";
 
-import { AnimatePresence, m } from "@/framer-motion";
-import { cn } from "@/lib/utils";
-import { Settings } from "lucide-react";
 import type { PropsWithChildren, ReactElement } from "react";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
+import type { CustomizableDashboardLayoutComponent } from "./customizable-dashboard-component-type";
+import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
 
 export interface DashboardSidebarFooterProps {
   Link: (
     props: PropsWithChildren<{ href: string; className?: string }>,
   ) => ReactElement;
+  sidebarFooterContent: CustomizableDashboardLayoutComponent;
 }
 
 export function DashboardSidebarFooter({
   Link,
+  sidebarFooterContent,
 }: DashboardSidebarFooterProps): ReactElement {
-  const { open, mobile } = useDashboardSidebarOpenState();
-  const showLabel: boolean = mobile || open;
+  const FooterContentComponent = sidebarFooterContent;
 
   return (
     <footer className="bg-background">
-      <Link
-        className={cn(
-          "w-full",
-          "flex flex-row text-gray-400 gap-2",
-          "justify-center",
-          "p-2",
-        )}
-        href="#"
-      >
-        <Settings />
-        <AnimatePresence>{showLabel && <m.p>Settings</m.p>}</AnimatePresence>
-      </Link>
+      <FooterContentComponent
+        useDashboardSidebarSizing={useDashboardSidebarSizing}
+        useDashboardSidebarOpenState={useDashboardSidebarOpenState}
+        Link={Link}
+      />
     </footer>
   );
 }

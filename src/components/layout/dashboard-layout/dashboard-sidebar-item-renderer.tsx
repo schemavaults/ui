@@ -1,6 +1,6 @@
 "use client";
 
-import type { PropsWithChildren, ReactElement } from "react";
+import { useContext, type PropsWithChildren, type ReactElement } from "react";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
 
 import { AnimatePresence, m } from "@/framer-motion";
@@ -8,6 +8,7 @@ import toggleDashboardLayoutCollapsedTransitionTime from "./toggle-dashboard-lay
 import { cn } from "@/lib/utils";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
+import { DashboardSidebarAdminOnlyItemsContext } from "./dashboard-sidebar-admin-only-items-context";
 
 export function DashboardSidebarItemRenderer({
   item,
@@ -20,15 +21,21 @@ export function DashboardSidebarItemRenderer({
 }): ReactElement {
   const { open, mobile } = useDashboardSidebarOpenState();
   const sizes = useDashboardSidebarSizing();
-
+  const isAdminItemGroup: boolean = useContext(
+    DashboardSidebarAdminOnlyItemsContext,
+  );
   const showItemLabel: boolean = mobile || open;
 
   const IconComponent = item.icon;
+  const itemColorClassName: string = isAdminItemGroup
+    ? "text-red-500"
+    : "text-foreground";
 
   function SidebarMenuItemTitle(): ReactElement {
     return (
       <m.span
         key={`sidebar-menu-item-title-container-[${item.title}]`}
+        className={itemColorClassName}
         initial={{
           opacity: 1,
           scale: 1,
@@ -90,7 +97,7 @@ export function DashboardSidebarItemRenderer({
           }}
           animate={mobile ? "expanded" : open ? "expanded" : "collapsed"}
         >
-          <IconComponent className="h-6 w-6" />
+          <IconComponent className={cn("h-6 w-6", itemColorClassName)} />
 
           <AnimatePresence>
             {showItemLabel && <SidebarMenuItemTitle key={item.title} />}

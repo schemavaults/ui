@@ -11,6 +11,7 @@ import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { Separator } from "@/components/ui";
 import toggleDashboardLayoutCollapsedTransitionTime from "./toggle-dashboard-layout-collapsed-transition-time";
+import type { CustomizableDashboardLayoutComponent } from "./customizable-dashboard-component-type";
 
 export interface DashboardLayoutSidebarProps {
   wordmark: ReactNode;
@@ -19,6 +20,7 @@ export interface DashboardLayoutSidebarProps {
     props: PropsWithChildren<{ href: string; className?: string }>,
   ) => ReactElement;
   brandHref: string;
+  sidebarFooterContent?: CustomizableDashboardLayoutComponent;
 }
 
 export function DashboardLayoutSidebar({
@@ -26,6 +28,7 @@ export function DashboardLayoutSidebar({
   wordmark,
   Link,
   brandHref,
+  ...props
 }: DashboardLayoutSidebarProps): ReactElement {
   const size = useDashboardSidebarSizing();
   const openState = useDashboardSidebarOpenState();
@@ -78,8 +81,15 @@ export function DashboardLayoutSidebar({
       />
       <Separator />
       <DashboardSidebarContent Link={Link} />
-      <Separator />
-      <DashboardSidebarFooter Link={Link} />
+      {typeof props.sidebarFooterContent === "function" && (
+        <>
+          <Separator />
+          <DashboardSidebarFooter
+            Link={Link}
+            sidebarFooterContent={props.sidebarFooterContent}
+          />
+        </>
+      )}
     </m.menu>
   );
 }

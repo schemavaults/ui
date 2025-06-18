@@ -11,6 +11,7 @@ import type { ICustomizableDashboardLayoutComponentProps } from "./customizable-
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { DashboardSidebarOpenStateDispatchContext } from "./dashboard-sidebar-open-state";
+import DashboardLayoutContextProvider from "./dashboard-layout-context-provider";
 
 export type { DashboardLayoutProps };
 
@@ -41,6 +42,7 @@ export function DashboardLayout({
         <CustomTopBarHeaderComponent
           useDashboardSidebarSizing={useDashboardSidebarSizing}
           useDashboardSidebarOpenState={useDashboardSidebarOpenState}
+          Link={Link}
         />
       );
     }
@@ -91,34 +93,40 @@ export function DashboardLayout({
     | undefined = props.topBarButtons;
 
   return (
-    <div className="w-screen min-h-screen">
-      <Sidebar />
-      <DashboardLayoutMainContentContainer>
-        <header
-          className="flex shrink-0 items-center gap-2 transition-[width,height] ease-linear"
-          style={{
-            height: size.header_height,
-          }}
-        >
-          <div className="flex flex-row justify-between items-center gap-2 px-4 w-full">
-            <DashboardLayoutSidebarTrigger />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
-            <HeaderBarPageIdentifierComponent />
-            <div role="none" className="grow" />
-            {typeof TopBarButtonsComponent === "function" && (
-              <TopBarButtonsComponent
-                useDashboardSidebarSizing={useDashboardSidebarSizing}
-                useDashboardSidebarOpenState={useDashboardSidebarOpenState}
+    <DashboardLayoutContextProvider
+      sidebarItems={props.sidebarItems}
+      sizing={props.sizing}
+    >
+      <div className="w-screen min-h-screen">
+        <Sidebar />
+        <DashboardLayoutMainContentContainer>
+          <header
+            className="flex shrink-0 items-center gap-2 transition-[width,height] ease-linear"
+            style={{
+              height: size.header_height,
+            }}
+          >
+            <div className="flex flex-row justify-between items-center gap-2 px-4 w-full">
+              <DashboardLayoutSidebarTrigger />
+              <Separator
+                orientation="vertical"
+                className="mr-2 data-[orientation=vertical]:h-4"
               />
-            )}
-          </div>
-        </header>
-        {children}
-      </DashboardLayoutMainContentContainer>
-    </div>
+              <HeaderBarPageIdentifierComponent />
+              <div role="none" className="grow" />
+              {typeof TopBarButtonsComponent === "function" && (
+                <TopBarButtonsComponent
+                  useDashboardSidebarSizing={useDashboardSidebarSizing}
+                  useDashboardSidebarOpenState={useDashboardSidebarOpenState}
+                  Link={Link}
+                />
+              )}
+            </div>
+          </header>
+          {children}
+        </DashboardLayoutMainContentContainer>
+      </div>
+    </DashboardLayoutContextProvider>
   );
 }
 

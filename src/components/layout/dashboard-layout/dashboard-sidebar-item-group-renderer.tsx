@@ -9,6 +9,7 @@ import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, m } from "@/framer-motion";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
+import { DashboardSidebarAdminOnlyItemsContext } from "./dashboard-sidebar-admin-only-items-context";
 
 export function DashboardSidebarItemGroupRenderer({
   group,
@@ -81,42 +82,46 @@ export function DashboardSidebarItemGroupRenderer({
         )}
       </AnimatePresence>
 
-      <m.ul
-        id={groupItemsContainerId}
-        layout
-        className={cn(
-          "w-full flex flex-col",
-          "items-start justify-start",
-          "gap-2",
-        )}
-        variants={{
-          collapsed: {
-            paddingLeft: 0,
-          },
-          expanded: {
-            paddingLeft: sizes.sidebar_expanded_menu_group_indent,
-          },
-        }}
-        animate={
-          openState.mobile
-            ? "expanded"
-            : openState.open
-              ? "expanded"
-              : "collapsed"
-        }
+      <DashboardSidebarAdminOnlyItemsContext.Provider
+        value={group.adminOnly ?? false}
       >
-        {group.items.map(
-          (item: DashboardSidebarItemDefinition): ReactElement => {
-            return (
-              <DashboardSidebarItemRenderer
-                item={item}
-                Link={Link}
-                key={`sidebar-item-[${groupTitle}]-[${item.title satisfies string}]`}
-              />
-            );
-          },
-        )}
-      </m.ul>
+        <m.ul
+          id={groupItemsContainerId}
+          layout
+          className={cn(
+            "w-full flex flex-col",
+            "items-start justify-start",
+            "gap-2",
+          )}
+          variants={{
+            collapsed: {
+              paddingLeft: 0,
+            },
+            expanded: {
+              paddingLeft: sizes.sidebar_expanded_menu_group_indent,
+            },
+          }}
+          animate={
+            openState.mobile
+              ? "expanded"
+              : openState.open
+                ? "expanded"
+                : "collapsed"
+          }
+        >
+          {group.items.map(
+            (item: DashboardSidebarItemDefinition): ReactElement => {
+              return (
+                <DashboardSidebarItemRenderer
+                  item={item}
+                  Link={Link}
+                  key={`sidebar-item-[${groupTitle}]-[${item.title satisfies string}]`}
+                />
+              );
+            },
+          )}
+        </m.ul>
+      </DashboardSidebarAdminOnlyItemsContext.Provider>
     </m.div>
   );
 }
