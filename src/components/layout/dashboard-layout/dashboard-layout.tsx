@@ -104,7 +104,9 @@ export function DashboardLayout({
         <DashboardLayoutMainContentContainer>
           <header
             className={cn(
-              "flex shrink-0 items-center gap-2 transition-[width,height] ease-linear",
+              "flex shrink-0 items-center gap-2",
+              "transition-[width,height] ease-linear",
+              "bg-background",
               size.sidebar_and_header_z_index_classname,
             )}
             style={{
