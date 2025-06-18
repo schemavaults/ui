@@ -12,9 +12,9 @@ export function ThemedPageBackground({
   children,
 }: ThemedPageBackgroundProps): ReactElement {
   return (
-    <div className="bg-blue-500 min-h-screen w-full -z-10">
-      <div className="absolute inset-0 bg-gradient-to-b from-red-500  to-transparent" />
-      <div className={cn("relative z-10 w-full min-h-screen", className)}>
+    <div className="min-h-full w-full">
+      <div className="absolute bg-blue-500 inset-0 bg-gradient-to-b from-red-500 to-transparent -z-10" />
+      <div className={cn("relative z-0 w-full min-h-full", className)}>
         {children}
       </div>
     </div>
