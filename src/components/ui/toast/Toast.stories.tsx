@@ -5,7 +5,7 @@ import type { ReactElement } from "react";
 import Button from "@/components/ui/button";
 import { validToastVariantIds } from "./toast-variants";
 import { useToast } from "@/components/hooks/use-toast";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "./toaster";
 
 type ToastOptions = Parameters<ReturnType<typeof useToast>["toast"]>[0];
 
