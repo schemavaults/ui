@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
+// import { fn } from "@storybook/test";
 
-import { Textarea } from "./textarea";
+import Input from "./input";
 import type { ReactElement } from "react";
+import { fn } from "@storybook/test";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: "Components/Text Area",
-  component: Textarea,
+  title: "Components/Input",
+  component: Input,
   parameters: {
     // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
     layout: "centered",
@@ -22,7 +23,7 @@ const meta = {
         type: "text",
       },
       description:
-        "Text that appears until the user has filled the text area with a string value",
+        "Text that appears until the user has filled the text input with a string value",
       table: {
         defaultValue: undefined,
       },
@@ -32,21 +33,35 @@ const meta = {
   args: {
     onChange: (): void => {
       fn();
-      return;
     },
   },
-} satisfies Meta<typeof Textarea>;
+} satisfies Meta<typeof Input>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const DefaultTextArea: Story = {
+export const DefaultTextInput: Story = {
   args: {},
+};
+
+export const NumberInput: Story = {
+  args: {
+    type: "number",
+  },
+};
+
+export const RangeInput: Story = {
+  args: {
+    type: "range",
+    step: 1,
+    min: 0,
+    max: 100,
+  },
 };
 
 export const WithPlaceholder: Story = {
   args: {
-    placeholder: "This text area has placeholder text!",
+    placeholder: "This text input has placeholder text!",
   },
 };
