@@ -1,14 +1,18 @@
+"use client";
+
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
 export interface InlineMenuContainerProps extends PropsWithChildren {
-  close?: () => void
+  close?: () => void;
 }
 
 // Used to render
-export function InlineMenuContainer(props: InlineMenuContainerProps): ReactElement {
+export function InlineMenuContainer(
+  props: InlineMenuContainerProps,
+): ReactElement {
   return (
     <div
       className="
@@ -19,7 +23,7 @@ export function InlineMenuContainer(props: InlineMenuContainerProps): ReactEleme
         rounded-md
         shadow-md
       "
-      role='menu'
+      role="menu"
     >
       {props.close && (
         <Button
@@ -31,7 +35,7 @@ export function InlineMenuContainer(props: InlineMenuContainerProps): ReactEleme
           "
           onClick={props.close}
           aria-label="Close menu"
-          variant={'secondary'}
+          variant={"secondary"}
         >
           <X />
         </Button>
@@ -42,20 +46,18 @@ export function InlineMenuContainer(props: InlineMenuContainerProps): ReactEleme
           justify-start items-stretch
           p-1
         "
-        role='menu'
+        role="menu"
       >
-        { props.children }
+        {props.children}
       </ul>
     </div>
-  )
+  );
 }
 
 function MenuItemIconSlot({ children }: PropsWithChildren): ReactElement {
   return (
-    <div className="h-6 w-6 flex items-center justify-center">
-      { children }
-    </div>
-  )
+    <div className="h-6 w-6 flex items-center justify-center">{children}</div>
+  );
 }
 
 export interface InlineMenuItemDefinition {
@@ -69,7 +71,7 @@ export interface InlineMenuItemDefinition {
 
 export function InlineMenuItem(props: InlineMenuItemDefinition): ReactElement {
   const destructive: boolean = props.destructive ?? false;
-  const color = destructive ? 'red' : undefined
+  const color = destructive ? "red" : undefined;
 
   const iconClassName = "h-4 w-4" as const;
 
@@ -81,26 +83,24 @@ export function InlineMenuItem(props: InlineMenuItemDefinition): ReactElement {
     "w-full grow",
     "flex flex-row flex-nowrap gap-2",
     "items-center justify-start",
-    props.disabled ? "hover:cursor-not-allowed" : "hover:cursor-pointer"
+    props.disabled ? "hover:cursor-not-allowed" : "hover:cursor-pointer",
   );
 
   return (
-    <li role='menuitem' className="w-full p-2">
+    <li role="menuitem" className="w-full p-2">
       <Button
-        variant={'ghost'}
+        variant={"ghost"}
         color={color}
         onClick={onPress}
         className={className}
       >
         <MenuItemIconSlot>
-          {(typeof Icon === 'function') && (<Icon
-            className={iconClassName}
-          />)}
+          {typeof Icon === "function" && <Icon className={iconClassName} />}
         </MenuItemIconSlot>
-        <p className="text-foreground">{ props.label }</p>
+        <p className="text-foreground">{props.label}</p>
       </Button>
     </li>
-  )
+  );
 }
 
 export interface InlineMenuProps {
@@ -111,13 +111,9 @@ export interface InlineMenuProps {
 export function InlineMenu(props: InlineMenuProps): ReactElement {
   return (
     <InlineMenuContainer close={props.close}>
-      {
-        props.items.map(inlineItem => {
-          return (
-            <InlineMenuItem {...inlineItem} key={inlineItem.id} />
-          )
-        })
-      }
+      {props.items.map((inlineItem) => {
+        return <InlineMenuItem {...inlineItem} key={inlineItem.id} />;
+      })}
     </InlineMenuContainer>
-  )
+  );
 }
