@@ -35,6 +35,10 @@ const meta = {
         disable: true,
       },
     },
+    className: {
+      control: "text",
+      description: "Add a classname (e.g. TailwindCSS styles) to the container",
+    },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
