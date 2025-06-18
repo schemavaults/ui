@@ -12,14 +12,23 @@ import { Button, Wordmark } from "@/components/ui";
 import { AnimatePresence, m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
-import DashboardLayoutContextProvider from "./dashboard-layout-context-provider";
 import { DashboardSidebarItemsAndGroupsDefinitions } from "./dashboard-sidebar-items-and-groups-context";
-import { ICustomizableDashboardLayoutComponentProps } from "./customizable-dashboard-component-type";
+import {
+  CustomizableDashboardLayoutComponent,
+  ICustomizableDashboardLayoutComponentProps,
+} from "./customizable-dashboard-component-type";
 
 function ExampleChildrenForContainer(): ReactNode {
   return (
-    <div>
-      <p>{LoremIpsumText}</p>
+    <div className="flex flex-col gap-4 justify-start items-start">
+      <p>{LoremIpsumText satisfies string}</p>
+      <p>{LoremIpsumText satisfies string}</p>
+      <p>{LoremIpsumText satisfies string}</p>
+      <p>{LoremIpsumText satisfies string}</p>
+      <p>{LoremIpsumText satisfies string}</p>
+      <p>{LoremIpsumText satisfies string}</p>
+      <p>{LoremIpsumText satisfies string}</p>
+      <p>{LoremIpsumText satisfies string}</p>
     </div>
   );
 }
@@ -144,7 +153,8 @@ const meta = {
     logo: <img src="/media/icon.png" width={40} height={40} />,
     wordmark: <Wordmark />,
     topBarTitle: "Page Title",
-    sidebarFooterContent: ExampleFooterContent,
+    sidebarFooterContent:
+      ExampleFooterContent satisfies CustomizableDashboardLayoutComponent,
     topBarButtons: ExampleHeaderButtonsContent,
   },
   decorators: [

@@ -18,7 +18,7 @@ export function DashboardLayoutMainContentContainer({
   return (
     <m.div
       layout
-      className="absolute min-h-screen overflow-x-hidden overflow-y-scroll"
+      className="absolute h-full grow overflow-x-hidden overflow-y-scroll"
       variants={{
         fullscreen: {
           width: "100vw",

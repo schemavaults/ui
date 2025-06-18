@@ -21,6 +21,7 @@ export interface DashboardLayoutSidebarProps {
   ) => ReactElement;
   brandHref: string;
   sidebarFooterContent?: CustomizableDashboardLayoutComponent;
+  className?: string;
 }
 
 export function DashboardLayoutSidebar({
@@ -32,16 +33,19 @@ export function DashboardLayoutSidebar({
 }: DashboardLayoutSidebarProps): ReactElement {
   const size = useDashboardSidebarSizing();
   const openState = useDashboardSidebarOpenState();
+  const desktop: boolean = !openState.mobile;
 
   return (
     <m.menu
       className={cn(
-        "h-screen",
-        !openState.mobile ? "absolute" : undefined,
+        "h-screen max-h-screen",
+        desktop ? "absolute z-40" : undefined,
         "transition-[width] ease-linear",
         "flex flex-col justify-between items-stretch",
         "border-r",
         "p-0",
+        size.sidebar_and_header_z_index_classname,
+        props.className,
       )}
       layout
       variants={{

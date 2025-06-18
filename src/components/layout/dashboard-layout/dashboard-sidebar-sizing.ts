@@ -8,6 +8,7 @@ export interface DashboardLayoutSidebarSizing {
   sidebar_menu_item_icon_gap: number;
   sidebar_expanded_menu_group_indent: number;
   sidebar_expanded_menu_group_label_bottom_padding: number;
+  sidebar_and_header_z_index_classname: string;
 }
 
 export const DASHBOARD_SIDEBAR_WIDTH_COLLAPSED = "4rem";
@@ -25,6 +26,7 @@ export const DEFAULT_DASHBOARD_SIDEBAR_SIZE: DashboardLayoutSidebarSizing = {
   sidebar_menu_item_icon_gap: 8,
   sidebar_expanded_menu_group_indent: 8,
   sidebar_expanded_menu_group_label_bottom_padding: 4,
+  sidebar_and_header_z_index_classname: "z-40",
 };
 
 export const DashboardLayoutSidebarSizeContext =

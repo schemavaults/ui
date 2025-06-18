@@ -12,6 +12,7 @@ import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { DashboardSidebarOpenStateDispatchContext } from "./dashboard-sidebar-open-state";
 import DashboardLayoutContextProvider from "./dashboard-layout-context-provider";
+import { cn } from "@/lib/utils";
 
 export type { DashboardLayoutProps };
 
@@ -71,6 +72,7 @@ export function DashboardLayout({
               wordmark={wordmark}
               Link={Link}
               brandHref={brandHref}
+              sidebarFooterContent={props.sidebarFooterContent}
             />
           </SheetContent>
         </Sheet>
@@ -82,6 +84,7 @@ export function DashboardLayout({
           wordmark={wordmark}
           Link={Link}
           brandHref={brandHref}
+          sidebarFooterContent={props.sidebarFooterContent}
         />
       );
     }
@@ -96,11 +99,14 @@ export function DashboardLayout({
       sidebarItems={props.sidebarItems}
       sizing={props.sizing}
     >
-      <div className="w-screen min-h-screen">
+      <div className="w-screen h-screen min-h-screen">
         <Sidebar />
         <DashboardLayoutMainContentContainer>
           <header
-            className="flex shrink-0 items-center gap-2 transition-[width,height] ease-linear"
+            className={cn(
+              "flex shrink-0 items-center gap-2 transition-[width,height] ease-linear",
+              size.sidebar_and_header_z_index_classname,
+            )}
             style={{
               height: size.header_height,
             }}
