@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, type ReactElement, FC, useContext } from "react";
+import { type ReactNode, type ReactElement, type FC, useContext } from "react";
 import DashboardLayoutSidebar from "./dashboard-sidebar";
 import type { DashboardLayoutProps } from "./DashboardLayoutProps";
 import { Separator } from "@/components/ui/separator";
@@ -16,7 +16,6 @@ import DashboardLayoutContextProvider from "./dashboard-layout-context-provider"
 export type { DashboardLayoutProps };
 
 /**
- * @requires Must be wrapped in a DashboardLayoutContextProvider
  *
  * @param param0 DashboardLayoutProps
  *
