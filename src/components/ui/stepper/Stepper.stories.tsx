@@ -5,7 +5,7 @@ import type { Step } from "./step_definition";
 import type { BaseStepperState } from "./base-stepper-state-type";
 import { type ReactElement, useState } from "react";
 import { LazyFramerMotionProvider } from "@/components/providers";
-import { Toaster } from "@/components/ui/toaster";
+import Toaster from "@/components/ui/toaster";
 import { useToast } from "@/components/hooks/use-toast";
 import Button from "@/components/ui/button";
 import { fn } from "@storybook/test";

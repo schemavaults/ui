@@ -15,8 +15,8 @@ export type * from "./label";
 
 export * from "./toast";
 export type * from "./toast";
-export * from "./toast/toaster";
-export type * from "./toast/toaster";
+export * from "./toaster";
+export type * from "./toaster";
 
 export * from "./wordmark";
 export type * from "./wordmark";
