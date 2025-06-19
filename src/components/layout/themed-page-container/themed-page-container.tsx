@@ -1,3 +1,5 @@
+"use client";
+
 import ThemedPageBackground from "@/components/ui/themed-page-background";
 import { PropsWithChildren, ReactElement } from "react";
 import PageColumnContainer from "@/components/layout/page-column-container";
@@ -13,7 +15,7 @@ export interface ThemedPageContainerProps extends PropsWithChildren {
  *
  * @param param0 ThemedPageContainerProps
  *
- * @returns A container that uses the <PageColumnContainer> and <ThemedPageContainer> components
+ * @returns A container that uses the PageColumnContainer and ThemedPageContainer components
  *
  * @see ThemedPageContainer
  *

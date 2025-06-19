@@ -1,22 +1,25 @@
 import type { Meta, StoryObj } from "@storybook/react";
 // import { fn } from "@storybook/test";
 
-import type { ReactElement, ReactNode } from "react";
+import type { FC, ReactElement, ReactNode } from "react";
 
 import ThemedPageContainer from "./themed-page-container";
 import LoremIpsumText from "@/stories/LoremImpsumText";
 
-function ExampleChildrenForContainer(): ReactNode {
+function ExampleChildrenForContainer({
+  n_paragraphs = 12,
+}: {
+  n_paragraphs: number;
+}): ReactNode {
+  const paragraphs: FC[] = [];
+  for (let i = 0; i < n_paragraphs; i++) {
+    paragraphs.push(() => <p>{LoremIpsumText}</p>);
+  }
   return (
     <>
-      <p>{LoremIpsumText}</p>
-      <p>{LoremIpsumText}</p>
-      <p>{LoremIpsumText}</p>
-      <p>{LoremIpsumText}</p>
-      <p>{LoremIpsumText}</p>
-      <p>{LoremIpsumText}</p>
-      <p>{LoremIpsumText}</p>
-      <p>{LoremIpsumText}</p>
+      {paragraphs.map((Paragraph, index: number) => (
+        <Paragraph key={`paragraph-${index}`} />
+      ))}
     </>
   );
 }
@@ -43,7 +46,7 @@ const meta = {
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
-    children: <ExampleChildrenForContainer />,
+    children: <ExampleChildrenForContainer n_paragraphs={12} />,
   },
 } satisfies Meta<typeof ThemedPageContainer>;
 
