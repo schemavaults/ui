@@ -10,7 +10,9 @@ import { m } from "@/framer-motion";
 import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { Separator } from "@/components/ui";
-import toggleDashboardLayoutCollapsedTransitionTime from "./toggle-dashboard-layout-collapsed-transition-time";
+import toggleDashboardLayoutCollapsedTransitionTime, {
+  toggleDashboardLayoutCollapsedTransitionEasing,
+} from "./toggle-dashboard-layout-collapsed-transition-time";
 import type { CustomizableDashboardLayoutComponent } from "./customizable-dashboard-component-type";
 
 export interface DashboardLayoutSidebarProps {
@@ -75,6 +77,7 @@ export function DashboardLayoutSidebar({
       exit={openState.mobile ? "expanded" : "exit"}
       transition={{
         duration: toggleDashboardLayoutCollapsedTransitionTime,
+        ease: toggleDashboardLayoutCollapsedTransitionEasing,
       }}
     >
       <DashboardSidebarHeader

@@ -4,7 +4,9 @@ import { m } from "@/framer-motion";
 import type { PropsWithChildren, ReactElement } from "react";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
-import toggleDashboardLayoutCollapsedTransitionTime from "./toggle-dashboard-layout-collapsed-transition-time";
+import toggleDashboardLayoutCollapsedTransitionTime, {
+  toggleDashboardLayoutCollapsedTransitionEasing,
+} from "./toggle-dashboard-layout-collapsed-transition-time";
 
 export interface DashboardLayoutMainContentContainerProps
   extends PropsWithChildren {}
@@ -53,6 +55,7 @@ export function DashboardLayoutMainContentContainer({
       }
       transition={{
         duration: toggleDashboardLayoutCollapsedTransitionTime,
+        ease: toggleDashboardLayoutCollapsedTransitionEasing,
       }}
     >
       {children}

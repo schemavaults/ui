@@ -2,7 +2,9 @@
 
 import { AnimatePresence, m } from "@/framer-motion";
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
-import toggleDashboardLayoutCollapsedTransitionTime from "./toggle-dashboard-layout-collapsed-transition-time";
+import toggleDashboardLayoutCollapsedTransitionTime, {
+  toggleDashboardLayoutCollapsedTransitionEasing,
+} from "./toggle-dashboard-layout-collapsed-transition-time";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { cn } from "@/lib/utils";
 import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
@@ -51,6 +53,8 @@ export function DashboardSidebarHeader({
         exit="exit"
         transition={{
           duration: toggleDashboardLayoutCollapsedTransitionTime,
+          ease: toggleDashboardLayoutCollapsedTransitionEasing,
+          delay: toggleDashboardLayoutCollapsedTransitionTime / 1.5,
         }}
         layout
       >
