@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
 import { DashboardSidebarAdminOnlyItemsContext } from "./dashboard-sidebar-admin-only-items-context";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 
 export function DashboardSidebarItemRenderer({
   item,
@@ -69,41 +70,46 @@ export function DashboardSidebarItemRenderer({
 
   return (
     <m.li key={item.title} className={cn("w-full")}>
-      <Link
-        href={item.url}
-        className={cn(
-          "flex flex-row",
-          "w-full",
-          "hover:bg-gray-200",
-          "rounded-md",
-          "p-1 md:p-2",
-        )}
-      >
-        <m.div
-          layout
-          className={cn(
-            "w-full",
-            "flex flex-row flex-nowrap",
-            "justify-start items-center",
-            "text-nowrap",
-          )}
-          variants={{
-            expanded: {
-              justifyContent: "start",
-            },
-            collapsed: {
-              justifyContent: "center",
-            },
-          }}
-          animate={mobile ? "expanded" : open ? "expanded" : "collapsed"}
-        >
-          <IconComponent className={cn("h-6 w-6", itemColorClassName)} />
+      <Tooltip>
+        <TooltipTrigger>
+          <Link
+            href={item.url}
+            className={cn(
+              "flex flex-row",
+              "w-full",
+              "hover:bg-gray-200",
+              "rounded-md",
+              "p-1 md:p-2",
+            )}
+          >
+            <m.div
+              layout
+              className={cn(
+                "w-full",
+                "flex flex-row flex-nowrap",
+                "justify-start items-center",
+                "text-nowrap",
+              )}
+              variants={{
+                expanded: {
+                  justifyContent: "start",
+                },
+                collapsed: {
+                  justifyContent: "center",
+                },
+              }}
+              animate={mobile ? "expanded" : open ? "expanded" : "collapsed"}
+            >
+              <IconComponent className={cn("h-6 w-6", itemColorClassName)} />
 
-          <AnimatePresence>
-            {showItemLabel && <SidebarMenuItemTitle key={item.title} />}
-          </AnimatePresence>
-        </m.div>
-      </Link>
+              <AnimatePresence>
+                {showItemLabel && <SidebarMenuItemTitle key={item.title} />}
+              </AnimatePresence>
+            </m.div>
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right">{item.title}</TooltipContent>
+      </Tooltip>
     </m.li>
   );
 }

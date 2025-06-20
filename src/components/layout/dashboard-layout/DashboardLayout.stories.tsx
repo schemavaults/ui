@@ -8,7 +8,7 @@ import LoremIpsumText from "@/stories/LoremImpsumText";
 import { PageColumnContainer } from "@/components/layout/page-column-container";
 import { AlarmClock, Lock, Plane, Share2, Tornado, Users } from "lucide-react";
 import { LazyFramerMotionProvider } from "@/components/providers";
-import { Button, Wordmark } from "@/components/ui";
+import { Button, TooltipProvider, Wordmark } from "@/components/ui";
 import { AnimatePresence, m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
@@ -164,6 +164,14 @@ const meta = {
         <LazyFramerMotionProvider>
           <Story {...context} />
         </LazyFramerMotionProvider>
+      );
+    },
+    // Wrap in Tooltip Provider
+    (Story, context): ReactElement => {
+      return (
+        <TooltipProvider>
+          <Story {...context} />
+        </TooltipProvider>
       );
     },
   ],
