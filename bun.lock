@@ -18,7 +18,7 @@
         "@radix-ui/react-slot": "^1.0.2",
         "@radix-ui/react-toast": "1.2.14",
         "@radix-ui/react-tooltip": "1.2.7",
-        "@schemavaults/theme": "0.22.5",
+        "@schemavaults/theme": "0.22.6",
         "@tanstack/react-table": "8.20.1",
         "class-variance-authority": "0.7.1",
         "clsx": "2.1.1",
@@ -281,7 +281,7 @@
 
     "@radix-ui/rect": ["@radix-ui/rect@1.1.1", "", {}, "sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw=="],
 
-    "@schemavaults/theme": ["@schemavaults/theme@0.22.5", "https://npm.pkg.github.com/download/@schemavaults/theme/0.22.5/9f12e92a0b30d8c8a4d8d8897cd805fa956409ac", { "dependencies": { "tailwindcss-animate": "1.0.7" }, "peerDependencies": { "react": "19.0.0", "react-dom": "19.0.0" } }, "sha512-9136Bs2KCpNNvedCqaVjHrKvLxiK0yr0/oN+1oWnRbtrgKDAUILHSAP9VVQqGSkY6Cf8M657b4VqkOhtxdEZwA=="],
+    "@schemavaults/theme": ["@schemavaults/theme@0.22.6", "https://npm.pkg.github.com/download/@schemavaults/theme/0.22.6/31f003ce5428773573920022487efc4050fd9fdc", { "dependencies": { "tailwindcss-animate": "1.0.7" }, "peerDependencies": { "react": "19.0.0", "react-dom": "19.0.0" } }, "sha512-UPzWuzcm/07f+fn9KkoZqi8gmxnVp2bIV0MAtYAkeOI0cnid2SCL1jIbv2HWh+UI+lxTZz9AuyxJUhe7+L0oYQ=="],
 
     "@storybook/addon-actions": ["@storybook/addon-actions@8.6.14", "", { "dependencies": { "@storybook/global": "^5.0.0", "@types/uuid": "^9.0.1", "dequal": "^2.0.2", "polished": "^4.2.2", "uuid": "^9.0.0" }, "peerDependencies": { "storybook": "^8.6.14" } }, "sha512-mDQxylxGGCQSK7tJPkD144J8jWh9IU9ziJMHfB84PKpI/V5ZgqMDnpr2bssTrUaGDqU5e1/z8KcRF+Melhs9pQ=="],
 
