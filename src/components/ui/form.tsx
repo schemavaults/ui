@@ -4,6 +4,16 @@ export { useForm } from "react-hook-form";
 export type {
   UseFormReturn,
   ControllerRenderProps as FormControllerRenderProps,
+  FieldPath as FormFieldPath,
+  FieldValues as FormFieldValues,
+  FieldPathValue as FormFieldPathValue,
+  FieldArrayPath as FormFieldArrayPath,
+  FieldPathByValue as FormFieldPathByValue,
+  FormState,
+  FormSubmitHandler,
+  FieldName as FormFieldName,
+  FieldArray as FormFieldArray,
+  FieldError as FormFieldError,
 } from "react-hook-form";
 
 import {
