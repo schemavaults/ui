@@ -6,11 +6,14 @@ import {
   TooltipContent,
   TooltipTrigger,
   Tooltip,
+  TooltipArrow,
 } from "./tooltip";
 import type { ReactElement } from "react";
 import Button from "@/components/ui/button";
 
-interface TooltipExampleProps {}
+interface TooltipExampleProps {
+  withArrow: boolean;
+}
 
 function TooltipExampleComponent(props: TooltipExampleProps): ReactElement {
   return (
@@ -20,6 +23,7 @@ function TooltipExampleComponent(props: TooltipExampleProps): ReactElement {
       </TooltipTrigger>
       <TooltipContent>
         <p>This is a tooltip</p>
+        {props.withArrow && <TooltipArrow />}
       </TooltipContent>
     </Tooltip>
   );
@@ -38,7 +42,9 @@ const meta = {
   // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {},
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
-  args: {},
+  args: {
+    withArrow: false,
+  },
   decorators: [
     (Story, context): ReactElement => {
       return (
@@ -55,7 +61,11 @@ type Story = StoryObj<typeof meta>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const TooltipExample: Story = {
+  args: {},
+};
+
+export const WithArrow: Story = {
   args: {
-    variant: "default",
+    withArrow: true,
   },
 };

@@ -9,7 +9,12 @@ import { cn } from "@/lib/utils";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
 import { DashboardSidebarAdminOnlyItemsContext } from "./dashboard-sidebar-admin-only-items-context";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipArrow,
+} from "@/components/ui";
 
 export function DashboardSidebarItemRenderer({
   item,
@@ -71,7 +76,7 @@ export function DashboardSidebarItemRenderer({
   return (
     <m.li key={item.title} className={cn("w-full")}>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger className="w-full">
           <Link
             href={item.url}
             className={cn(
@@ -108,7 +113,10 @@ export function DashboardSidebarItemRenderer({
             </m.div>
           </Link>
         </TooltipTrigger>
-        <TooltipContent side="right">{item.title}</TooltipContent>
+        <TooltipContent side="right">
+          {item.title}
+          <TooltipArrow />
+        </TooltipContent>
       </Tooltip>
     </m.li>
   );
