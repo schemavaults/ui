@@ -1,6 +1,6 @@
 "use client";
 
-export { useForm } from "react-hook-form";
+export { useForm, useFormContext, useFormState } from "react-hook-form";
 export type {
   UseFormReturn,
   ControllerRenderProps as FormControllerRenderProps,
