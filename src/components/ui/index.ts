@@ -1,6 +1,9 @@
 export * from "./alert";
 export type * from "./alert";
 
+export * from "./background-blur";
+export type * from "./background-blur";
+
 export * from "./themed-page-background";
 export type * from "./themed-page-background";
 
