@@ -59,8 +59,14 @@ export const DefaultAlert: Story = {
   },
 };
 
-export const Destructive: Story = {
+export const DestructiveAlert: Story = {
   args: {
     variant: "destructive",
+  },
+};
+
+export const WarningAlert: Story = {
+  args: {
+    variant: "warning",
   },
 };

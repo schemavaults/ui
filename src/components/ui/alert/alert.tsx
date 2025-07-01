@@ -8,6 +8,7 @@ import { HTMLAttributes, ReactElement, Ref } from "react";
 export const alertVariantIds = [
   "default",
   "destructive",
+  "warning",
 ] as const satisfies string[];
 
 export type AlertVariantId = (typeof alertVariantIds)[number];
@@ -20,6 +21,8 @@ const alertVariants = cva(
         default: "bg-background text-foreground",
         destructive:
           "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+        warning:
+          "border-warning/50 text-warning dark:border-warning [&>svg]:text-warning",
       } satisfies Record<AlertVariantId, string>,
     },
     defaultVariants: {

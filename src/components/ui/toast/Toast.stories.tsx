@@ -74,20 +74,20 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const DefaultAlert: Story = {
+export const DefaultToast: Story = {
   args: {
     variant: "default",
   },
 };
 
-export const Destructive: Story = {
+export const DestructiveToast: Story = {
   args: {
     variant: "destructive",
     title: "This is a 'destructive' toast title!",
   },
 };
 
-export const Warning: Story = {
+export const WarningToast: Story = {
   args: {
     variant: "warning",
     title: "This is a 'warning' toast title!",
