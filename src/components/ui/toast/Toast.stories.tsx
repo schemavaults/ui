@@ -83,5 +83,13 @@ export const DefaultAlert: Story = {
 export const Destructive: Story = {
   args: {
     variant: "destructive",
+    title: "This is a 'destructive' toast title!",
+  },
+};
+
+export const Warning: Story = {
+  args: {
+    variant: "warning",
+    title: "This is a 'warning' toast title!",
   },
 };

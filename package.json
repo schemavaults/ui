@@ -1,6 +1,6 @@
 {
   "name": "@schemavaults/ui",
-  "version": "0.11.75",
+  "version": "0.11.76",
   "private": false,
   "license": "UNLICENSED",
   "description": "React.js UI components for SchemaVaults frontend applications",
@@ -36,7 +36,7 @@
     "react-hook-form": "7.58.1",
     "tailwind-merge": "3.0.2",
     "zod": "3.23.8",
-    "@schemavaults/theme": "0.22.6"
+    "@schemavaults/theme": "0.22.7"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "8.6.14",

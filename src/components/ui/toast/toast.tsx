@@ -32,6 +32,8 @@ const toastVariants = cva(
         default: "border bg-background text-foreground",
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground",
+        warning:
+          "warning group border-warning bg-warning text-warning-foreground",
       } satisfies Record<ToastVariantID, string>,
     },
     defaultVariants: {
@@ -42,7 +44,7 @@ const toastVariants = cva(
 
 interface ToastProps
   extends ComponentPropsWithoutRef<typeof ToastPrimitives.Root> {
-  variant?: "default" | "destructive";
+  variant?: ToastVariantID;
 }
 
 const Toast = ({ className, variant, ...props }: ToastProps) => {
