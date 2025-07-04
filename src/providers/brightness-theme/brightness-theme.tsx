@@ -1,6 +1,9 @@
 "use client";
 
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import {
+  ThemeProvider as NextThemesProvider,
+  useTheme as useBrightnessTheme,
+} from "next-themes";
 
 export type BrightnessThemeProviderProps = Parameters<
   typeof NextThemesProvider
@@ -20,3 +23,5 @@ export function BrightnessThemeProvider({
 }
 
 export default BrightnessThemeProvider;
+
+export { useBrightnessTheme };
