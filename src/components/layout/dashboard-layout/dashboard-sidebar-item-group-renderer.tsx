@@ -1,6 +1,6 @@
 "use client";
 
-import type { PropsWithChildren, ReactElement } from "react";
+import type { ReactElement } from "react";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
 import type { DashboardSidebarItemGroupDefinition } from "./dashboard-sidebar-item-group";
 import DashboardSidebarItemRenderer from "./dashboard-sidebar-item-renderer";
@@ -10,15 +10,14 @@ import { cn } from "@/lib/utils";
 import { AnimatePresence, m } from "@/framer-motion";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
 import { DashboardSidebarAdminOnlyItemsContext } from "./dashboard-sidebar-admin-only-items-context";
+import type { LinkComponentType } from "./link-component-type";
 
 export function DashboardSidebarItemGroupRenderer({
   group,
   Link,
 }: {
   group: DashboardSidebarItemGroupDefinition;
-  Link: (
-    props: PropsWithChildren<{ href: string; className?: string }>,
-  ) => ReactElement;
+  Link: LinkComponentType;
 }): ReactElement {
   const groupTitle: string = group.title;
   const openState = useDashboardSidebarOpenState();

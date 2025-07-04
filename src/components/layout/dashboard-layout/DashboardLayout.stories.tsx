@@ -17,6 +17,7 @@ import {
   CustomizableDashboardLayoutComponent,
   ICustomizableDashboardLayoutComponentProps,
 } from "./customizable-dashboard-component-type";
+import { LinkComponentProps, LinkComponentType } from "./link-component-type";
 
 function ExampleChildrenForContainer(): ReactNode {
   return (
@@ -72,13 +73,16 @@ function Link({
   href,
   children,
   className,
-}: PropsWithChildren<{ href: string; className?: string }>): ReactElement {
+  onClick,
+}: LinkComponentProps): ReactElement {
   return (
-    <a href={href} className={className}>
+    <a href={href} className={className} onClick={onClick}>
       {children}
     </a>
   );
 }
+
+Link satisfies LinkComponentType;
 
 function ExampleFooterContent({
   useDashboardSidebarOpenState,

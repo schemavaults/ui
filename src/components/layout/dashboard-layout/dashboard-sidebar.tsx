@@ -14,13 +14,12 @@ import toggleDashboardLayoutCollapsedTransitionTime, {
   toggleDashboardLayoutCollapsedTransitionEasing,
 } from "./toggle-dashboard-layout-collapsed-transition-time";
 import type { CustomizableDashboardLayoutComponent } from "./customizable-dashboard-component-type";
+import type { LinkComponentType } from "./link-component-type";
 
 export interface DashboardLayoutSidebarProps {
   wordmark: ReactNode;
   logo: ReactNode;
-  Link: (
-    props: PropsWithChildren<{ href: string; className?: string }>,
-  ) => ReactElement;
+  Link: LinkComponentType;
   brandHref: string;
   sidebarFooterContent?: CustomizableDashboardLayoutComponent;
   className?: string;

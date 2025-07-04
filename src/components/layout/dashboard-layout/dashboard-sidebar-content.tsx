@@ -9,11 +9,10 @@ import DashboardSidebarItemGroupRenderer from "./dashboard-sidebar-item-group-re
 import { useDashboardSidebarItemsAndGroups } from "./useDashboardSidebarItemsAndGroups";
 import { m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
+import type { LinkComponentType } from "./link-component-type";
 
 export interface DashboardLayoutSidebarContentProps {
-  Link: (
-    props: PropsWithChildren<{ href: string; className?: string }>,
-  ) => ReactElement;
+  Link: LinkComponentType;
 }
 
 export function DashboardSidebarContent({

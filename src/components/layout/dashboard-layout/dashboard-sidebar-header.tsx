@@ -8,13 +8,12 @@ import toggleDashboardLayoutCollapsedTransitionTime, {
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { cn } from "@/lib/utils";
 import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
+import type { LinkComponentType } from "./link-component-type";
 
 export interface DashboardLayoutSidebarHeaderProps {
   wordmark: ReactNode;
   logo: ReactNode;
-  Link: (
-    props: PropsWithChildren<{ href: string; className?: string }>,
-  ) => ReactElement;
+  Link: LinkComponentType;
   brandHref: string;
 }
 

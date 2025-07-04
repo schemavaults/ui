@@ -4,11 +4,10 @@ import type { PropsWithChildren, ReactElement } from "react";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import type { CustomizableDashboardLayoutComponent } from "./customizable-dashboard-component-type";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
+import type { LinkComponentType } from "./link-component-type";
 
 export interface DashboardSidebarFooterProps {
-  Link: (
-    props: PropsWithChildren<{ href: string; className?: string }>,
-  ) => ReactElement;
+  Link: LinkComponentType;
   sidebarFooterContent: CustomizableDashboardLayoutComponent;
 }
 

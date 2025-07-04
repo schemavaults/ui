@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext } from "react";
+import { createContext, Dispatch, SetStateAction } from "react";
 
 export interface IDashboardSidebarOpenStateContextType {
   open: boolean;
@@ -10,9 +10,9 @@ export interface IDashboardSidebarOpenStateContextType {
 export const DashboardSidebarOpenStateContext =
   createContext<IDashboardSidebarOpenStateContextType | null>(null);
 
-export type DashboardSidebarOpenStateDispatchType = (
-  newOpenState: boolean,
-) => void;
+export type DashboardSidebarOpenStateDispatchType = Dispatch<
+  SetStateAction<boolean>
+>;
 
 export const DashboardSidebarOpenStateDispatchContext =
   createContext<DashboardSidebarOpenStateDispatchType>(() => {

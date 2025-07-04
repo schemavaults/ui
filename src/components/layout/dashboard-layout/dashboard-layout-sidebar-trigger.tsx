@@ -2,16 +2,16 @@
 
 import { Button } from "@/components/ui";
 import { SidebarOpen, SidebarClose } from "lucide-react";
-import { ReactElement, useContext } from "react";
+import type { ReactElement } from "react";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { AnimatePresence } from "@/framer-motion";
-import { DashboardSidebarOpenStateDispatchContext } from "./dashboard-sidebar-open-state";
+import useDashboardSidebarOpenStateDispatch from "./useDashboardSidebarOpenStateDispatch";
 
 const sidebarTriggerIconClassName: string = "h-4 w-4";
 
 export function DashboardLayoutSidebarTrigger(): ReactElement {
   const openState = useDashboardSidebarOpenState();
-  const setOpen = useContext(DashboardSidebarOpenStateDispatchContext);
+  const setOpen = useDashboardSidebarOpenStateDispatch();
 
   return (
     <Button

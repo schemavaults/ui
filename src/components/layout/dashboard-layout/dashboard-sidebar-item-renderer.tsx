@@ -15,17 +15,18 @@ import {
   TooltipTrigger,
   TooltipArrow,
 } from "@/components/ui";
+import type { LinkComponentType } from "./link-component-type";
+import useDashboardSidebarOpenStateDispatch from "./useDashboardSidebarOpenStateDispatch";
 
 export function DashboardSidebarItemRenderer({
   item,
   Link,
 }: {
   item: DashboardSidebarItemDefinition;
-  Link: (
-    props: PropsWithChildren<{ href: string; className?: string }>,
-  ) => ReactElement;
+  Link: LinkComponentType;
 }): ReactElement {
   const { open, mobile } = useDashboardSidebarOpenState();
+  const setSidebarOpen = useDashboardSidebarOpenStateDispatch();
   const sizes = useDashboardSidebarSizing();
   const isAdminItemGroup: boolean = useContext(
     DashboardSidebarAdminOnlyItemsContext,
@@ -86,6 +87,10 @@ export function DashboardSidebarItemRenderer({
               "rounded-md",
               "p-1 md:p-2",
             )}
+            onClick={(e): void => {
+              e.preventDefault();
+              setSidebarOpen(false);
+            }}
           >
             <m.div
               layout
