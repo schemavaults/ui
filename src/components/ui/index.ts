@@ -1,6 +1,9 @@
 export * from "./alert";
 export type * from "./alert";
 
+export * from "./badge";
+export type * from "./badge";
+
 export * from "./background-blur";
 export type * from "./background-blur";
 
