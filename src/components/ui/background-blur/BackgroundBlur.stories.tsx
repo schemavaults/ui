@@ -7,6 +7,7 @@ import BackgroundBlur, {
   type BackgroundBlurProps,
 } from "./background-blur";
 import Wordmark from "@/components/ui/wordmark";
+import LoremIpsumText from "@/stories/LoremImpsumText";
 
 interface BackgroundBlurExampleProps
   extends Omit<BackgroundBlurProps, "foreground" | "background"> {
@@ -81,15 +82,6 @@ const meta = {
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {},
-  decorators: [
-    (Story, context) => {
-      return (
-        <main className="w-full min-h-screen">
-          <Story {...context} />
-        </main>
-      );
-    },
-  ],
 } satisfies Meta<typeof BackgroundBlurExample & FC<BackgroundBlurProps>>;
 
 export default meta;
@@ -99,9 +91,47 @@ const exampleBackgroundImageSrc: string =
   "https://www.goodfreephotos.com/albums/astrophotography/starry-milky-way-galaxy.jpg";
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const Example: Story = {
+export const FullscreenExample: Story = {
   args: {
     intensity: "xs",
     backgroundImageHref: exampleBackgroundImageSrc,
   },
+  decorators: [
+    (Story, context) => {
+      return (
+        <main className="w-full min-h-screen h-screen">
+          <Story {...context} />
+        </main>
+      );
+    },
+  ],
+};
+
+function ExampleLoremIpsumSection(): ReactElement {
+  return (
+    <section className="w-full min-h-[60vh] flex items-center justify-center p-4">
+      <p>{LoremIpsumText}</p>
+    </section>
+  );
+}
+
+export const HalfHeightInALongerPage: Story = {
+  args: {
+    intensity: "xs",
+    backgroundImageHref: exampleBackgroundImageSrc,
+  },
+  decorators: [
+    (Story, context) => {
+      return (
+        <div className="min-h-[200vh] w-full flex flex-col">
+          <main className="w-full h-[50vh]">
+            <Story {...context} />
+          </main>
+          <ExampleLoremIpsumSection />
+          <ExampleLoremIpsumSection />
+          <ExampleLoremIpsumSection />
+        </div>
+      );
+    },
+  ],
 };

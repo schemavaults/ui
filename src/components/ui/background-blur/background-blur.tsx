@@ -59,21 +59,42 @@ export function BackgroundBlur({
   background,
   foreground,
   intensity = "default",
+  ...props
 }: BackgroundBlurProps): ReactElement {
   const BackgroundComponent: FC | undefined = background;
   const ForegroundComponent: FC | undefined = foreground;
+
   return (
-    <div className="w-full h-full">
-      <div className="absolute w-full h-full left-0 top-0 overflow-hidden -z-10">
+    <div className={cn("w-full h-full", "grid grid-cols-1 grid-rows-1")}>
+      <div
+        className={cn(
+          "col-start-1 col-end-2",
+          "row-start-1 row-end-2",
+          "w-full h-full",
+          "overflow-hidden -z-10",
+        )}
+      >
         {BackgroundComponent && <BackgroundComponent />}
       </div>
 
       <Blur
         variant={intensity satisfies BackgroundBlurIntensityVariant}
-        className="absolute w-full h-full left-0 top-0 z-0"
+        className={cn(
+          "col-start-1 col-end-2",
+          "row-start-1 row-end-2",
+          "w-full h-full",
+          "z-0",
+        )}
       />
 
-      <div className="absolute w-full h-full left-0 top-0 overflow-hidden z-10">
+      <div
+        className={cn(
+          "col-start-1 col-end-2",
+          "row-start-1 row-end-2",
+          "w-full h-full",
+          "overflow-hidden z-10",
+        )}
+      >
         {ForegroundComponent && <ForegroundComponent />}
       </div>
     </div>
