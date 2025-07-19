@@ -1,12 +1,19 @@
 import type { StorybookConfig } from "@storybook/react-webpack5";
-import type { Options } from "@swc/core";
+import type { Options as SwcOptions } from "@swc/core";
 import { resolve } from "path";
+import webpack from "webpack";
 
+type StorybookWebpackConfig = Awaited<
+  ReturnType<NonNullable<StorybookConfig["webpackFinal"]>>
+>;
+
+// Where to find static assets for the Storybook.js site config (e.g. logo.png)
 const storybookAssetsDirectory: string = resolve(
   __dirname,
   "../storybook-assets",
 );
 
+// @schemavaults/ui Storybook.js site config
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
   addons: [
@@ -21,24 +28,24 @@ const config: StorybookConfig = {
     name: "@storybook/react-webpack5",
     options: {},
   },
-  webpackFinal: async (config) => {
-    // finalConfig.module.rules.push({
-    //   test: /\.(js\.map|md)$/,
-    //   type: "asset/resource",
-    //   use: [
-    //     {
-    //       loader: "ignore-loader",
-    //     },
-    //   ],
-    // });
-
+  webpackFinal: async (config, options): Promise<StorybookWebpackConfig> => {
     const existingModule = config.module;
 
     let existingModuleRules = Array.isArray(config.module?.rules)
       ? config.module.rules
       : [];
 
-    return {
+    const webpackPlugins: NonNullable<StorybookWebpackConfig["plugins"]> = [
+      ...(config.plugins || []),
+    ];
+
+    const bufferPolyfillPlugin = new webpack.ProvidePlugin({
+      Buffer: ["buffer", "Buffer"],
+    });
+
+    webpackPlugins.push(bufferPolyfillPlugin as any);
+
+    const finalConfig: StorybookWebpackConfig = {
       ...config,
       module: {
         ...existingModule,
@@ -50,6 +57,7 @@ const config: StorybookConfig = {
           },
         ],
       },
+      plugins: webpackPlugins,
       resolve: {
         ...config.resolve,
         alias: {
@@ -62,10 +70,15 @@ const config: StorybookConfig = {
           "@/stories": resolve(__dirname, "../src/stories"),
           "@/framer-motion": resolve(__dirname, "../src/framer-motion"),
         },
+        fallback: {
+          ...config.resolve?.fallback,
+          buffer: require.resolve("buffer/"),
+        },
       },
     };
+    return finalConfig;
   },
-  swc: (config: Options, options): Options => {
+  swc: (config: SwcOptions, options): SwcOptions => {
     return {
       ...config,
       // Apply your custom SWC configuration
