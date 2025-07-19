@@ -16,6 +16,9 @@ export type * from "./button";
 export * from "./input";
 export type * from "./input";
 
+export * from "./file-input";
+export type * from "./file-input";
+
 export * from "./label";
 export type * from "./label";
 
