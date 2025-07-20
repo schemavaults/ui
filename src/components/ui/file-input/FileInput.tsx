@@ -1,7 +1,7 @@
 "use client";
 
 import { useDoesFilenameHaveValidFileExtension } from "./useDoesFilenameHaveValidFileExtension";
-import fileToBase64UrlEncoded from "./fileToBase64UrlEncoded";
+import fileToBase64UrlEncoded from "./serializeFile";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -12,14 +12,14 @@ import {
   type ReactElement,
 } from "react";
 
-export interface FileInputProps {
+export interface FileInputProps<SerializedFileType = string> {
   id: string;
   disabled?: boolean;
   onBlur?: () => void;
-  setValue: (base64url_str: string) => void;
+  setValue: (serialized_file: SerializedFileType) => void;
   expectedFileExtensions?: readonly `.${string}`[];
   debug?: boolean;
-  bufferToBase64Url: (buf: Buffer, debug?: boolean) => string;
+  serialize: (buf: Buffer, debug?: boolean) => SerializedFileType;
 }
 
 /**
@@ -27,13 +27,13 @@ export interface FileInputProps {
  * @param param0 FileInputProps
  * @returns FileInput component. Calls 'setValue' with the selected file
  */
-export function FileInput({
+export function FileInput<SerializedFileType = string>({
   id,
   disabled,
   onBlur,
   setValue,
   ...props
-}: FileInputProps): ReactElement {
+}: FileInputProps<SerializedFileType>): ReactElement {
   const debug: boolean = props.debug ?? false;
   const { toast } = useToast();
 
@@ -117,7 +117,7 @@ export function FileInput({
         }
       }
 
-      if (typeof props.bufferToBase64Url !== "function") {
+      if (typeof props.serialize !== "function") {
         throw new Error(
           "FileInput component expected to receive a 'bufferToBase64Url' function!",
         );
@@ -129,11 +129,11 @@ export function FileInput({
         );
       }
 
-      let base64url_encoded: string;
+      let base64url_encoded: SerializedFileType;
       try {
         base64url_encoded = await fileToBase64UrlEncoded(
           file,
-          props.bufferToBase64Url,
+          props.serialize,
           debug,
         );
       } catch (e: unknown) {
@@ -161,7 +161,7 @@ export function FileInput({
 
       return;
     },
-    [debug, toast, props.bufferToBase64Url, setValue],
+    [debug, toast, props.serialize, setValue],
   );
 
   return (

@@ -1,11 +1,11 @@
 import bufferFromFile from "./fileToBuffer";
 import { Buffer } from "buffer";
 
-export async function fileToBase64UrlEncoded(
+export async function serializeFile<SerializedFileType = string>(
   file: File,
-  bufferToBase64Url: (buf: Buffer, debug: boolean) => string,
+  serializeFromBuffer: (buf: Buffer, debug: boolean) => SerializedFileType,
   debug: boolean = false,
-): Promise<string> {
+): Promise<SerializedFileType> {
   if (debug) {
     console.log(
       `[fileToBase64UrlEncoded] Attempting to extract buffer from file '${file.name}'...`,
@@ -31,19 +31,14 @@ export async function fileToBase64UrlEncoded(
     );
   }
 
-  let base64url_str: string;
   try {
-    base64url_str = bufferToBase64Url(file_buffer, debug);
+    return serializeFromBuffer(file_buffer satisfies Buffer, debug);
   } catch (e: unknown) {
-    console.error(
-      `Failed to encode input file '${file.name}' as 'base64url': `,
-      e,
-    );
+    console.error(`Failed to encode input file '${file.name}' into: `, e);
     throw new Error(
       `Failed to encode input file '${file.name}' as 'base64url'!`,
     );
   }
-  return base64url_str;
 }
 
-export default fileToBase64UrlEncoded;
+export default serializeFile;
