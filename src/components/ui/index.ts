@@ -101,3 +101,9 @@ export type * from "./split-pane";
 
 export * from "./sheet";
 export type * from "./sheet";
+
+export * from "./select";
+export type * from "./select";
+
+export * from "./scroll-area";
+export type * from "./scroll-area";
