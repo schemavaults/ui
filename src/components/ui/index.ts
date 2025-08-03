@@ -107,3 +107,6 @@ export type * from "./select";
 
 export * from "./scroll-area";
 export type * from "./scroll-area";
+
+export * from "./typewriter-effect";
+export type * from "./typewriter-effect";
