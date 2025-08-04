@@ -7,7 +7,7 @@ import {
   usePresence,
   useTransform,
 } from "@/framer-motion";
-import { type ReactElement, useEffect } from "react";
+import { type ReactElement, useEffect, useRef } from "react";
 import { CursorBlinker } from "./cursor-blinker";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ export interface TypewriterEffectProps {
   onComplete: (animationCompleted: "enter" | "exit") => void; // called whenever the typewriter effect finishes entering OR exiting
   duration: number; // how long should enter/exit take in seconds
   className?: string;
+  initial?: boolean; // whether to play initial enter animation (inherited from AnimatePresence)
 }
 
 export function TypewriterEffect({
@@ -23,8 +24,10 @@ export function TypewriterEffect({
   onComplete,
   duration,
   className,
+  initial = true,
 }: TypewriterEffectProps): ReactElement {
   const [isPresent, safeToRemove] = usePresence();
+  const hasInitialized = useRef(false);
 
   const count: MotionValue<number> = useMotionValue<number>(0);
   const rounded: MotionValue<number> = useTransform(count, (latest): number =>
@@ -57,7 +60,24 @@ export function TypewriterEffect({
       return controls.stop;
     } else {
       // Entry animation: animate from 0 to message.length
+
+      console.assert(
+        isPresent,
+        "Expected AnimatePresence to have marked this component as present if this point was reached!",
+      );
+
       const keyframes: number = message.length;
+
+      // If this is the initial render and initial={false}, skip animation
+      if (!hasInitialized.current && !initial) {
+        hasInitialized.current = true;
+        count.set(keyframes);
+        onComplete("enter");
+        return;
+      }
+
+      hasInitialized.current = true;
+
       const controls = animate<number>(count, keyframes, {
         type: "tween",
         duration,
@@ -76,6 +96,7 @@ export function TypewriterEffect({
     isPresent,
     onComplete,
     safeToRemove,
+    initial,
   ]);
 
   return (

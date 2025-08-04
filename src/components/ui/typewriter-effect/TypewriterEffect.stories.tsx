@@ -21,11 +21,16 @@ const exampleMessages: string[][] = [
   exampleMessage3,
 ];
 
+interface TypewriterEffectExampleProps
+  extends Omit<TypewriterEffectProps, "message"> {
+  initial: boolean;
+}
+
 function TypewriterEffectExample(
-  props: Omit<TypewriterEffectProps, "message">,
+  props: TypewriterEffectExampleProps,
 ): ReactElement {
   const [activeMessageIndex, setActiveMessageIndex] = useState<number | null>(
-    null,
+    props.initial ? null : 0,
   );
 
   useEffect(() => {
@@ -41,12 +46,13 @@ function TypewriterEffectExample(
 
   return (
     <main className="w-full h-full min-h-screen flex flex-col items-center justify-center">
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={props.initial}>
         {Array.isArray(activeMessage) && (
           <TypewriterEffect
             key={activeMessage.join("")}
             message={activeMessage}
             duration={props.duration}
+            initial={props.initial}
             onComplete={(x: "enter" | "exit"): void => {
               props.onComplete(x);
               const delayNextMessageMs: number = 1500;
@@ -99,12 +105,20 @@ const meta = {
       description:
         "A callback that is triggered whenever the typewriter effect finishes entering or exiting",
     },
+    initial: {
+      description: "Allow disabling initial entrance animation",
+      type: "boolean",
+      control: {
+        type: "boolean",
+      },
+    },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
     duration: 2.0,
     onComplete: fn(),
     className: "text-4xl text-center",
+    initial: true,
   },
   decorators: [
     (Story): ReactElement => {
@@ -123,4 +137,10 @@ type Story = StoryObj<typeof meta>;
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const Example: Story = {
   args: {},
+};
+
+export const InitialEntryDisabled: Story = {
+  args: {
+    initial: false,
+  },
 };
