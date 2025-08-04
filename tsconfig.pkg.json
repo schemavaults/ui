@@ -17,6 +17,7 @@
       "@/*": ["./src"],
       "@/components/*": ["./src/components/*"],
       "@/hooks/*": ["./src/components/hooks/*"],
+      "@/types/*": ["./src/types/*"],
       "@/lib/*": ["./src/lib/*"],
       "@/framer-motion": ["./src/framer-motion"]
     },

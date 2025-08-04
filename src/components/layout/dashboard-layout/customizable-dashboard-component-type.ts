@@ -1,10 +1,12 @@
 import type { PropsWithChildren, ReactElement } from "react";
-import type { useDashboardSidebarOpenState } from "./useDashboardSidebarOpenState";
-import type { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
+import type {
+  DashboardLayoutSidebarSizing,
+  IDashboardSidebarOpenStateContextType,
+} from "./dashboard-sidebar";
 
 export interface ICustomizableDashboardLayoutComponentProps {
-  useDashboardSidebarSizing: typeof useDashboardSidebarSizing;
-  useDashboardSidebarOpenState: typeof useDashboardSidebarOpenState;
+  useDashboardSidebarSizing: () => DashboardLayoutSidebarSizing;
+  useDashboardSidebarOpenState: () => IDashboardSidebarOpenStateContextType;
   Link: (
     props: PropsWithChildren<{ href: string; className?: string }>,
   ) => ReactElement;

@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { AnimatePresence, m } from "@/framer-motion";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
 import { DashboardSidebarAdminOnlyItemsContext } from "./dashboard-sidebar-admin-only-items-context";
-import type { LinkComponentType } from "./link-component-type";
+import type { LinkComponentType } from "@/types/Link";
 
 export function DashboardSidebarItemGroupRenderer({
   group,

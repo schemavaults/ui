@@ -2,9 +2,9 @@
 
 import type { PropsWithChildren, ReactElement } from "react";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
-import type { CustomizableDashboardLayoutComponent } from "./customizable-dashboard-component-type";
+import type { CustomizableDashboardLayoutComponent } from "../customizable-dashboard-component-type";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
-import type { LinkComponentType } from "./link-component-type";
+import type { LinkComponentType } from "@/types/Link";
 
 export interface DashboardSidebarFooterProps {
   Link: LinkComponentType;

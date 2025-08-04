@@ -18,6 +18,7 @@
       "@/components/*": ["./src/components/*"],
       "@/hooks/*": ["./src/components/hooks/*"],
       "@/lib/*": ["./src/lib/*"],
+      "@/types/*": ["./src/types/*"],
       "@/stories/*": ["./src/stories/*"],
       "@/framer-motion": ["./src/framer-motion"]
     }

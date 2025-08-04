@@ -4,11 +4,11 @@ import { AnimatePresence, m } from "@/framer-motion";
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 import toggleDashboardLayoutCollapsedTransitionTime, {
   toggleDashboardLayoutCollapsedTransitionEasing,
-} from "./toggle-dashboard-layout-collapsed-transition-time";
+} from "../toggle-dashboard-layout-collapsed-transition-time";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { cn } from "@/lib/utils";
 import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
-import type { LinkComponentType } from "./link-component-type";
+import type { LinkComponentType } from "@/types/Link";
 
 export interface DashboardLayoutSidebarHeaderProps {
   wordmark: ReactNode;

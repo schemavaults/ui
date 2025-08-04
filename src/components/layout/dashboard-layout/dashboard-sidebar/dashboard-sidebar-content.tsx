@@ -9,7 +9,7 @@ import DashboardSidebarItemGroupRenderer from "./dashboard-sidebar-item-group-re
 import { useDashboardSidebarItemsAndGroups } from "./useDashboardSidebarItemsAndGroups";
 import { m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
-import type { LinkComponentType } from "./link-component-type";
+import type { LinkComponentType } from "@/types/Link";
 
 export interface DashboardLayoutSidebarContentProps {
   Link: LinkComponentType;

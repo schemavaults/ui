@@ -8,3 +8,4 @@ export interface LinkComponentProps
   }> {}
 
 export type LinkComponentType = (props: LinkComponentProps) => ReactElement;
+export type { LinkComponentType as Link };

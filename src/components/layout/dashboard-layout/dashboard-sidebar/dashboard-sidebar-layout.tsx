@@ -12,11 +12,11 @@ import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { Separator } from "@/components/ui";
 import toggleDashboardLayoutCollapsedTransitionTime, {
   toggleDashboardLayoutCollapsedTransitionEasing,
-} from "./toggle-dashboard-layout-collapsed-transition-time";
-import type { CustomizableDashboardLayoutComponent } from "./customizable-dashboard-component-type";
-import type { LinkComponentType } from "./link-component-type";
+} from "../toggle-dashboard-layout-collapsed-transition-time";
+import type { CustomizableDashboardLayoutComponent } from "../customizable-dashboard-component-type";
+import type { LinkComponentType } from "@/types/Link";
 
-export interface DashboardLayoutSidebarProps {
+export interface DashboardLayoutSidebarLayoutProps {
   wordmark: ReactNode;
   logo: ReactNode;
   Link: LinkComponentType;
@@ -25,59 +25,42 @@ export interface DashboardLayoutSidebarProps {
   className?: string;
 }
 
-export function DashboardLayoutSidebar({
+export function DashboardLayoutSidebarLayout({
   logo,
   wordmark,
   Link,
   brandHref,
   ...props
-}: DashboardLayoutSidebarProps): ReactElement {
+}: DashboardLayoutSidebarLayoutProps): ReactElement {
   const size = useDashboardSidebarSizing();
   const openState = useDashboardSidebarOpenState();
   const desktop: boolean = !openState.mobile;
 
+  let widthClassName: string;
+  if (openState.mobile) {
+    widthClassName = size.mobile_expanded_classname;
+  } else {
+    // desktop
+    if (openState.open) {
+      widthClassName = size.desktop_expanded_classname;
+    } else {
+      widthClassName = size.desktop_collapsed_classname;
+    }
+  }
+
   return (
-    <m.menu
+    <menu
       className={cn(
         "h-screen max-h-screen",
-        desktop ? "absolute z-40" : undefined,
-        "transition-[width] ease-linear",
+        desktop ? "absolute" : undefined,
+        "transition-[width] ease-linear will-change-[width]",
         "flex flex-col justify-between items-stretch",
         "border-r",
         "p-0",
         size.sidebar_and_header_z_index_classname,
+        widthClassName,
         props.className,
       )}
-      layout
-      variants={{
-        expanded: {
-          width: openState.mobile
-            ? size.mobile_expanded
-            : size.desktop_expanded,
-          opacity: 1,
-        },
-        collapsed: {
-          width: size.desktop_collapsed,
-          opacity: 1,
-        },
-        exit: {
-          width: size.desktop_collapsed,
-          opacity: 0,
-        },
-      }}
-      initial={openState.mobile ? "expanded" : "collapsed"}
-      animate={
-        openState.mobile
-          ? "expanded"
-          : openState.open
-            ? "expanded"
-            : "collapsed"
-      }
-      exit={openState.mobile ? "expanded" : "exit"}
-      transition={{
-        duration: toggleDashboardLayoutCollapsedTransitionTime,
-        ease: toggleDashboardLayoutCollapsedTransitionEasing,
-      }}
     >
       <DashboardSidebarHeader
         wordmark={wordmark}
@@ -96,8 +79,8 @@ export function DashboardLayoutSidebar({
           />
         </>
       )}
-    </m.menu>
+    </menu>
   );
 }
 
-export default DashboardLayoutSidebar;
+export default DashboardLayoutSidebarLayout;

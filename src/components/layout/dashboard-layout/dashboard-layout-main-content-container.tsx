@@ -2,11 +2,14 @@
 
 import { m } from "@/framer-motion";
 import type { PropsWithChildren, ReactElement } from "react";
-import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
-import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
+import {
+  useDashboardSidebarSizing,
+  useDashboardSidebarOpenState,
+} from "./dashboard-sidebar";
 import toggleDashboardLayoutCollapsedTransitionTime, {
   toggleDashboardLayoutCollapsedTransitionEasing,
 } from "./toggle-dashboard-layout-collapsed-transition-time";
+import { cn } from "@/lib/utils";
 
 export interface DashboardLayoutMainContentContainerProps
   extends PropsWithChildren {}
@@ -18,48 +21,25 @@ export function DashboardLayoutMainContentContainer({
   const size = useDashboardSidebarSizing();
 
   return (
-    <m.div
-      layout
-      className="absolute h-full grow overflow-x-hidden overflow-y-scroll"
-      variants={{
-        fullscreen: {
-          width: "100vw",
-          left: 0,
-          opacity: 1,
-        },
-        desktop_open_sidebar: {
-          width: `calc(100vw - ${size.desktop_expanded})`,
-          left: size.desktop_expanded,
-          opacity: 1,
-        },
-        desktop_collapsed_sidebar: {
-          width: `calc(100vw - ${size.desktop_collapsed})`,
-          left: size.desktop_collapsed,
-          opacity: 1,
-        },
-        hidden: {
-          opacity: 0,
-          left: 0,
-          width: openState.mobile
-            ? "100vw"
-            : `calc(100vw - ${size.desktop_expanded})`,
-        },
-      }}
-      initial="hidden"
-      animate={
-        openState.mobile
-          ? "fullscreen"
-          : openState.open
-            ? "desktop_open_sidebar"
-            : "desktop_collapsed_sidebar"
-      }
-      transition={{
-        duration: toggleDashboardLayoutCollapsedTransitionTime,
-        ease: toggleDashboardLayoutCollapsedTransitionEasing,
-      }}
+    <div
+      id="dashboard-layout-main-content-container"
+      className={cn(
+        "absolute",
+        "h-full grow",
+        "overflow-x-hidden overflow-y-scroll",
+        "max-md:w-screen",
+        "transition-[width,left] ease-linear will-change-[width]",
+        openState.open
+          ? size.content_container_desktop_sidebar_open_width_classname
+          : size.content_container_desktop_sidebar_closed_width_classname,
+        "max-md:left-0",
+        openState.open
+          ? size.content_container_desktop_sidebar_open_left_classname
+          : size.content_container_desktop_sidebar_closed_left_classname,
+      )}
     >
       {children}
-    </m.div>
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 // import { fn } from "@storybook/test";
 
-import type { PropsWithChildren, ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import DashboardLayout, { type DashboardLayoutProps } from "./dashboard-layout";
 import LoremIpsumText from "@/stories/LoremImpsumText";
@@ -12,12 +12,12 @@ import { Button, TooltipProvider, Wordmark } from "@/components/ui";
 import { AnimatePresence, m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
-import { DashboardSidebarItemsAndGroupsDefinitions } from "./dashboard-sidebar-items-and-groups-context";
+import type { DashboardSidebarItemsAndGroupsDefinitions } from "./dashboard-sidebar";
 import {
   CustomizableDashboardLayoutComponent,
   ICustomizableDashboardLayoutComponentProps,
 } from "./customizable-dashboard-component-type";
-import { LinkComponentProps, LinkComponentType } from "./link-component-type";
+import { LinkComponentProps, LinkComponentType } from "@/types/Link";
 
 function ExampleChildrenForContainer(): ReactNode {
   return (

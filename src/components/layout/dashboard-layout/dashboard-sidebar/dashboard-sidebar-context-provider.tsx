@@ -17,7 +17,7 @@ interface DashboardLayoutContextProviderProps extends PropsWithChildren {
   sizing?: DashboardLayoutSidebarSizing;
 }
 
-export function DashboardLayoutContextProvider({
+export function DashboardSidebarContextProvider({
   children,
   sidebarItems,
   ...props
@@ -35,4 +35,4 @@ export function DashboardLayoutContextProvider({
   );
 }
 
-export default DashboardLayoutContextProvider;
+export default DashboardSidebarContextProvider;

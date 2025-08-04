@@ -4,7 +4,7 @@ import { useContext, type PropsWithChildren, type ReactElement } from "react";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
 
 import { AnimatePresence, m } from "@/framer-motion";
-import toggleDashboardLayoutCollapsedTransitionTime from "./toggle-dashboard-layout-collapsed-transition-time";
+import toggleDashboardLayoutCollapsedTransitionTime from "../toggle-dashboard-layout-collapsed-transition-time";
 import { cn } from "@/lib/utils";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
   TooltipArrow,
 } from "@/components/ui";
-import type { LinkComponentType } from "./link-component-type";
+import type { LinkComponentType } from "@/types/Link";
 import useDashboardSidebarOpenStateDispatch from "./useDashboardSidebarOpenStateDispatch";
 
 export function DashboardSidebarItemRenderer({
