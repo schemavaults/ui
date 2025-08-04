@@ -10,6 +10,7 @@ import {
 import { type ReactElement, useEffect, useRef } from "react";
 import { CursorBlinker } from "./cursor-blinker";
 import { cn } from "@/lib/utils";
+import useDebug from "@/components/hooks/use-debug";
 
 export interface TypewriterEffectProps {
   message: string[];
@@ -26,15 +27,18 @@ export function TypewriterEffect({
   className,
   initial = true,
 }: TypewriterEffectProps): ReactElement {
+  const debug: boolean = useDebug();
   const [isPresent, safeToRemove] = usePresence();
-  const hasInitialized = useRef(false);
+  const hasInitialized = useRef<boolean>(false);
 
-  const count: MotionValue<number> = useMotionValue<number>(0);
+  const count: MotionValue<number> = useMotionValue<number>(
+    initial ? 0 : message.length,
+  );
   const rounded: MotionValue<number> = useTransform(count, (latest): number =>
     Math.max(0, Math.round(latest)),
   );
   const displayText: MotionValue<string> = useTransform(
-    rounded,
+    rounded satisfies MotionValue<number>,
     (latest: number): string => {
       return message.slice(0, latest).join("");
     },
@@ -44,6 +48,9 @@ export function TypewriterEffect({
   // Effect that controls enter & exit animation
   useEffect(() => {
     if (!isPresent) {
+      if (debug) {
+        console.log("[TypewriterEffect] Running exit animation...");
+      }
       // Exit animation: animate from current count to 0
       const keyframes: number = 0;
       const controls = animate<number>(count, keyframes, {
@@ -59,6 +66,9 @@ export function TypewriterEffect({
       });
       return controls.stop;
     } else {
+      if (debug) {
+        console.log("[TypewriterEffect] Running entry animation...");
+      }
       // Entry animation: animate from 0 to message.length
 
       console.assert(
