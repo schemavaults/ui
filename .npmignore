@@ -39,3 +39,6 @@ postcss.config.cjs
 .babelrc
 
 storybook-assets/
+
+.zed/
+.vscode/
