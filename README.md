@@ -9,7 +9,7 @@ SchemaVaults React.js UI component library package. [Here's the @schemavaults/ui
 ### Ensure that globals.css is imported from @schemavaults/theme
 
 ```javascript
-import "@schemavaults/theme/dist/globals.css"
+import "@schemavaults/theme/globals.css"
 ```
 
 ### Ensure that the app's TailwindCSS configuration `content` field matches any code files
