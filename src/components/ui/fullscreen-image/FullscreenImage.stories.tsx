@@ -89,22 +89,6 @@ export const WithHighResFullscreen: Story = {
   },
 };
 
-export const Portrait: Story = {
-  args: {
-    src: samplePortrait,
-    alt: "Portrait image",
-    className: "w-48 h-64",
-  },
-};
-
-export const Landscape: Story = {
-  args: {
-    src: sampleLandscape,
-    alt: "Landscape image",
-    className: "w-96 h-48",
-  },
-};
-
 export const CustomThumbnail: Story = {
   args: {
     src: sampleImage,
