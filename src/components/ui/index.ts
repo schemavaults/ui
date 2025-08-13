@@ -110,3 +110,6 @@ export type * from "./scroll-area";
 
 export * from "./typewriter-effect";
 export type * from "./typewriter-effect";
+
+export * from "./fullscreen-image";
+export type * from "./fullscreen-image";
