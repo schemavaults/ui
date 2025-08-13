@@ -33,7 +33,7 @@ function BackgroundBlurExample(
       foreground={() => {
         return (
           <div className="w-full h-full flex items-center justify-center">
-            <h2 className="text-4xl">
+            <h2 className="text-4xl text-center">
               Welcome to <Wordmark />
             </h2>
           </div>
@@ -88,7 +88,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const exampleBackgroundImageSrc: string =
-  "https://www.goodfreephotos.com/albums/astrophotography/starry-milky-way-galaxy.jpg";
+  "/media/example_images/milky-way-1920x1080.webp";
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const FullscreenExample: Story = {

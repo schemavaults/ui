@@ -67,10 +67,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Sample images for demo purposes
-const sampleImage = "https://picsum.photos/400/300?random=1";
-const sampleImageHD = "https://picsum.photos/1920/1080?random=1";
-const samplePortrait = "https://picsum.photos/300/400?random=2";
-const sampleLandscape = "https://picsum.photos/600/300?random=3";
+const sampleImage = "/media/example_images/milky-way-400x300.webp";
+const sampleImageHD = "/media/example_images/milky-way-1920x1080.webp";
 
 export const Default: Story = {
   args: {
