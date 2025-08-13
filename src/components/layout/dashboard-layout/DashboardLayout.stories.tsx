@@ -18,6 +18,7 @@ import {
   ICustomizableDashboardLayoutComponentProps,
 } from "./customizable-dashboard-component-type";
 import { LinkComponentProps, LinkComponentType } from "@/types/Link";
+import { fn } from "@storybook/test";
 
 function ExampleChildrenForContainer(): ReactNode {
   return (
@@ -160,6 +161,8 @@ const meta = {
     sidebarFooterContent:
       ExampleFooterContent satisfies CustomizableDashboardLayoutComponent,
     topBarButtons: ExampleHeaderButtonsContent,
+    onOpenSidebar: fn(),
+    onCloseSidebar: fn(),
   },
   decorators: [
     // Wrap in Framer Motion Provider

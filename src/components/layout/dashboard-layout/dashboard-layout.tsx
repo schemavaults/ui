@@ -55,6 +55,8 @@ export function DashboardLayout({
     <DashboardSidebarContextProvider
       sidebarItems={props.sidebarItems}
       sizing={props.sizing}
+      onOpenSidebar={props.onOpenSidebar}
+      onCloseSidebar={props.onCloseSidebar}
     >
       <div className="w-screen h-screen min-h-screen">
         <DashboardSidebar

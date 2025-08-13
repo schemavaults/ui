@@ -10,13 +10,16 @@ export interface IDashboardSidebarOpenStateContextType {
 export const DashboardSidebarOpenStateContext =
   createContext<IDashboardSidebarOpenStateContextType | null>(null);
 
-export type DashboardSidebarOpenStateDispatchType = Dispatch<
-  SetStateAction<boolean>
->;
+export type DashboardSidebarOpenStateDispatchType = (
+  openState: boolean,
+) => void;
 
 export const DashboardSidebarOpenStateDispatchContext =
-  createContext<DashboardSidebarOpenStateDispatchType>(() => {
-    throw new Error(
-      "Not within <DashboardSidebarOpenStateDispatchContext.Provider>!",
-    );
-  });
+  createContext<DashboardSidebarOpenStateDispatchType>(
+    (openState: boolean): void => {
+      void openState;
+      throw new Error(
+        "Not within <DashboardSidebarOpenStateDispatchContext.Provider>!",
+      );
+    },
+  );

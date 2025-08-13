@@ -16,4 +16,6 @@ export interface DashboardLayoutProps extends PropsWithChildren {
   sidebarFooterContent?: CustomizableDashboardLayoutComponent;
   sidebarItems: DashboardSidebarItemsAndGroupsDefinitions;
   sizing?: DashboardLayoutSidebarSizing;
+  onOpenSidebar?: () => void;
+  onCloseSidebar?: () => void;
 }

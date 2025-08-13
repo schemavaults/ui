@@ -8,10 +8,15 @@ import {
 import { useIsMobile } from "@/components/hooks";
 
 export interface DashboardSidebarOpenStateProviderProps
-  extends PropsWithChildren {}
+  extends PropsWithChildren {
+  onOpenSidebar?: () => void;
+  onCloseSidebar?: () => void;
+}
 
 export function DashboardSidebarOpenStateProvider({
   children,
+  onOpenSidebar,
+  onCloseSidebar,
 }: DashboardSidebarOpenStateProviderProps): ReactElement {
   const [open, setOpen] = useState<boolean>(false);
 
@@ -19,7 +24,26 @@ export function DashboardSidebarOpenStateProvider({
 
   return (
     <DashboardSidebarOpenStateContext.Provider value={{ open, mobile }}>
-      <DashboardSidebarOpenStateDispatchContext.Provider value={setOpen}>
+      <DashboardSidebarOpenStateDispatchContext.Provider
+        value={(newOpenState: boolean): void => {
+          setOpen(newOpenState);
+          if (newOpenState && typeof onOpenSidebar === "function") {
+            try {
+              onOpenSidebar();
+            } catch (e: unknown) {
+              console.error("Uncaught error in onOpenSidebar handler: ", e);
+            }
+          }
+          if (!newOpenState && typeof onCloseSidebar === "function") {
+            try {
+              onCloseSidebar();
+            } catch (e: unknown) {
+              console.error("Uncaught error in onCloseSidebar handler: ", e);
+            }
+          }
+          return;
+        }}
+      >
         {children}
       </DashboardSidebarOpenStateDispatchContext.Provider>
     </DashboardSidebarOpenStateContext.Provider>

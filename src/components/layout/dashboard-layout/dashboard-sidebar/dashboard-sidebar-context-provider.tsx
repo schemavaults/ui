@@ -15,6 +15,8 @@ import {
 interface DashboardLayoutContextProviderProps extends PropsWithChildren {
   sidebarItems: DashboardSidebarItemsAndGroupsDefinitions;
   sizing?: DashboardLayoutSidebarSizing;
+  onOpenSidebar?: () => void;
+  onCloseSidebar?: () => void;
 }
 
 export function DashboardSidebarContextProvider({
@@ -23,7 +25,10 @@ export function DashboardSidebarContextProvider({
   ...props
 }: DashboardLayoutContextProviderProps): ReactElement {
   return (
-    <DashboardSidebarOpenStateProvider>
+    <DashboardSidebarOpenStateProvider
+      onOpenSidebar={props.onOpenSidebar}
+      onCloseSidebar={props.onCloseSidebar}
+    >
       <DashboardSidebarItemsAndGroupsContext.Provider value={sidebarItems}>
         <DashboardLayoutSidebarSizeContext.Provider
           value={props.sizing ?? DEFAULT_DASHBOARD_SIDEBAR_SIZE}
