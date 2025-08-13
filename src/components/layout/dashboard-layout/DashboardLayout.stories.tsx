@@ -7,7 +7,7 @@ import DashboardLayout, { type DashboardLayoutProps } from "./dashboard-layout";
 import LoremIpsumText from "@/stories/LoremImpsumText";
 import { PageColumnContainer } from "@/components/layout/page-column-container";
 import { AlarmClock, Lock, Plane, Share2, Tornado, Users } from "lucide-react";
-import { LazyFramerMotionProvider } from "@/components/providers";
+import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
 import { Button, TooltipProvider, Wordmark } from "@/components/ui";
 import { AnimatePresence, m } from "@/framer-motion";
 import { cn } from "@/lib/utils";

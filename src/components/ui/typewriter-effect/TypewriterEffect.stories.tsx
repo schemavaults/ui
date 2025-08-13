@@ -4,7 +4,7 @@ import { fn } from "@storybook/test";
 import { useEffect, useState, type ReactElement } from "react";
 import { TypewriterEffect, TypewriterEffectProps } from "./typewriter-effect";
 import { AnimatePresence } from "@/framer-motion";
-import { LazyFramerMotionProvider } from "@/components/providers";
+import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
 
 const exampleMessage1: string[] = [..."Hello there! "];
 exampleMessage1.push("👋");
