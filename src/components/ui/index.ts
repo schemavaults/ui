@@ -113,3 +113,6 @@ export type * from "./typewriter-effect";
 
 export * from "./fullscreen-image";
 export type * from "./fullscreen-image";
+
+export * from "./visually-hidden";
+export type * from "./visually-hidden";
