@@ -8,6 +8,7 @@ export { DashboardLayoutSidebarTrigger } from "./dashboard-layout-sidebar-trigge
 export { useDashboardSidebarOpenState } from "./useDashboardSidebarOpenState";
 export { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
 export { useDashboardSidebarOpenStateDispatch } from "./useDashboardSidebarOpenStateDispatch";
+export { useCloseDashboardSidebarOnRouteChange } from "./useCloseDashboardSidebarOnRouteChange";
 
 export { DashboardSidebarContextProvider } from "./dashboard-sidebar-context-provider";
 

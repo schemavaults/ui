@@ -7,6 +7,7 @@ export type * from "./customizable-dashboard-component-type";
 export {
   useDashboardSidebarOpenState,
   useDashboardSidebarOpenStateDispatch,
+  useCloseDashboardSidebarOnRouteChange,
 } from "./dashboard-sidebar";
 export type {
   DashboardSidebarItemDefinition,
