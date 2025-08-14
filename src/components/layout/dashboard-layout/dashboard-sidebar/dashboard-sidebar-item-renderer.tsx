@@ -17,6 +17,7 @@ import {
 } from "@/components/ui";
 import type { LinkComponentType } from "@/types/Link";
 import useDashboardSidebarOpenStateDispatch from "./useDashboardSidebarOpenStateDispatch";
+import useDebug from "@/components/hooks/use-debug";
 
 export function DashboardSidebarItemRenderer({
   item,
@@ -25,6 +26,7 @@ export function DashboardSidebarItemRenderer({
   item: DashboardSidebarItemDefinition;
   Link: LinkComponentType;
 }): ReactElement {
+  const debug: boolean = useDebug();
   const { open, mobile } = useDashboardSidebarOpenState();
   const setSidebarOpen = useDashboardSidebarOpenStateDispatch();
   const sizes = useDashboardSidebarSizing();
@@ -89,6 +91,13 @@ export function DashboardSidebarItemRenderer({
             )}
             onClick={(e): void => {
               e.preventDefault();
+              if (debug) {
+                console.log(
+                  "[DashboardSidebarItemRenderer] onClick(",
+                  item,
+                  ")",
+                );
+              }
               setSidebarOpen(false);
             }}
           >
