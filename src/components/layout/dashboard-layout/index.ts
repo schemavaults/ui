@@ -4,6 +4,10 @@ export { DashboardLayout as default } from "./dashboard-layout";
 
 export type * from "./customizable-dashboard-component-type";
 
+export {
+  useDashboardSidebarOpenState,
+  useDashboardSidebarOpenStateDispatch,
+} from "./dashboard-sidebar";
 export type {
   DashboardSidebarItemDefinition,
   DashboardSidebarItemGroupDefinition,
