@@ -44,6 +44,8 @@ export interface FullscreenImageProps<
   thumbnailClassName?: string;
   /** Custom className for the fullscreen image */
   fullscreenClassName?: string;
+  /** Custom className for the fullscreen image's container */
+  fullscreenContainerClassName?: string;
   /** Disable the zoom cursor on hover */
   disableZoomCursor?: boolean;
   /** Custom loading component */
@@ -142,6 +144,19 @@ function FullscreenImage<
     }
   }
 
+  let fullscreenImageClassName: string;
+  if (typeof fullscreenImageProps?.className === "string") {
+    fullscreenImageClassName = cn(
+      fullscreenImageProps.className,
+      fullscreenClassName,
+    );
+  } else {
+    fullscreenImageClassName = cn(
+      "max-w-full max-h-full object-contain rounded-lg shadow-2xl",
+      fullscreenClassName,
+    );
+  }
+
   return (
     <>
       {/* Thumbnail/Trigger */}
@@ -183,7 +198,17 @@ function FullscreenImage<
             {/* Close button */}
             <button
               onClick={closeFullscreen}
-              className="absolute top-4 right-4 z-60 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
+              className={cn(
+                "absolute",
+                "top-4 right-4",
+                "z-[1000]",
+                "p-2",
+                "rounded-full",
+                "bg-black/50 hover:bg-black/70",
+                "text-white",
+                "transition-colors duration-200",
+                "focus:outline-none focus:ring-2 focus:ring-white/50",
+              )}
               aria-label="Close fullscreen image"
             >
               <X className="w-6 h-6" />
@@ -207,8 +232,15 @@ function FullscreenImage<
                 duration: 0.4,
                 ease: [0.32, 0.72, 0, 1], // Custom easing for smooth animation
               }}
-              className="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
+              className={cn(
+                "fullscreen-image-component-container",
+                "relative",
+                "max-w-[95vw] max-h-[95vh]",
+                "flex",
+                "items-center justify-center",
+                props.fullscreenContainerClassName,
+              )}
+              onClick={(e): void => e.stopPropagation()}
             >
               {ImageComponent ? (
                 <ImageComponent
@@ -216,21 +248,14 @@ function FullscreenImage<
                   alt={alt}
                   {...(fullscreenImageProps as any)}
                   onLoad={handleImageLoad}
-                  className={cn(
-                    "max-w-full max-h-full object-contain rounded-lg shadow-2xl",
-                    fullscreenClassName,
-                    fullscreenImageProps?.className,
-                  )}
+                  className={fullscreenImageClassName}
                 />
               ) : (
                 <img
                   src={fullscreenSrc || src}
                   alt={alt}
                   onLoad={handleImageLoad}
-                  className={cn(
-                    "max-w-full max-h-full object-contain rounded-lg shadow-2xl",
-                    fullscreenClassName,
-                  )}
+                  className={fullscreenImageClassName}
                 />
               )}
             </m.div>
