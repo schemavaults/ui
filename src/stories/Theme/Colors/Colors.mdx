@@ -1,0 +1,30 @@
+import { Canvas, Meta } from '@storybook/blocks';
+import * as ColorsStories from './Colors.stories';
+
+<Meta of={ColorsStories} />
+
+# Colors
+
+## Note: Colors are not included in CSS output unless used
+
+This is a feature of Tailwind, not a bug. Only the classnames explicitly used (findable in static code) are included in the generated CSS to cut file size.
+
+### Good Example 👍
+
+```tsx
+<div className={"text-red-500"} />
+```
+
+### Bad Example (`text-red-500` will not appear in generated CSS) 👎
+```tsx
+<div className={`text-${"red"}-500`} />
+````
+
+Thus, you should ensure that you include the full classname if you want the appropriate styles to be included in your final bundle!
+
+
+## All Colors
+
+All of the available colors and their respective TailwindCSS classnames are listed below:
+
+<Canvas of={ColorsStories.AllColors}/>
