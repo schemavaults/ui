@@ -1,0 +1,18 @@
+import { Canvas, Meta } from '@storybook/blocks';
+import * as NoScrollbarStories from './NoScrollbar.stories';
+
+<Meta of={NoScrollbarStories} />
+
+# No Scrollbar
+
+You can set the `no-scrollbar` classname, and the `@schemavaults/theme`-generated TailwindCSS config will apply a utility class.
+
+First, a preview of a scrollable container **WITHOUT** the `no-scrollbar` tag applied:
+
+<Canvas of={NoScrollbarStories.WithoutNoScrollbarUtility} />
+
+Now, **WITH** the `no-scrollbar` tag applied:
+
+<Canvas of={NoScrollbarStories.WithNoScrollbarUtilityEnabled} />
+
+In theory, you shouldn't see a scrollbar for the second example.

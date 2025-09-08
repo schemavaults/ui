@@ -13,11 +13,11 @@ import { AnimatePresence, m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
 import type { DashboardSidebarItemsAndGroupsDefinitions } from "./dashboard-sidebar";
-import {
+import type {
   CustomizableDashboardLayoutComponent,
   ICustomizableDashboardLayoutComponentProps,
 } from "./customizable-dashboard-component-type";
-import { LinkComponentProps, LinkComponentType } from "@/types/Link";
+import type { LinkComponentProps, LinkComponentType } from "@/types/Link";
 import { fn } from "@storybook/test";
 
 function ExampleChildrenForContainer(): ReactNode {

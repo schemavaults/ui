@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, type ReactElement, type FC, useContext } from "react";
+import type { ReactNode, ReactElement, FC } from "react";
 import DashboardSidebar, {
   DashboardLayoutSidebarTrigger,
   DashboardSidebarContextProvider,

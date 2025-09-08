@@ -29,6 +29,7 @@ export function DashboardSidebarContent({
         "flex flex-col items-stretch justify-start",
         "p-2",
         "overflow-x-hidden overflow-y-scroll",
+        "no-scrollbar",
       )}
     >
       {sidebarItems.map(
