@@ -1,6 +1,6 @@
 {
   "name": "@schemavaults/ui",
-  "version": "0.11.111",
+  "version": "0.11.112",
   "private": false,
   "license": "UNLICENSED",
   "description": "React.js UI components for SchemaVaults frontend applications",
@@ -54,7 +54,7 @@
     "autoprefixer": "10.4.21",
     "base64url": "3.0.1",
     "buffer": "6.0.3",
-    "bun-types": "1.2.17",
+    "bun-types": "1.2.21",
     "eslint-plugin-storybook": "0.12.0",
     "ignore-loader": "0.1.2",
     "postcss": "8.5.3",
@@ -62,7 +62,7 @@
     "storybook": "8.6.14",
     "tailwindcss": "3.4.17",
     "tsc-alias": "1.8.16",
-    "typescript": "5.8.3",
+    "typescript": "5.9.2",
     "webpack": "^5.100.2"
   },
   "scripts": {
@@ -118,7 +118,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "packageManager": "bun@1.2.17",
+  "packageManager": "bun@1.2.21",
   "eslintConfig": {
     "extends": [
       "plugin:storybook/recommended"
