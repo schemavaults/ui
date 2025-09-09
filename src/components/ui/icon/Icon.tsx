@@ -44,7 +44,10 @@ function LoadedSvgIcon(
 }
 
 function LazySvgIcon(
-  props: Omit<IconProps, "src"> & { svgPromise: Promise<SVGSVGElement> },
+  props: Omit<IconProps, "src"> & {
+    svgPromise: Promise<SVGSVGElement>;
+    size: number;
+  },
 ): ReactElement {
   const svg = use(props.svgPromise);
 
@@ -60,13 +63,20 @@ function LazySvgIcon(
     }
   });
 
+  let withOptionalSvgPromise: Omit<typeof props, "svgPromise"> & {
+    svgPromise?: unknown;
+  } = {
+    ...props,
+  };
+
+  delete withOptionalSvgPromise.svgPromise;
+
   return (
     <LoadedSvgIcon
       innerHTML={innerHTML}
       viewBox={viewBox}
       svgAttributes={svgAttributes}
-      size={props.size}
-      {...props}
+      {...withOptionalSvgPromise}
     />
   );
 }
