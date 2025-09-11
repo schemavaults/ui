@@ -3,8 +3,9 @@ import type { ComponentProps, ReactElement } from "react";
 import { fn } from "@storybook/test";
 import Icon, { DEFAULT_ICON_SIZE } from "./Icon";
 
-// Sample images for demo purposes
-const sampleSvg = "/media/example_images/calendar.svg";
+// Sample image within storybook-assets/ folder for demo purposes
+const sampleSvg: string = "/media/example_images/calendar.svg";
+const rawSampleSvg: string = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-icon lucide-calendar"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>`;
 
 const meta = {
   title: "Components/Icon",
@@ -95,6 +96,20 @@ export const ExtraLarge: Story = {
 export const WithCustomClass: Story = {
   args: {
     src: sampleSvg,
+    size: 48,
+    className: "hover:scale-110 transition-transform cursor-pointer",
+    style: {
+      fill: "#8b5cf6",
+    },
+  },
+};
+
+/**
+ * @description You can pass raw **'\<svg>...</svg>'** UTF-8 string
+ */
+export const InlinedInsteadOfFilepath: Story = {
+  args: {
+    src: rawSampleSvg,
     size: 48,
     className: "hover:scale-110 transition-transform cursor-pointer",
     style: {
