@@ -3,10 +3,21 @@ import type { ComponentProps, ReactElement } from "react";
 import { fn } from "@storybook/test";
 import Icon, { DEFAULT_ICON_SIZE } from "./Icon";
 import parseSvgIcon from "./parseSvgIcon";
+import { svgDataUrlPrefix } from "./SvgDataUrl";
 
 // Sample image within storybook-assets/ folder for demo purposes
 const sampleSvg: string = "/media/example_images/calendar.svg";
-const rawSampleSvg: string = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-icon lucide-calendar"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>`;
+const rawSampleSvg: string = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-icon lucide-calendar">
+    <path d="M8 2v4"/>
+    <path d="M16 2v4"/>
+    <rect width="18" height="18" x="3" y="4" rx="2"/>
+    <path d="M3 10h18"/>
+  </svg>
+`.trim();
+const base64SampleSvg: string = Buffer.from(rawSampleSvg, "utf-8").toString(
+  "base64",
+);
 
 const meta = {
   title: "Components/Icon",
@@ -137,6 +148,19 @@ export const PreloadedAsSrc: Story = {
       table: {
         disable: true,
       },
+    },
+  },
+};
+
+/**
+ * @description Pass base64-encoded SVG data url as the 'src' property
+ */
+export const DataUrlAsSrc: Story = {
+  args: {
+    src: `${svgDataUrlPrefix}${base64SampleSvg}`,
+    size: 48,
+    style: {
+      fill: "#00ffff",
     },
   },
 };

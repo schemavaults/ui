@@ -6,24 +6,30 @@ import IconFromSvgFilepath from "./IconFromSvgFilepath";
 import IconFromUtf8XmlSvg from "./IconFromUtf8XmlSvg";
 import DEFAULT_ICON_SIZE from "./DefaultIconSize";
 import RenderSvg from "./RenderSvg";
+import IconFromSvgDataUrl from "./IconFromSvgDataUrl";
 
-type IconDisplayMethod = "filepath" | "dataurl" | "SvgSvgInstance";
+type IconDisplayMethod = "filepath" | "utf8-xml" | "dataurl" | "SvgSvgInstance";
 
 function determineIconDisplayMethod(src: IconProps["src"]): IconDisplayMethod {
-  if (typeof src === "string" && src.endsWith(".svg")) {
-    return "filepath";
+  if (typeof src === "string") {
+    if (src.endsWith(".svg")) {
+      return "filepath";
+    } else if (src.startsWith("data:")) {
+      return "dataurl";
+    } else if (src.includes("<svg")) {
+      return "utf8-xml";
+    } else {
+      console.warn("Unhandled string format to display SVG from!");
+    }
   }
 
-  if (typeof src === "string" && src.includes("<svg")) {
-    return "dataurl";
-  }
-
+  // src as string should be handled by this point
   if (typeof src === "string") {
     if (process.env.NODE_ENV === "development") {
-      console.warn("Invalid 'src':", src);
+      console.warn("Invalid 'src' string format:", src);
     }
     throw new Error(
-      "Invalid 'src' property, invalid string to render icon with!",
+      "Invalid 'src' property, unhandled string type to render SVG icon with!",
     );
   }
 
@@ -47,8 +53,15 @@ function IconFacade({ src, ...props }: IconProps): ReactElement {
   switch (displayMethod) {
     case "filepath":
       return <IconFromSvgFilepath src={src} {...props} size={size} />;
-    case "dataurl":
+    case "utf8-xml":
       return <IconFromUtf8XmlSvg src={src} {...props} size={size} />;
+    case "dataurl":
+      if (typeof src !== "string") {
+        throw new TypeError(
+          "Expected 'src' to be a string for dataurl render method!",
+        );
+      }
+      return <IconFromSvgDataUrl src={src} {...props} size={size} />;
     case "SvgSvgInstance":
       if (!(src instanceof SVGSVGElement)) {
         throw new TypeError(
