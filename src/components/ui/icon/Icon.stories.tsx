@@ -119,13 +119,17 @@ export const InlinedInsteadOfFilepath: Story = {
   },
 };
 
+/**
+ * @description Pass an initialized SVGSVGElement instance as the 'src' property
+ *
+ * @see parseSvgIcon
+ */
 export const PreloadedAsSrc: Story = {
   args: {
-    src: parseSvgIcon(rawSampleSvg),
+    src: parseSvgIcon(rawSampleSvg) satisfies SVGSVGElement,
     size: 48,
-    className: "hover:scale-110 transition-transform cursor-pointer",
     style: {
-      fill: "#0d5ff6",
+      fill: "#00ffff",
     },
   },
   argTypes: {
