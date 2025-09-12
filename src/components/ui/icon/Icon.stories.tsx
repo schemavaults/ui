@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import type { ComponentProps, ReactElement } from "react";
 import { fn } from "@storybook/test";
 import Icon, { DEFAULT_ICON_SIZE } from "./Icon";
+import parseSvgIcon from "./parseSvgIcon";
 
 // Sample image within storybook-assets/ folder for demo purposes
 const sampleSvg: string = "/media/example_images/calendar.svg";
@@ -113,7 +114,25 @@ export const InlinedInsteadOfFilepath: Story = {
     size: 48,
     className: "hover:scale-110 transition-transform cursor-pointer",
     style: {
-      fill: "#8b5cf6",
+      fill: "#9b7c02",
+    },
+  },
+};
+
+export const PreloadedAsSrc: Story = {
+  args: {
+    src: parseSvgIcon(rawSampleSvg),
+    size: 48,
+    className: "hover:scale-110 transition-transform cursor-pointer",
+    style: {
+      fill: "#0d5ff6",
+    },
+  },
+  argTypes: {
+    src: {
+      table: {
+        disable: true,
+      },
     },
   },
 };

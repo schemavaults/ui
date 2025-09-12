@@ -1,3 +1,8 @@
+/**
+ *
+ * @param utf8_svg_icon A string containing an SVG element. E.g. `<svg>...</svg>`
+ * @returns SVGSVGElement The parsed SVG DOM
+ */
 function parseSvgIcon(utf8_svg_icon: string): SVGSVGElement {
   const parser = new DOMParser();
   const svgDoc = parser.parseFromString(utf8_svg_icon, "image/svg+xml");
