@@ -36,7 +36,8 @@ function IconFromSvgFilepath({
             "Expected source path to end in .svg within IconFromSvgFilepath component",
           );
         }
-        return await loadSvgFromRemote(src);
+        const svg: SVGSVGElement = await loadSvgFromRemote(src);
+        return svg;
       } else if (!src) {
         throw new TypeError(
           "Did not receive a 'src' property to render SVG with!",
