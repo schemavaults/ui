@@ -119,3 +119,6 @@ export type * from "./visually-hidden";
 
 export * from "./icon";
 export type * from "./icon";
+
+export * from "./tabs";
+export type * from "./tabs";
