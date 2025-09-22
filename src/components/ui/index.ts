@@ -122,3 +122,6 @@ export type * from "./icon";
 
 export * from "./tabs";
 export type * from "./tabs";
+
+export * from "./slider";
+export type * from "./slider";
