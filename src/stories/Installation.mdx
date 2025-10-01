@@ -1,0 +1,88 @@
+import { Meta } from '@storybook/blocks';
+import { Wordmark } from "@/components/ui/wordmark";
+
+<Meta title="Installation" />
+
+# Installation & Setup
+
+## Create a `.npmrc` file
+Create a `.npmrc` file in your project root to tell your package manager where `@schemavaults` scoped packages should be resolved from:
+```
+@schemavaults:registry=https://npm.pkg.github.com
+//https://npm.pkg.github.com/:username=${SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER}
+//https://npm.pkg.github.com/:_authToken=${SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN}
+```
+
+## Store your GitHub credentials
+
+Create a `.env` file that has your credentials to access the package registry:
+```bash
+SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER="jalexw"
+SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN="ghp_abcxyz"
+```
+
+## Install packages
+
+Use your package manager to download the packages from the registry:
+```bash
+bun install @schemavaults/ui @schemavaults/theme tailwindcss@3.4.17 postcss@8.5.6 autoprefixer@10.4.21
+```
+
+## Generate your TailwindCSS configuration using `@schemavaults/theme`
+
+### Create a TailwindCSS configuration file at `tailwind.config.ts`:
+
+```typescript
+import type { Config } from "tailwindcss";
+import { SchemaVaultsTailwindConfigFactory } from "@schemavaults/theme";
+const config = new SchemaVaultsTailwindConfigFactory().createConfig({
+  content: ["./src/**/*.{tsx,jsx,js,ts,mdx}", "@schemavaults/ui"]
+});
+export default config;
+```
+
+### Create a PostCSS configuration file at `postcss.config.cjs`:
+```javascript
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+```
+
+### Import `globals.css`
+Inside of your app (for example, within your `App.tsx` or root `layout.tsx`) import `globals.css` to trigger PostCSS/TailwindCSS to run:
+
+```jsx
+import '@schemavaults/theme/globals.css'
+
+export default function MyApp() {
+  return <main><p>Hello World!</p></main>
+}
+```
+
+### Additional Steps
+
+Not working? Depending on what type of app environment you're building in you may need additional configuration!
+
+- Using webpack to build your app? You'll probably have to use the `postcss-loader` as well. For example, see the [configuration for this Storybook.js site](https://github.com/schemavaults/ui/blob/main/.storybook/main.ts).
+
+## Start building your app!
+
+Components should now work and be properly styled/themed!
+
+### Example Usage
+
+```tsx
+import type { ReactElement } from "react";
+import { Wordmark } from "@schemavaults/ui";
+
+export default function ExampleUsage(): ReactElement {
+  return <Wordmark />
+}
+```
+
+### Example Output
+
+<Wordmark />
