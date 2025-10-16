@@ -33,6 +33,8 @@ storybook-static/
 .storybook/
 
 tsconfig.pkg.tsbuildinfo
+tsconfig.json
+tsconfig.pkg.json
 
 tailwind.config.ts
 postcss.config.cjs
@@ -42,3 +44,7 @@ storybook-assets/
 
 .zed/
 .vscode/
+
+.npmrc
+.npmrc.github
+.npmrc.npmjs

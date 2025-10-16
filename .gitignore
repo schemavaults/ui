@@ -18,3 +18,5 @@ old_ui/
 storybook-static/
 
 tsconfig.pkg.tsbuildinfo
+
+.npmrc
