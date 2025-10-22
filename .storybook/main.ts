@@ -31,7 +31,9 @@ const config: StorybookConfig = {
     name: "@storybook/react-webpack5",
     options: {},
   },
-  webpackFinal: async (config, options): Promise<StorybookWebpackConfig> => {
+  webpackFinal: async (
+    config: webpack.Configuration,
+  ): Promise<StorybookWebpackConfig> => {
     const existingModule = config.module;
 
     let existingModuleRules = Array.isArray(config.module?.rules)
@@ -81,7 +83,7 @@ const config: StorybookConfig = {
     };
     return finalConfig;
   },
-  swc: (config: SwcOptions, options): SwcOptions => {
+  swc: (config: SwcOptions): SwcOptions => {
     return {
       ...config,
       // Apply your custom SWC configuration
