@@ -1,3 +1,6 @@
+// .storybook/main.ts
+// Defines the Storybook.js site configuration for @schemavaults/ui preview site!
+
 import type { StorybookConfig } from "@storybook/react-webpack5";
 import type { Options as SwcOptions } from "@swc/core";
 import { resolve } from "path";
