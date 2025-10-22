@@ -5,33 +5,19 @@ import { Wordmark } from "@/components/ui/wordmark";
 
 # Installation & Setup
 
-## Create a `.npmrc` file
-Create a `.npmrc` file in your project root to tell your package manager where `@schemavaults` scoped packages should be resolved from:
-```
-@schemavaults:registry=https://npm.pkg.github.com
-//https://npm.pkg.github.com/:username=${SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER}
-//https://npm.pkg.github.com/:_authToken=${SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN}
-```
-
-## Store your GitHub credentials
-
-Create a `.env` file that has your credentials to access the package registry:
-```bash
-SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER="jalexw"
-SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN="ghp_abcxyz"
-```
-
-## Install packages
+## 1. Install packages
 
 Use your package manager to download the packages from the registry:
 ```bash
 bun install @schemavaults/ui @schemavaults/theme tailwindcss@3.4.17 postcss@8.5.6 autoprefixer@10.4.21
 ```
 
-## Generate your TailwindCSS configuration using `@schemavaults/theme`
+## 2. Setup TailwindCSS & generate your configuration using `@schemavaults/theme`
 
-### Create a TailwindCSS configuration file at `tailwind.config.ts`:
+You'll have to configure [TailwindCSS](https://v3.tailwindcss.com/) and [PostCSS](https://postcss.org/), then configure them with `@schemavaults/theme`!
 
+### 2a. Create a TailwindCSS configuration file: `tailwind.config.ts`:
+In your app's root directory, create a file named `tailwind.config.ts` that generates a TailwindCSS config:
 ```typescript
 import type { Config } from "tailwindcss";
 import { SchemaVaultsTailwindConfigFactory } from "@schemavaults/theme";
@@ -41,7 +27,8 @@ const config = new SchemaVaultsTailwindConfigFactory().createConfig({
 export default config;
 ```
 
-### Create a PostCSS configuration file at `postcss.config.cjs`:
+### 2b. Create a PostCSS configuration file at `postcss.config.cjs`:
+In your app's root directory, create a file named `postcss.config.cjs` that generates a PostCSS config:
 ```javascript
 module.exports = {
   plugins: {
@@ -51,7 +38,7 @@ module.exports = {
 };
 ```
 
-### Import `globals.css`
+### 2c. Import `globals.css`
 Inside of your app (for example, within your `App.tsx` or root `layout.tsx`) import `globals.css` to trigger PostCSS/TailwindCSS to run:
 
 ```jsx
@@ -62,13 +49,16 @@ export default function MyApp() {
 }
 ```
 
-### Additional Steps
+### 2d. Additional Steps
 
 Not working? Depending on what type of app environment you're building in you may need additional configuration!
 
-- Using webpack to build your app? You'll probably have to use the `postcss-loader` as well. For example, see the [configuration for this Storybook.js site](https://github.com/schemavaults/ui/blob/main/.storybook/main.ts).
+Some app frameworks like Next.js will automatically run PostCSS for you during the build process. Alternatively, other frameworks or custom setups may require you to manually configure PostCSS (which in turn runs TailwindCSS).
 
-## Start building your app!
+- Using webpack to build your app? You'll probably have to use the `postcss-loader` as well. For example, see [the configuration for this Storybook.js site](https://github.com/schemavaults/ui/blob/main/.storybook/main.ts).
+
+
+## 3. Start building your app!
 
 Components should now work and be properly styled/themed!
 

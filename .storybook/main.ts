@@ -1,3 +1,6 @@
+// .storybook/main.ts
+// Defines the Storybook.js site configuration for @schemavaults/ui preview site!
+
 import type { StorybookConfig } from "@storybook/react-webpack5";
 import type { Options as SwcOptions } from "@swc/core";
 import { resolve } from "path";
@@ -28,7 +31,9 @@ const config: StorybookConfig = {
     name: "@storybook/react-webpack5",
     options: {},
   },
-  webpackFinal: async (config, options): Promise<StorybookWebpackConfig> => {
+  webpackFinal: async (
+    config: webpack.Configuration,
+  ): Promise<StorybookWebpackConfig> => {
     const existingModule = config.module;
 
     let existingModuleRules = Array.isArray(config.module?.rules)
@@ -78,7 +83,7 @@ const config: StorybookConfig = {
     };
     return finalConfig;
   },
-  swc: (config: SwcOptions, options): SwcOptions => {
+  swc: (config: SwcOptions): SwcOptions => {
     return {
       ...config,
       // Apply your custom SWC configuration
