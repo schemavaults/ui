@@ -26,6 +26,7 @@ const config: StorybookConfig = {
   staticDirs: [storybookAssetsDirectory],
   core: {
     disableTelemetry: true,
+    builder: "@storybook/builder-webpack5",
   },
   framework: {
     name: "@storybook/react-webpack5",
