@@ -8,4 +8,6 @@ RUN apt-get update \
     && apt-get auto-remove -y \
     && apt-get clean -y
 
+RUN chsh -s "$(which bash)"
+
 USER bun
