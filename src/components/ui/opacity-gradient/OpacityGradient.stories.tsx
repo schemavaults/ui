@@ -2,20 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react";
 // import { fn } from "@storybook/test";
 
 import OpacityGradient, { type OpacityGradientProps } from "./opacity-gradient";
-import {
-  startTransition,
-  useEffect,
-  useRef,
-  useState,
-  type ReactElement,
-} from "react";
+import type { ReactElement } from "react";
 import LoremIpsumText from "@/stories/LoremImpsumText";
 import { cn } from "@/lib/utils";
-import {
-  AnimatePresence,
-  useMotionValueEvent,
-  useScroll,
-} from "@/framer-motion";
+import { AnimatePresence } from "@/framer-motion";
 
 interface OpacityGradientExampleProps extends OpacityGradientProps {}
 
