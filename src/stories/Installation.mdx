@@ -21,7 +21,7 @@ In your app's root directory, create a file named `tailwind.config.ts` that gene
 ```typescript
 import type { Config } from "tailwindcss";
 import { SchemaVaultsTailwindConfigFactory } from "@schemavaults/theme";
-const config = new SchemaVaultsTailwindConfigFactory().createConfig({
+const config: Config = new SchemaVaultsTailwindConfigFactory().createConfig({
   content: ["./src/**/*.{tsx,jsx,js,ts,mdx}", "@schemavaults/ui"]
 });
 export default config;
