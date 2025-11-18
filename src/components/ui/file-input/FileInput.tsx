@@ -20,6 +20,7 @@ export interface FileInputProps<SerializedFileType = string> {
   expectedFileExtensions?: readonly `.${string}`[];
   debug?: boolean;
   serialize: (buf: Buffer, debug?: boolean) => SerializedFileType;
+  className?: string;
 }
 
 /**
@@ -165,18 +166,17 @@ export function FileInput<SerializedFileType = string>({
   );
 
   return (
-    <div className="w-full p-2">
-      <Input
-        id={id}
-        type="file"
-        disabled={disabled}
-        onBlur={onBlur}
-        onChange={onFileChange}
-        className={cn(
-          disabled ? "hover:cursor-not-allowed" : "hover:cursor-pointer",
-        )}
-      />
-    </div>
+    <Input
+      id={id}
+      type="file"
+      disabled={disabled}
+      onBlur={onBlur}
+      onChange={onFileChange}
+      className={cn(
+        props.className,
+        disabled ? "hover:cursor-not-allowed" : "hover:cursor-pointer",
+      )}
+    />
   );
 }
 
