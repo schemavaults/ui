@@ -48,3 +48,5 @@ storybook-assets/
 .npmrc
 .npmrc.github
 .npmrc.npmjs
+
+.devcontainer/
