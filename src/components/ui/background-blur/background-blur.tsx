@@ -59,7 +59,6 @@ export function BackgroundBlur({
   background,
   foreground,
   intensity = "default",
-  ...props
 }: BackgroundBlurProps): ReactElement {
   const BackgroundComponent: FC | undefined = background;
   const ForegroundComponent: FC | undefined = foreground;

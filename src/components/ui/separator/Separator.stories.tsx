@@ -1,7 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
-
-import Separator, { type SeparatorProps } from "./separator";
+import Separator from "./separator";
 import type { ReactElement } from "react";
 import { cn } from "@/lib/utils";
 

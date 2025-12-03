@@ -64,7 +64,9 @@ function TypewriterEffectExample(
                       (currentMessageIndex + 1) % exampleMessages.length,
                     );
                   }
-                } catch (e: unknown) {}
+                } catch (e: unknown) {
+                  console.error("TypewriterEffect onComplete error: ", e);
+                }
               }, delayNextMessageMs);
             }}
             className={props.className}

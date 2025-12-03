@@ -11,10 +11,11 @@ export function useCloseDashboardSidebarOnRouteChange(
   const debug: boolean = useDebug();
   const pathname: string = usePathname();
   const state = useDashboardSidebarOpenState();
+  const open: boolean = state.open;
   const setOpen = useDashboardSidebarOpenStateDispatch();
 
   useEffect((): void => {
-    if (state.open) {
+    if (open) {
       if (debug) {
         console.log(
           "[useCloseDashboardSidebarOnRouteChange] Closing sidebar...",
@@ -22,7 +23,7 @@ export function useCloseDashboardSidebarOnRouteChange(
       }
       setOpen(false);
     }
-  }, [pathname, setOpen, debug]);
+  }, [pathname, open, setOpen, debug]);
 }
 
 export default useCloseDashboardSidebarOnRouteChange;

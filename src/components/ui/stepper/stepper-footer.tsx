@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  RefObject,
-  useState,
-  useTransition,
-  type PropsWithChildren,
-  type ReactElement,
-} from "react";
+import { useState, type PropsWithChildren, type ReactElement } from "react";
 import type { Step } from "./step_definition";
 import { useStepperContext } from "./useStepperContext";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -108,10 +102,12 @@ export function StepperFooter<StepperState extends BaseStepperState>({
               e instanceof Error ? e.message : "An unknown error occurred!",
           });
         })
-        .finally(() => {
+        .finally((): void => {
           try {
             setNavigating(false);
-          } catch (e: unknown) {}
+          } catch (e: unknown) {
+            void e;
+          }
         });
     };
 
@@ -172,3 +168,5 @@ export function StepperFooter<StepperState extends BaseStepperState>({
 
   return <AnimatedFooterComponent />;
 }
+
+export default StepperFooter;

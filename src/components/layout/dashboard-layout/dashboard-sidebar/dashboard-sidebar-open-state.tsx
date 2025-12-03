@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, Dispatch, SetStateAction } from "react";
+import { createContext } from "react";
 
 export interface IDashboardSidebarOpenStateContextType {
   open: boolean;

@@ -1,7 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
-
-import type { FC, ReactElement, ReactNode } from "react";
+import type { FC, ReactNode } from "react";
 
 import ThemedPageContainer from "./themed-page-container";
 import LoremIpsumText from "@/stories/LoremImpsumText";

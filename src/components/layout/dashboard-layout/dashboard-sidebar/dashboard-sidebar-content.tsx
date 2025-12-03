@@ -1,6 +1,6 @@
 "use client";
 
-import type { PropsWithChildren, ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import DashboardSidebarItemRenderer from "./dashboard-sidebar-item-renderer";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";

@@ -1,9 +1,4 @@
-import type {
-  ForwardedRef,
-  RefObject,
-  ReactElement,
-  RefAttributes,
-} from "react";
+import type { ReactElement } from "react";
 import { BaseStepperState } from "./base-stepper-state-type";
 
 export interface BaseStep {

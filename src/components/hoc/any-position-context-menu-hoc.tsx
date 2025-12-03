@@ -1,11 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { AnimatePresence, m } from "framer-motion";
+import { AnimatePresence, m } from "@/framer-motion";
 import {
   createContext,
   type FC,
-  type PropsWithChildren,
   type ReactElement,
   type RefObject,
   useCallback,
@@ -47,7 +45,10 @@ function useContextMenuDebug(): boolean {
       if (process.env.NODE_ENV === "development") {
         isDebug = true;
       }
-    } catch (e: unknown) {}
+    } catch (e: unknown) {
+      void e;
+      isDebug = false;
+    }
     return isDebug;
   }, []);
 }
@@ -93,7 +94,7 @@ export function AnyPositionContextMenuHOC<
       data: null,
     });
     return;
-  }, [setState]);
+  }, [setState, debug]);
 
   function AnyPositionContextMenuRenderer({
     hideContextMenu,
@@ -213,7 +214,7 @@ export function AnyPositionContextMenuHOC<
         data,
       });
     },
-    [setState],
+    [setState, debug],
   );
 
   return {

@@ -8,15 +8,16 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
 } from "./navigation-menu";
-import { CircleCheckIcon, CircleHelpIcon, CircleIcon } from "lucide-react";
-import type { PropsWithChildren, ReactElement } from "react";
+import type {
+  PropsWithChildren,
+  ReactElement,
+  ComponentPropsWithoutRef,
+} from "react";
 
 function Link({
   href,
   children,
-  className,
 }: PropsWithChildren<{ href: string; className?: string }>): ReactElement {
   return <a href={href}>{children}</a>;
 }
@@ -68,7 +69,7 @@ function ListItem({
   children,
   href,
   ...props
-}: React.ComponentPropsWithoutRef<"li"> & { href: string }) {
+}: ComponentPropsWithoutRef<"li"> & { href: string }) {
   return (
     <li {...props}>
       <NavigationMenuLink asChild>

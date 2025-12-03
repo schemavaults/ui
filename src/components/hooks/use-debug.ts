@@ -5,7 +5,9 @@ export function useDebug(): boolean {
     if (process.env.NODE_ENV === "development") {
       return true;
     }
-  } catch (e: unknown) {}
+  } catch (e: unknown) {
+    void e;
+  }
   try {
     if (
       typeof process.env.SCHEMAVAULTS_UI_DEBUG === "string" &&
@@ -19,7 +21,9 @@ export function useDebug(): boolean {
     ) {
       return true;
     }
-  } catch (e: unknown) {}
+  } catch (e: unknown) {
+    void e;
+  }
 
   return false;
 }

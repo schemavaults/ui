@@ -1,6 +1,6 @@
 "use client";
 
-import type { PropsWithChildren, ReactElement } from "react";
+import type { ReactElement } from "react";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import type { CustomizableDashboardLayoutComponent } from "../customizable-dashboard-component-type";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";

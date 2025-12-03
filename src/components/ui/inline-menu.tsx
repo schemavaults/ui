@@ -112,7 +112,7 @@ export function InlineMenu(props: InlineMenuProps): ReactElement {
   return (
     <InlineMenuContainer close={props.close}>
       {props.items.map((inlineItem) => {
-        return <InlineMenuItem {...inlineItem} key={inlineItem.id} />;
+        return <InlineMenuItem key={inlineItem.id} {...inlineItem} />;
       })}
     </InlineMenuContainer>
   );

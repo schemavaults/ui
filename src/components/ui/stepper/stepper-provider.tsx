@@ -1,6 +1,6 @@
 "use client";
 
-import type { FC, PropsWithChildren, ReactElement } from "react";
+import type { PropsWithChildren, ReactElement } from "react";
 import type { Step } from "./step_definition";
 import { StepperContext } from "./stepper-context";
 import type { BaseStepperState } from "./base-stepper-state-type";
@@ -77,3 +77,5 @@ export function StepperProvider<
     </StepperContext.Provider>
   );
 }
+
+export default StepperProvider;

@@ -1,7 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
-
-import Label, { type LabelProps } from "./label";
+import Label from "./label";
 import type { ReactElement } from "react";
 import Input from "@/components/ui/input";
 

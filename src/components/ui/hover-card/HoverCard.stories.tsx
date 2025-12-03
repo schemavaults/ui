@@ -14,7 +14,12 @@ function HoverCardDemo(): ReactElement {
       </HoverCardTrigger>
       <HoverCardContent className="w-80">
         <div className="flex justify-between gap-4">
-          <img src="/media/icon.png" width={64} height={64} />
+          <img
+            src="/media/icon.png"
+            alt="SchemaVaults icon for example hover card story"
+            width={64}
+            height={64}
+          />
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">@schemavaults</h4>
             <p className="text-sm">The data storage solution</p>

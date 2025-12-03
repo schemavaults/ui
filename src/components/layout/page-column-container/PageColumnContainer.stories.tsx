@@ -1,11 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 // import { fn } from "@storybook/test";
 
-import type { ReactElement, ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import PageColumnContainer, {
-  type PageColumnContainerProps,
-} from "./page-column-container";
+import PageColumnContainer from "./page-column-container";
 import LoremIpsumText from "@/stories/LoremImpsumText";
 
 function ExampleChildrenForContainer(): ReactNode {

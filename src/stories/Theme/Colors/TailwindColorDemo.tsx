@@ -1,11 +1,10 @@
 "use client";
 
-import { type ReactElement } from "react";
+import type { ReactElement } from "react";
 import colorGroups from "./colorGroups";
-import ColorSwatch from "./ColorSwatch";
 import ColorGroup from "./ColorGroup";
 
-const TailwindColorDemo = () => {
+function TailwindColorDemo(): ReactElement {
   // All class names are explicitly defined here so Tailwind can detect them
 
   return (
@@ -51,6 +50,6 @@ const TailwindColorDemo = () => {
       </div>
     </div>
   );
-};
+}
 
 export default TailwindColorDemo;

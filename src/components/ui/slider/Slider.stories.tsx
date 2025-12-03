@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 // import { fn } from "@storybook/test";
 
-import type { ReactElement } from "react";
 import Slider from "./slider";
 
 import { useArgs } from "@storybook/preview-api";
@@ -81,6 +80,7 @@ export const SliderExample: Story = {
     className: "w-60 rounded-md",
     min: 0,
     max: 100,
-    value: 50 as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: 50 satisfies number as any,
   },
 };

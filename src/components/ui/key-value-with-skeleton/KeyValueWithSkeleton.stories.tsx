@@ -39,6 +39,7 @@ export const FixedValue: Story = {
 
 function createExamplePromise(): Promise<string> {
   return new Promise((resolve, reject) => {
+    void reject;
     setTimeout(() => {
       resolve("value resolved from timeout promise after 2s!");
     }, 2000);

@@ -65,3 +65,5 @@ export function StepperBody<StepperState extends BaseStepperState>() {
     </div>
   );
 }
+
+export default StepperBody;

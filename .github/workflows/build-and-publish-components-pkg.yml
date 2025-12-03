@@ -27,6 +27,8 @@ jobs:
         env:
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ github.actor }}
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Validate/lint code with ESLint
+        run: bun run lint
       - name: Build package with Bun
         run: bun run build
       - name: Configure .npmrc to publish to GitHub NPM registry

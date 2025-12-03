@@ -1,6 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
-
 import FileInput from "./FileInput";
 import { fn } from "@storybook/test";
 import Toaster from "@/components/ui/toaster";
@@ -19,7 +17,9 @@ export function bufferToBase64Url(
 
   try {
     return buffer.toString("base64url");
-  } catch (e: unknown) {}
+  } catch (e: unknown) {
+    console.error(e);
+  }
 
   try {
     return base64url.encode(buffer);

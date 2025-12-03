@@ -1,7 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
-
-import type { ReactElement } from "react";
 import Badge from "./badge";
 import { badgeVariantIds } from "./badge-variants";
 

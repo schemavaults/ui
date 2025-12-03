@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   type ColumnDef,
@@ -12,10 +12,10 @@ import {
   getSortedRowModel,
   useReactTable,
   type RowSelectionState,
-} from "@tanstack/react-table"
-import { ChevronDown } from "lucide-react"
+} from "@tanstack/react-table";
+import { ChevronDown } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -24,8 +24,8 @@ import {
   // DropdownMenuLabel,
   // DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -33,10 +33,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { type ReactElement, useState, type FC } from "react"
+} from "@/components/ui/table";
+import { type ReactElement, useState, type FC } from "react";
 
-export interface DatatableProps<T extends Object> {
+export interface DatatableProps<T extends object> {
   data: T[];
   columns: ColumnDef<T>[];
   initialVisibleColumns: VisibilityState;
@@ -44,22 +44,19 @@ export interface DatatableProps<T extends Object> {
   datatypeLabel: string;
 }
 
-export function Datatable<T extends Object>(
-    {
-      data,
-      columns,
-      initialVisibleColumns,
-      HeaderButtons,
-      datatypeLabel
-    }: DatatableProps<T>
-  ): ReactElement {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-    []
-  )
-  const [columnVisibility, setColumnVisibility] =
-    useState<VisibilityState>(initialVisibleColumns)
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+export function Datatable<T extends object>({
+  data,
+  columns,
+  initialVisibleColumns,
+  HeaderButtons,
+  datatypeLabel,
+}: DatatableProps<T>): ReactElement {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    initialVisibleColumns,
+  );
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const table = useReactTable({
     data,
     columns: columns satisfies ColumnDef<T>[],
@@ -77,7 +74,7 @@ export function Datatable<T extends Object>(
       columnVisibility,
       rowSelection,
     },
-  })
+  });
 
   return (
     <div className="w-full flex flex-col justify-start items-center">
@@ -114,14 +111,13 @@ export function Datatable<T extends Object>(
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column['id'].toUpperCase()}
+                      {column["id"].toUpperCase()}
                     </DropdownMenuCheckboxItem>
-                  )
+                  );
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        
       </div>
       {/** Table */}
       <div className="rounded-md border w-full">
@@ -136,10 +132,10 @@ export function Datatable<T extends Object>(
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
-                  )
+                  );
                 })}
               </TableRow>
             ))}
@@ -155,7 +151,7 @@ export function Datatable<T extends Object>(
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -199,5 +195,5 @@ export function Datatable<T extends Object>(
         </div>
       </div>
     </div>
-  )
+  );
 }

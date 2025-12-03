@@ -23,7 +23,7 @@ export async function bufferFromFile(
   }
 
   if (
-    (file.hasOwnProperty("bytes") || "bytes" in file) &&
+    (Object.hasOwn(file, "bytes") || "bytes" in file) &&
     typeof file.bytes === "function"
   ) {
     if (debug) {
@@ -33,7 +33,7 @@ export async function bufferFromFile(
     }
     return Buffer.from(await file.bytes());
   } else if (
-    (file.hasOwnProperty("arrayBuffer") || "arrayBuffer" in file) &&
+    (Object.hasOwn(file, "arrayBuffer") || "arrayBuffer" in file) &&
     typeof file.arrayBuffer === "function"
   ) {
     if (debug) {
@@ -83,11 +83,6 @@ export async function bufferFromFile(
         "Failed to read file data buffer using 'FileReader' instance!",
       );
     }
-
-    console.warn(
-      "'File' interface does not appear to have 'bytes' or 'arrayBuffer' methods!",
-    );
-    throw new Error("Failed to extract file data from 'File' instance!");
   }
 }
 

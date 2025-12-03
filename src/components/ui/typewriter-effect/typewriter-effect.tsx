@@ -1,3 +1,5 @@
+"use client";
+
 import {
   type AnimationScope,
   type MotionValue,
@@ -8,7 +10,7 @@ import {
   useTransform,
 } from "@/framer-motion";
 import { type ReactElement, useEffect, useRef } from "react";
-import { CursorBlinker } from "./cursor-blinker";
+import CursorBlinker from "./cursor-blinker";
 import { cn } from "@/lib/utils";
 import useDebug from "@/components/hooks/use-debug";
 
@@ -107,6 +109,7 @@ export function TypewriterEffect({
     onComplete,
     safeToRemove,
     initial,
+    debug,
   ]);
 
   return (

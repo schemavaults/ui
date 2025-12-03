@@ -33,6 +33,7 @@ export function FileInput<SerializedFileType = string>({
   disabled,
   onBlur,
   setValue,
+  expectedFileExtensions,
   ...props
 }: FileInputProps<SerializedFileType>): ReactElement {
   const debug: boolean = props.debug ?? false;
@@ -41,14 +42,14 @@ export function FileInput<SerializedFileType = string>({
   const hasValidFileExtensionsExplicitlyDefined: boolean =
     useMemo((): boolean => {
       return (
-        Array.isArray(props.expectedFileExtensions) &&
-        props.expectedFileExtensions.length >= 1
+        Array.isArray(expectedFileExtensions) &&
+        expectedFileExtensions.length >= 1
       );
-    }, [props.expectedFileExtensions]);
+    }, [expectedFileExtensions]);
 
   const doesFilenameHaveValidFileExtension =
     useDoesFilenameHaveValidFileExtension({
-      expectedFileExtensions: props.expectedFileExtensions,
+      expectedFileExtensions: expectedFileExtensions,
     });
 
   const onFileChange = useCallback(
@@ -93,16 +94,16 @@ export function FileInput<SerializedFileType = string>({
         if (debug) {
           console.log(
             "[FileInput] Validating that uploaded file meets explicitly defined file extension requirements: ",
-            props.expectedFileExtensions,
+            expectedFileExtensions,
           );
         }
 
-        if (!Array.isArray(props.expectedFileExtensions)) {
+        if (!Array.isArray(expectedFileExtensions)) {
           throw new Error(
             "Expected at least 1 valid file extension to have been defined if this point was reached!",
           );
         }
-        const exts: readonly string[] = props.expectedFileExtensions;
+        const exts: readonly string[] = expectedFileExtensions;
         if (!doesFilenameHaveValidFileExtension(filename)) {
           const errMsg: string =
             exts.length === 1
@@ -162,7 +163,15 @@ export function FileInput<SerializedFileType = string>({
 
       return;
     },
-    [debug, toast, props.serialize, setValue],
+    [
+      debug,
+      toast,
+      props.serialize,
+      setValue,
+      doesFilenameHaveValidFileExtension,
+      hasValidFileExtensionsExplicitlyDefined,
+      expectedFileExtensions,
+    ],
   );
 
   return (

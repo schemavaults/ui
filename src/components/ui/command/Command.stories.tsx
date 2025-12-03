@@ -1,6 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
-
 import {
   Calculator,
   Calendar,
@@ -19,11 +17,6 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "./command";
-
-import type { ReactElement } from "react";
-import Button from "@/components/ui/button";
-import Input from "@/components/ui/input";
-import Label from "@/components/ui/label";
 
 function CommandDemo() {
   return (

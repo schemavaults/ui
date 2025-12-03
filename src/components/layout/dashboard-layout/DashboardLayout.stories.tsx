@@ -155,7 +155,14 @@ const meta = {
     children: <ExapleDashboardPageContent />,
     brandHref: "https://ui.schemavaults.com",
     Link,
-    logo: <img src="/media/icon.png" width={40} height={40} />,
+    logo: (
+      <img
+        src="/media/icon.png"
+        alt="SchemaVaults icon for dashboard layout example header"
+        width={40}
+        height={40}
+      />
+    ),
     wordmark: <Wordmark />,
     topBarTitle: "Page Title",
     sidebarFooterContent:

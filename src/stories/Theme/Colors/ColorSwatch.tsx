@@ -25,6 +25,7 @@ export function ColorSwatch({
         canParseShadeAsInt = true;
       }
     } catch (e: unknown) {
+      void e;
       canParseShadeAsInt = false;
     }
     return canParseShadeAsInt;
@@ -40,7 +41,7 @@ export function ColorSwatch({
     } else {
       return shade;
     }
-  }, [isShadeNumber, shade]);
+  }, [isShadeNumber, shade, colorName]);
 
   return (
     <div className="flex flex-col items-center space-y-2">

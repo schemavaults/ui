@@ -42,7 +42,8 @@ function SplitPaneSeparator({
         `flex items-center justify-center bg-gray-200`,
         `${direction === "row" ? "w-1" : "h-1"}`,
       )}
-      role="separator"
+      role="slider"
+      aria-orientation={direction === "row" ? "vertical" : "horizontal"}
       aria-valuenow={splitPercentage}
       aria-valuemin={10}
       aria-valuemax={90}

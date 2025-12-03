@@ -1,18 +1,14 @@
 "use client";
 
-import type { PropsWithChildren, ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import DashboardSidebarHeader from "./dashboard-sidebar-header";
 import DashboardSidebarContent from "./dashboard-sidebar-content";
 import DashboardSidebarFooter from "./dashboard-sidebar-footer";
 import { cn } from "@/lib/utils";
-import { m } from "@/framer-motion";
 import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { Separator } from "@/components/ui";
-import toggleDashboardLayoutCollapsedTransitionTime, {
-  toggleDashboardLayoutCollapsedTransitionEasing,
-} from "../toggle-dashboard-layout-collapsed-transition-time";
 import type { CustomizableDashboardLayoutComponent } from "../customizable-dashboard-component-type";
 import type { LinkComponentType } from "@/types/Link";
 

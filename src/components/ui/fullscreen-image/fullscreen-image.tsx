@@ -4,7 +4,6 @@ import type {
   ComponentProps,
   ComponentPropsWithoutRef,
   ComponentType,
-  FC,
   ReactElement,
   ReactNode,
 } from "react";
@@ -121,16 +120,17 @@ function FullscreenImage<
   };
 
   let thumbnailContent: ReactNode;
-  if (!!thumbnail) {
+  if (thumbnail) {
     thumbnailContent = thumbnail;
   } else {
-    if (!!ImageComponent) {
+    if (ImageComponent) {
       const customThumbnailProps = {
         src,
         alt,
         ...imageProps,
         className: cn("w-full h-full object-cover", imageProps?.className),
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       thumbnailContent = <ImageComponent {...(customThumbnailProps as any)} />;
     } else {
       thumbnailContent = (
@@ -246,6 +246,7 @@ function FullscreenImage<
                 <ImageComponent
                   src={fullscreenSrc || src}
                   alt={alt}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   {...(fullscreenImageProps as any)}
                   onLoad={handleImageLoad}
                   className={fullscreenImageClassName}

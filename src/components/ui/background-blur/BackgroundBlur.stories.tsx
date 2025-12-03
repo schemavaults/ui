@@ -1,6 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
-
 import type { FC, ReactElement } from "react";
 import BackgroundBlur, {
   backgroundBlurIntensityVariants,
@@ -25,6 +23,7 @@ function BackgroundBlurExample(
           <div className="w-full h-full">
             <img
               className="object-cover w-full h-full"
+              alt=""
               src={props.backgroundImageHref}
             />
           </div>

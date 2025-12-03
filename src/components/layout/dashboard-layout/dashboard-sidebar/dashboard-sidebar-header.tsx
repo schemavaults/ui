@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, m } from "@/framer-motion";
-import type { PropsWithChildren, ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import toggleDashboardLayoutCollapsedTransitionTime, {
   toggleDashboardLayoutCollapsedTransitionEasing,
 } from "../toggle-dashboard-layout-collapsed-transition-time";

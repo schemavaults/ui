@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, type PropsWithChildren, type ReactElement } from "react";
+import { useContext, type ReactElement } from "react";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
 
 import { AnimatePresence, m } from "@/framer-motion";

@@ -1,6 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import type { ComponentProps, ReactElement } from "react";
-import { fn } from "@storybook/test";
 import Icon, { DEFAULT_ICON_SIZE } from "./Icon";
 import parseSvgIcon from "./parseSvgIcon";
 import { svgDataUrlPrefix } from "./SvgDataUrl";

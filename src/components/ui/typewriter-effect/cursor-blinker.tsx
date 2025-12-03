@@ -32,7 +32,6 @@ export function CursorBlinker({}: CursorBlinkerProps): ReactElement {
       exit="hidden"
       className="text-primary"
       role="presentation"
-      aria-description="A blinking vertical line-- indicating that a 'typewriter effect' animation is active"
     >
       |
     </m.span>

@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
 import { Stepper, type StepperProps } from "./stepper";
 import type { Step } from "./step_definition";
 import type { BaseStepperState } from "./base-stepper-state-type";

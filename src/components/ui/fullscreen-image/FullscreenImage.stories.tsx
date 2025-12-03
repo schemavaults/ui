@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { FullscreenImage } from "./fullscreen-image";
 import type { ComponentProps, ReactElement } from "react";
 import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
-import { fn } from "@storybook/test";
 
 const meta = {
   title: "Components/Fullscreen Image",

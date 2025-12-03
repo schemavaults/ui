@@ -1,14 +1,10 @@
 "use client";
 
-import { m } from "@/framer-motion";
 import type { PropsWithChildren, ReactElement } from "react";
 import {
   useDashboardSidebarSizing,
   useDashboardSidebarOpenState,
 } from "./dashboard-sidebar";
-import toggleDashboardLayoutCollapsedTransitionTime, {
-  toggleDashboardLayoutCollapsedTransitionEasing,
-} from "./toggle-dashboard-layout-collapsed-transition-time";
 import { cn } from "@/lib/utils";
 
 export interface DashboardLayoutMainContentContainerProps
