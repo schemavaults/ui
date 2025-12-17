@@ -50,8 +50,9 @@ interface ToastProps
 const Toast = ({ className, variant, ...props }: ToastProps) => {
   return (
     <ToastPrimitives.Root
-      className={cn(toastVariants({ variant }), className)}
+      className={cn("toast", toastVariants({ variant }), className)}
       {...props}
+      data-variant={variant ?? "default"}
     />
   );
 };
