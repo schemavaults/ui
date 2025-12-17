@@ -55,3 +55,5 @@ eslint.config.cjs
 eslint.config.mjs
 eslint.config.js
 eslint.config.ts
+
+schemavaults-ui.tgz

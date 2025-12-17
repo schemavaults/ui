@@ -20,3 +20,5 @@ storybook-static/
 tsconfig.pkg.tsbuildinfo
 
 .npmrc
+
+schemavaults-ui.tgz
