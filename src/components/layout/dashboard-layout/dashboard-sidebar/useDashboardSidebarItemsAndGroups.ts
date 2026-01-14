@@ -15,3 +15,5 @@ export function useDashboardSidebarItemsAndGroups(): readonly (
   }
   return sidebarItems;
 }
+
+export default useDashboardSidebarItemsAndGroups;

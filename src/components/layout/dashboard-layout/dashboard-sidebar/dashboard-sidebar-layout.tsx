@@ -34,15 +34,19 @@ export function DashboardLayoutSidebarLayout({
 
   let widthClassName: string;
   if (openState.mobile) {
-    widthClassName = size.mobile_expanded_classname;
+    widthClassName = size.mobile_expanded_width_classname;
   } else {
     // desktop
     if (openState.open) {
-      widthClassName = size.desktop_expanded_classname;
+      widthClassName = size.desktop_expanded_width_classname;
     } else {
-      widthClassName = size.desktop_collapsed_classname;
+      widthClassName = size.desktop_collapsed_width_classname;
     }
   }
+
+  const separatorClassName: string = cn(
+    "flex-shrink-0"
+  )
 
   return (
     <menu
@@ -64,11 +68,11 @@ export function DashboardLayoutSidebarLayout({
         Link={Link}
         brandHref={brandHref}
       />
-      <Separator />
+      <Separator orientation="horizontal" className={separatorClassName} />
       <DashboardSidebarContent Link={Link} />
       {typeof props.sidebarFooterContent === "function" && (
         <>
-          <Separator />
+          <Separator orientation="horizontal" className={separatorClassName} />
           <DashboardSidebarFooter
             Link={Link}
             sidebarFooterContent={props.sidebarFooterContent}

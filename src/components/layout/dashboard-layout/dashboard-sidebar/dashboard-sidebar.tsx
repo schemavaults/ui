@@ -34,7 +34,7 @@ export function DashboardSidebar(
       >
         <SheetContent
           side="left"
-          className={cn(size.mobile_expanded_classname)}
+          className={cn(size.mobile_expanded_width_classname)}
           style={{
             zIndex: 1000,
           }}

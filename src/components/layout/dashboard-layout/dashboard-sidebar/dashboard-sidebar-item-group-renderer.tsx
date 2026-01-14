@@ -73,7 +73,7 @@ export function DashboardSidebarItemGroupRenderer({
           >
             <Label
               htmlFor={groupItemsContainerId}
-              className={cn("font-bold text-nowrap")}
+              className={cn("font-bold text-nowrap", sizes.sidebar_menu_item_x_margin_classname)}
             >
               {groupTitle}
             </Label>
@@ -90,23 +90,8 @@ export function DashboardSidebarItemGroupRenderer({
           className={cn(
             "w-full flex flex-col",
             "items-start justify-start",
-            "gap-2",
+            sizes.sidebar_menu_item_gap_classname
           )}
-          variants={{
-            collapsed: {
-              paddingLeft: 0,
-            },
-            expanded: {
-              paddingLeft: sizes.sidebar_expanded_menu_group_indent,
-            },
-          }}
-          animate={
-            openState.mobile
-              ? "expanded"
-              : openState.open
-                ? "expanded"
-                : "collapsed"
-          }
         >
           {group.items.map(
             (item: DashboardSidebarItemDefinition): ReactElement => {

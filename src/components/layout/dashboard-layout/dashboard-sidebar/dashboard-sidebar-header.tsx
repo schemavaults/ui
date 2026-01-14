@@ -74,10 +74,11 @@ export function DashboardSidebarHeader({
         "flex flex-row flex-nowrap",
         "justify-start items-center bg-background",
         "overflow-hidden",
+        "flex-shrink-0"
       )}
     >
       <Link href={brandHref} className={cn(
-        size.desktop_collapsed_classname,
+        size.desktop_collapsed_width_classname,
         size.header_height_classname,
         "flex items-center justify-center",
         "flex-shrink-0"

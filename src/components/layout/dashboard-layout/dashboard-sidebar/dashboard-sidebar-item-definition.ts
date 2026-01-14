@@ -1,10 +1,4 @@
-import type { ReactNode } from "react";
-
-type SidebarItemIconComponent = ({
-  className,
-}: {
-  className: string;
-}) => ReactNode;
+import type { SidebarItemIconComponent } from "./dashboard-sidebar-item-icon-component";
 
 export interface DashboardSidebarItemDefinition {
   type: "dashboard-sidebar-item-definition";
