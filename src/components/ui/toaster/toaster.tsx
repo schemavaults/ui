@@ -9,7 +9,6 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
 
 export function Toaster() {
   const { toasts } = useToast();
