@@ -83,7 +83,7 @@ export function DashboardSidebarHeader({
         "flex-shrink-0"
       )}>{logo}</Link>
 
-      <AnimatePresence>
+      <AnimatePresence initial={!mobile}>
         {showWordmark && (
           <AnimatedBrandWordmark key="animated-brand-wordmark" />
         )}
