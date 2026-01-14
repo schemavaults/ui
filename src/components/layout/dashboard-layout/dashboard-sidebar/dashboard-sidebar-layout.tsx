@@ -6,9 +6,9 @@ import DashboardSidebarHeader from "./dashboard-sidebar-header";
 import DashboardSidebarContent from "./dashboard-sidebar-content";
 import DashboardSidebarFooter from "./dashboard-sidebar-footer";
 import { cn } from "@/lib/utils";
-import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
+import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
-import { Separator } from "@/components/ui";
+import Separator from "@/components/ui/separator";
 import type { CustomizableDashboardLayoutComponent } from "../customizable-dashboard-component-type";
 import type { LinkComponentType } from "@/types/Link";
 
