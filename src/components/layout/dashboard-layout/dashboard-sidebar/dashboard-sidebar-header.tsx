@@ -26,6 +26,7 @@ export function DashboardSidebarHeader({
   const size = useDashboardSidebarSizing();
   const { open, mobile } = useDashboardSidebarOpenState();
   const showWordmark: boolean = mobile || open;
+  
 
   function AnimatedBrandWordmark(): ReactElement {
     return (
@@ -70,23 +71,23 @@ export function DashboardSidebarHeader({
       }}
       className={cn(
         "w-full",
-        "p-2",
         "flex flex-row flex-nowrap",
-        "justify-center items-center bg-background",
+        "justify-start items-center bg-background",
         "overflow-hidden",
       )}
     >
-      <m.div
-        layout
-        className={cn("flex flex-row flex-nowrap justify-start items-center")}
-      >
-        <Link href={brandHref}>{logo}</Link>
-        <AnimatePresence>
-          {showWordmark && (
-            <AnimatedBrandWordmark key="animated-brand-wordmark" />
-          )}
-        </AnimatePresence>
-      </m.div>
+      <Link href={brandHref} className={cn(
+        size.desktop_collapsed_classname,
+        size.header_height_classname,
+        "flex items-center justify-center",
+        "flex-shrink-0"
+      )}>{logo}</Link>
+
+      <AnimatePresence>
+        {showWordmark && (
+          <AnimatedBrandWordmark key="animated-brand-wordmark" />
+        )}
+      </AnimatePresence>
     </m.header>
   );
 }
