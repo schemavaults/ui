@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 export interface ThemedPageContainerProps extends PropsWithChildren {
   backgroundClassName?: string;
   contentContainerClassName?: string;
+  // Added to default content container class name
+  additionalContentContainerClassName?: string;
 }
 
 /**
@@ -25,21 +27,36 @@ export function ThemedPageContainer({
   children,
   ...props
 }: ThemedPageContainerProps): ReactElement {
+
+  const defaultBackgroundClassName: string = cn(
+  "min-h-full",
+  "p-2 sm:p-4 lg:p-6"
+)
+
+  const defaultContentContainerClassName: string = cn(
+    "rounded-lg",
+    "gap-2 sm:gap-4 lg:gap-6",
+    props.additionalContentContainerClassName
+  );
+
+  const backgroundClassName: string = typeof props.backgroundClassName === 'string' ?
+      props.backgroundClassName
+      : defaultBackgroundClassName;
+  const contentContainerClassName: string = typeof props.contentContainerClassName === 'string' ?
+      cn(props.contentContainerClassName, props.additionalContentContainerClassName)
+      : defaultContentContainerClassName;
+  
   return (
     <ThemedPageBackground
       className={cn(
-        "min-h-full",
-        "h-full",
-        "py-2 px-2",
-        "sm:px-4 sm:py-4",
-        "md:px-6 md:py-6",
         "grow",
         "overflow-y-scroll",
-        props.backgroundClassName,
+        "flex flex-col items-stretch justify-start",
+        backgroundClassName
       )}
     >
       <PageColumnContainer
-        className={cn("rounded-lg", props.contentContainerClassName)}
+        className={contentContainerClassName}
       >
         {children}
       </PageColumnContainer>

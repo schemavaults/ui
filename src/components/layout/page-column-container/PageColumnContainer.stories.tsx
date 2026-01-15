@@ -41,6 +41,7 @@ const meta = {
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
     children: <ExampleChildrenForContainer />,
+    className: "p-2 md:p-4 lg:p-6"
   },
 } satisfies Meta<typeof PageColumnContainer>;
 

@@ -20,10 +20,10 @@ export function PageColumnContainer({
   return (
     <main
       className={cn(
-        "w-full bg-background",
-        "justify-start flex flex-col items-center gap-4",
-        "px-2 sm:px-4 md:px-6",
-        "py-2 sm:py-4",
+        "page-column-container",
+        "grow",
+        "flex flex-col",
+        "justify-start items-stretch",
         props.className,
       )}
     >
