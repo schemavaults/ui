@@ -1,7 +1,7 @@
 "use client";
 
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
-import { Button } from "./button";
+import Button from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
