@@ -83,3 +83,7 @@ src/components/ui/button/
 - `tsc-alias` resolves path aliases post-compilation
 - Output goes to `dist/` directory
 - Stories are excluded from the package build but included in Storybook
+
+### Git Commit Format
+
+Use the format `${semver} - ${commit_description}`. E.g. 0.12.15 - Added a new Storybook.js story for the Form component.
