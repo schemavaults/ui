@@ -1,6 +1,6 @@
 {
   "name": "@schemavaults/ui",
-  "version": "0.13.3",
+  "version": "0.13.4",
   "private": false,
   "license": "UNLICENSED",
   "description": "React.js UI components for SchemaVaults frontend applications",
@@ -43,6 +43,7 @@
     "@emotion/is-prop-valid": "1.4.0"
   },
   "devDependencies": {
+    "semver": "7.7.2",
     "@storybook/addon-essentials": "8.6.15",
     "@storybook/addon-webpack5-compiler-swc": "3.0.0",
     "@storybook/blocks": "8.6.15",
