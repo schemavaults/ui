@@ -18,7 +18,10 @@ old_ui/
 storybook-static/
 
 tsconfig.pkg.tsbuildinfo
+tsconfig.buildinfo
 
 .npmrc
 
 schemavaults-ui.tgz
+
+.claude

@@ -32,6 +32,7 @@ next-env.d.ts
 storybook-static/
 .storybook/
 
+tsconfig.tsbuildinfo
 tsconfig.pkg.tsbuildinfo
 tsconfig.json
 tsconfig.pkg.json
@@ -59,3 +60,4 @@ eslint.config.ts
 schemavaults-ui.tgz
 
 CLAUDE.md
+.claude
