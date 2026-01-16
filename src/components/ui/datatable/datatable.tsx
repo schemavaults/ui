@@ -69,14 +69,14 @@ export function Datatable<T extends object>({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   // Determine search mode
-  const useGlobalSearch = enableGlobalFilter || Array.isArray(searchColumn);
-  const searchableColumns = Array.isArray(searchColumn) ? searchColumn : undefined;
+  const tanstackGlobalSearchEnabled: boolean = enableGlobalFilter || Array.isArray(searchColumn);
+  const searchableColumns: readonly string[] | undefined = Array.isArray(searchColumn) ? searchColumn : undefined;
 
   // Custom filter for multi-column search (when searchColumn is an array)
-  const multiColumnFilterFn: FilterFn<T> = (row, _columnId, filterValue: string) => {
+  const multiColumnFilterFn: FilterFn<T> = (row, _columnId, filterValue: string): boolean => {
     if (!filterValue || !searchableColumns) return true;
-    const search = filterValue.toLowerCase();
-    return searchableColumns.some((colId) => {
+    const search: string = filterValue.toLowerCase();
+    return searchableColumns.some((colId: string) => {
       const value = row.getValue(colId);
       return String(value ?? "").toLowerCase().includes(search);
     });
@@ -93,7 +93,7 @@ export function Datatable<T extends object>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    ...(useGlobalSearch && {
+    ...(tanstackGlobalSearchEnabled && {
       globalFilterFn: searchableColumns ? multiColumnFilterFn : "includesString",
       onGlobalFilterChange: setGlobalFilter,
     }),
@@ -102,9 +102,13 @@ export function Datatable<T extends object>({
       columnFilters,
       columnVisibility,
       rowSelection,
-      ...(useGlobalSearch && { globalFilter }),
+      ...(tanstackGlobalSearchEnabled && { globalFilter }),
     },
   });
+
+  if (enableGlobalFilter && searchColumn) {
+    throw new TypeError("The props 'searchColumn' and 'enableGlobalFilter' may not both be set.")
+  }
 
   return (
     <div className="w-full flex flex-col justify-start items-center">
@@ -114,12 +118,12 @@ export function Datatable<T extends object>({
           <Input
             placeholder={`Filter ${datatypeLabel.toLowerCase()}s...`}
             value={
-              useGlobalSearch
+              tanstackGlobalSearchEnabled
                 ? globalFilter
                 : (table.getColumn(searchColumn as string)?.getFilterValue() as string) ?? ""
             }
             onChange={(event) => {
-              if (useGlobalSearch) {
+              if (tanstackGlobalSearchEnabled) {
                 setGlobalFilter(event.target.value);
               } else if (typeof searchColumn === "string") {
                 table.getColumn(searchColumn)?.setFilterValue(event.target.value);
