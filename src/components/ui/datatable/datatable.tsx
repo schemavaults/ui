@@ -5,6 +5,7 @@ import {
   type ColumnFiltersState,
   type SortingState,
   type VisibilityState,
+  type FilterFn,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -20,9 +21,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  // DropdownMenuItem,
-  // DropdownMenuLabel,
-  // DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -42,6 +40,15 @@ export interface DatatableProps<T extends object> {
   initialVisibleColumns: VisibilityState;
   HeaderButtons: FC;
   datatypeLabel: string;
+  /**
+   * Column(s) to search. Can be:
+   * - A single column ID string (filters that column only)
+   * - An array of column IDs (searches across those columns)
+   * - Omit and set enableGlobalFilter for all-column search
+   */
+  searchColumn?: string | string[];
+  /** Enable global filtering across all columns. Overrides searchColumn if true. */
+  enableGlobalFilter?: boolean;
 }
 
 export function Datatable<T extends object>({
@@ -50,13 +57,31 @@ export function Datatable<T extends object>({
   initialVisibleColumns,
   HeaderButtons,
   datatypeLabel,
+  searchColumn,
+  enableGlobalFilter = false,
 }: DatatableProps<T>): ReactElement {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState<string>("");
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     initialVisibleColumns,
   );
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  // Determine search mode
+  const useGlobalSearch = enableGlobalFilter || Array.isArray(searchColumn);
+  const searchableColumns = Array.isArray(searchColumn) ? searchColumn : undefined;
+
+  // Custom filter for multi-column search (when searchColumn is an array)
+  const multiColumnFilterFn: FilterFn<T> = (row, _columnId, filterValue: string) => {
+    if (!filterValue || !searchableColumns) return true;
+    const search = filterValue.toLowerCase();
+    return searchableColumns.some((colId) => {
+      const value = row.getValue(colId);
+      return String(value ?? "").toLowerCase().includes(search);
+    });
+  };
+
   const table = useReactTable({
     data,
     columns: columns satisfies ColumnDef<T>[],
@@ -68,11 +93,16 @@ export function Datatable<T extends object>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    ...(useGlobalSearch && {
+      globalFilterFn: searchableColumns ? multiColumnFilterFn : "includesString",
+      onGlobalFilterChange: setGlobalFilter,
+    }),
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      ...(useGlobalSearch && { globalFilter }),
     },
   });
 
@@ -80,14 +110,24 @@ export function Datatable<T extends object>({
     <div className="w-full flex flex-col justify-start items-center">
       {/** Table Helpers (search + buttons) */}
       <div className="flex flex-row flex-wrap gap-4 items-center py-2 md:py-4 w-full">
-        <Input
-          placeholder={`Filter ${datatypeLabel.toLowerCase()}s...`}
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm min-w-24 w-auto grow"
-        />
+        {(searchColumn || enableGlobalFilter) && (
+          <Input
+            placeholder={`Filter ${datatypeLabel.toLowerCase()}s...`}
+            value={
+              useGlobalSearch
+                ? globalFilter
+                : (table.getColumn(searchColumn as string)?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) => {
+              if (useGlobalSearch) {
+                setGlobalFilter(event.target.value);
+              } else if (typeof searchColumn === "string") {
+                table.getColumn(searchColumn)?.setFilterValue(event.target.value);
+              }
+            }}
+            className="max-w-sm min-w-24 w-auto grow"
+          />
+        )}
         <div className="ml-auto flex flex-row flex-wrap justify-end gap-2 md:gap-4">
           {/** Extra buttons */}
           <HeaderButtons />
