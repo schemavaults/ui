@@ -21,6 +21,9 @@ bun run build:storybook
 # Type check without emitting
 bun run typecheck
 
+# Type check (including .stories.tsx files) without emitting
+bun run typecheck:storybook
+
 # Lint source files
 bun run lint
 ```

@@ -1,6 +1,6 @@
 "use client";
 
-import type { PropsWithChildren, ReactElement, ReactNode } from "react";
+import { createContext, useContext, useMemo, type FC, type PropsWithChildren, type ReactElement, type ReactNode } from "react";
 import Button from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
@@ -15,14 +15,15 @@ export function InlineMenuContainer(
 ): ReactElement {
   return (
     <div
-      className="
-        flex flex-col
-        justify-start items-stretch
-        bg-background
-        border border-accent
-        rounded-md
-        shadow-md
-      "
+      className={cn(
+        "flex flex-col",
+        "justify-start items-stretch",
+        "bg-background",
+        "border border-accent",
+        "rounded-md",
+        "shadow-md",
+        "relative"
+      )}
       role="menu"
     >
       {props.close && (
@@ -56,7 +57,7 @@ export function InlineMenuContainer(
 
 function MenuItemIconSlot({ children }: PropsWithChildren): ReactElement {
   return (
-    <div className="h-6 w-6 flex items-center justify-center">{children}</div>
+    <div className="h-6 w-6 flex items-center justify-center text-current">{children}</div>
   );
 }
 
@@ -69,13 +70,27 @@ export interface InlineMenuItemDefinition {
   disabled?: boolean;
 }
 
+const InlineMenuHasIconsSetContext = createContext<boolean | null>(null);
+
+function useInlineMenuHasIconsSet(): boolean {
+  const context = useContext(InlineMenuHasIconsSetContext);
+  if (typeof context !== "boolean") {
+    throw new Error("useInlineMenuHasIconsSet must be used within an InlineMenuHasIconsSetContext provider");
+  }
+  return context;
+}
+
 export function InlineMenuItem(props: InlineMenuItemDefinition): ReactElement {
   const destructive: boolean = props.destructive ?? false;
   const color = destructive ? "red" : undefined;
 
-  const iconClassName = "h-4 w-4" as const;
+  const colorClassName: string = destructive ? "text-red-500" : "text-foreground";
+  const iconClassName: string = cn(
+    "h-4 w-4"
+  );
 
-  const Icon = props.icon;
+  const hasIconsSet: boolean = useInlineMenuHasIconsSet();
+  const Icon: FC<{ className?: string }> | undefined = props.icon;
 
   const onPress = props.disabled ? undefined : props.onPress;
 
@@ -83,6 +98,7 @@ export function InlineMenuItem(props: InlineMenuItemDefinition): ReactElement {
     "w-full grow",
     "flex flex-row flex-nowrap gap-2",
     "items-center justify-start",
+    colorClassName,
     props.disabled ? "hover:cursor-not-allowed" : "hover:cursor-pointer",
   );
 
@@ -93,11 +109,15 @@ export function InlineMenuItem(props: InlineMenuItemDefinition): ReactElement {
         color={color}
         onClick={onPress}
         className={className}
+        disabled={props.disabled}
       >
-        <MenuItemIconSlot>
-          {typeof Icon === "function" && <Icon className={iconClassName} />}
-        </MenuItemIconSlot>
-        <p className="text-foreground">{props.label}</p>
+        { hasIconsSet && (
+          <MenuItemIconSlot>
+            {typeof Icon === "function" && <Icon className={iconClassName} />}
+          </MenuItemIconSlot>
+        )}
+        
+        <p className={cn(colorClassName)}>{props.label}</p>
       </Button>
     </li>
   );
@@ -109,11 +129,16 @@ export interface InlineMenuProps {
 }
 
 export function InlineMenu(props: InlineMenuProps): ReactElement {
+  const hasAnIconSet: boolean = useMemo(() => props.items.some((item) => typeof item.icon === 'function'), [props.items]);
   return (
-    <InlineMenuContainer close={props.close}>
-      {props.items.map((inlineItem) => {
-        return <InlineMenuItem key={inlineItem.id} {...inlineItem} />;
-      })}
-    </InlineMenuContainer>
+    <InlineMenuHasIconsSetContext.Provider value={hasAnIconSet}>
+      <InlineMenuContainer close={props.close}>
+        {props.items.map((inlineItem) => {
+          return <InlineMenuItem key={inlineItem.id} {...inlineItem} />;
+        })}
+      </InlineMenuContainer>
+    </InlineMenuHasIconsSetContext.Provider>
   );
 }
+
+export default InlineMenu;
