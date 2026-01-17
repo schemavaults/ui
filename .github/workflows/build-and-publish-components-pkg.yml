@@ -67,7 +67,7 @@ jobs:
       - name: Configure .npmrc to publish to GitHub NPM registry
         run: cp .npmrc.github .npmrc
       - name: Publish package to GitHub NPM registry
-        run: bun publish --registry=https://npm.pkg.github.com
+        run: bun publish ./schemavaults-ui.tgz --registry=https://npm.pkg.github.com
         env:
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ github.actor }}
           SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
