@@ -86,4 +86,4 @@ src/components/ui/button/
 
 ### Git Commit Format
 
-Use the format `${semver} - ${commit_description}`. E.g. 0.12.15 - Added a new Storybook.js story for the Form component.
+Use the format `${semver} - ${commit_description}`. E.g. 0.12.15 - Added a new Storybook.js story for the Form component. If you are commiting a new version, ensure that the 'version' field of package.json has been bumped appropriately.
