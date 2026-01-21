@@ -40,22 +40,27 @@ export function DashboardSidebarHeader({
               display: "none",
             },
             width: 0,
+            transition: {
+              duration: toggleDashboardLayoutCollapsedTransitionTime,
+              ease: toggleDashboardLayoutCollapsedTransitionEasing,
+              delay: 0,
+            },
           },
           enter: {
             opacity: 1,
             scale: 1,
             display: "block",
             width: "auto",
+            transition: {
+              duration: toggleDashboardLayoutCollapsedTransitionTime,
+              ease: toggleDashboardLayoutCollapsedTransitionEasing,
+              delay: toggleDashboardLayoutCollapsedTransitionTime / 1.5,
+            },
           },
         }}
         initial="exit"
         animate="enter"
         exit="exit"
-        transition={{
-          duration: toggleDashboardLayoutCollapsedTransitionTime,
-          ease: toggleDashboardLayoutCollapsedTransitionEasing,
-          delay: toggleDashboardLayoutCollapsedTransitionTime / 1.5,
-        }}
         layout
       >
         <Link href={brandHref}>{wordmark}</Link>

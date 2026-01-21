@@ -9,6 +9,10 @@ import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, m } from "@/framer-motion";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
+import {
+  toggleDashboardLayoutCollapsedTransitionTime,
+  toggleDashboardLayoutCollapsedTransitionEasing,
+} from "../toggle-dashboard-layout-collapsed-transition-time";
 import { DashboardSidebarAdminOnlyItemsContext } from "./dashboard-sidebar-admin-only-items-context";
 import type { LinkComponentType } from "@/types/Link";
 
@@ -59,6 +63,11 @@ export function DashboardSidebarItemGroupRenderer({
               display: "block",
               paddingBottom:
                 sizes.sidebar_expanded_menu_group_label_bottom_padding,
+              transition: {
+                duration: toggleDashboardLayoutCollapsedTransitionTime,
+                ease: toggleDashboardLayoutCollapsedTransitionEasing,
+                delay: toggleDashboardLayoutCollapsedTransitionTime / 1.5,
+              },
             }}
             exit={{
               scale: 0,
@@ -69,6 +78,11 @@ export function DashboardSidebarItemGroupRenderer({
                 display: "none",
               },
               paddingBottom: 0,
+              transition: {
+                duration: toggleDashboardLayoutCollapsedTransitionTime,
+                ease: toggleDashboardLayoutCollapsedTransitionEasing,
+                delay: 0,
+              },
             }}
           >
             <Label
