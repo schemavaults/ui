@@ -68,7 +68,6 @@ export function DashboardLayoutSidebarLayout({
         Link={Link}
         brandHref={brandHref}
       />
-      <Separator orientation="horizontal" className={separatorClassName} />
       <DashboardSidebarContent Link={Link} />
       {typeof props.sidebarFooterContent === "function" && (
         <>
