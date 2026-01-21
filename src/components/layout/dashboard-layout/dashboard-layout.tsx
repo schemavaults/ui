@@ -69,9 +69,11 @@ export function DashboardLayout({
         <DashboardLayoutMainContentContainer>
           <header
             className={cn(
+              "sticky top-0",
               "flex shrink-0 items-center gap-2",
               "transition-[width,height] ease-linear",
               "bg-background",
+              "border-b",
               size.sidebar_and_header_z_index_classname,
             )}
             style={{

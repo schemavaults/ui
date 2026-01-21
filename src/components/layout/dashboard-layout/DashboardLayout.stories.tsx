@@ -21,16 +21,12 @@ import type { LinkComponentProps, LinkComponentType } from "@/types/Link";
 import { fn } from "@storybook/test";
 
 function ExampleChildrenForContainer(): ReactNode {
+  const REPEAT_TEXT: number = 25;
   return (
-    <div className="flex flex-col gap-4 justify-start items-start">
-      <p>{LoremIpsumText satisfies string}</p>
-      <p>{LoremIpsumText satisfies string}</p>
-      <p>{LoremIpsumText satisfies string}</p>
-      <p>{LoremIpsumText satisfies string}</p>
-      <p>{LoremIpsumText satisfies string}</p>
-      <p>{LoremIpsumText satisfies string}</p>
-      <p>{LoremIpsumText satisfies string}</p>
-      <p>{LoremIpsumText satisfies string}</p>
+    <div className="flex flex-col gap-4 justify-start items-start p-4">
+      {Array.from({ length: REPEAT_TEXT }).map((_, index) => (
+        <p key={index}>{LoremIpsumText satisfies string}</p>
+      ))}
     </div>
   );
 }

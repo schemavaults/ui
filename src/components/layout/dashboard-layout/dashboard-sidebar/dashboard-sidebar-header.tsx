@@ -74,7 +74,8 @@ export function DashboardSidebarHeader({
         "flex flex-row flex-nowrap",
         "justify-start items-center bg-background",
         "overflow-hidden",
-        "flex-shrink-0"
+        "flex-shrink-0",
+        "border-b"
       )}
     >
       <Link href={brandHref} className={cn(

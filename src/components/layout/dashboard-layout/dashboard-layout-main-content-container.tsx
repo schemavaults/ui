@@ -23,6 +23,7 @@ export function DashboardLayoutMainContentContainer({
         "absolute",
         "h-full grow",
         "overflow-x-hidden overflow-y-scroll",
+        "no-scrollbar",
         "max-md:w-screen",
         "transition-[width,left] ease-linear will-change-[width]",
         openState.open
