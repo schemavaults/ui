@@ -34,10 +34,13 @@ import {
 } from "@/components/ui/table";
 import { type ReactElement, useState, type FC } from "react";
 
-export interface DatatableProps<T extends object> {
-  data: T[];
-  columns: ColumnDef<T>[];
+export type { ColumnDef };
+
+export interface DatatableProps<TData extends object, TValue = unknown> {
+  data: TData[];
+  columns: ColumnDef<TData, TValue>[];
   initialVisibleColumns: VisibilityState;
+  // Renders buttons (or anything really) at the top of table. Useful for an 'Add' button.
   HeaderButtons?: FC;
   datatypeLabel: string;
   /**
@@ -51,7 +54,7 @@ export interface DatatableProps<T extends object> {
   enableGlobalFilter?: boolean;
 }
 
-export function Datatable<T extends object>({
+export function Datatable<TData extends object, TValue = unknown>({
   data,
   columns,
   initialVisibleColumns,
@@ -59,7 +62,7 @@ export function Datatable<T extends object>({
   searchColumn,
   enableGlobalFilter = false,
   HeaderButtons,
-}: DatatableProps<T>): ReactElement {
+}: DatatableProps<TData, TValue>): ReactElement {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState<string>("");
@@ -78,7 +81,7 @@ export function Datatable<T extends object>({
     : undefined;
 
   // Custom filter for multi-column search (when searchColumn is an array)
-  const multiColumnFilterFn: FilterFn<T> = (
+  const multiColumnFilterFn: FilterFn<TData> = (
     row,
     _columnId,
     filterValue: string,
@@ -95,7 +98,7 @@ export function Datatable<T extends object>({
 
   const table = useReactTable({
     data,
-    columns: columns satisfies ColumnDef<T>[],
+    columns: columns satisfies ColumnDef<TData, TValue>[],
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -260,3 +263,5 @@ export function Datatable<T extends object>({
     </div>
   );
 }
+
+export default Datatable;
