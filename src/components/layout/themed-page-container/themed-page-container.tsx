@@ -27,37 +27,40 @@ export function ThemedPageContainer({
   children,
   ...props
 }: ThemedPageContainerProps): ReactElement {
-
   const defaultBackgroundClassName: string = cn(
-  "min-h-full",
-  "p-2 sm:p-4 lg:p-6"
-)
+    "min-h-full",
+    "p-2 sm:p-4 lg:p-6",
+  );
 
   const defaultContentContainerClassName: string = cn(
     "rounded-lg",
     "gap-2 sm:gap-4 lg:gap-6",
-    props.additionalContentContainerClassName
+    props.additionalContentContainerClassName,
   );
 
-  const backgroundClassName: string = typeof props.backgroundClassName === 'string' ?
-      props.backgroundClassName
+  const backgroundContentClassName: string =
+    typeof props.backgroundClassName === "string"
+      ? props.backgroundClassName
       : defaultBackgroundClassName;
-  const contentContainerClassName: string = typeof props.contentContainerClassName === 'string' ?
-      cn(props.contentContainerClassName, props.additionalContentContainerClassName)
+  const contentContainerClassName: string =
+    typeof props.contentContainerClassName === "string"
+      ? cn(
+          props.contentContainerClassName,
+          props.additionalContentContainerClassName,
+        )
       : defaultContentContainerClassName;
-  
+
   return (
     <ThemedPageBackground
       className={cn(
         "grow",
-        "overflow-y-scroll",
+        "overflow-y-scroll no-scrollbar",
         "flex flex-col items-stretch justify-start",
-        backgroundClassName
+        backgroundContentClassName,
       )}
+      backgroundClassName={undefined}
     >
-      <PageColumnContainer
-        className={contentContainerClassName}
-      >
+      <PageColumnContainer className={contentContainerClassName}>
         {children}
       </PageColumnContainer>
     </ThemedPageBackground>

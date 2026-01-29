@@ -32,7 +32,14 @@ export function ThemedPageBackground({
 
   return (
     <div className={backgroundClassNames.join(" ")}>
-      <div className={cn("relative z-10 w-full min-h-full", props.className)}>
+      <div
+        className={cn(
+          "schemavaults-themed-page-background-internal-content",
+          "relative z-10",
+          "w-full min-h-full",
+          props.className,
+        )}
+      >
         {children}
       </div>
     </div>
