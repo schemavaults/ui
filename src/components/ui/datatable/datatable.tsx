@@ -38,7 +38,7 @@ export interface DatatableProps<T extends object> {
   data: T[];
   columns: ColumnDef<T>[];
   initialVisibleColumns: VisibilityState;
-  HeaderButtons: FC;
+  HeaderButtons?: FC;
   datatypeLabel: string;
   /**
    * Column(s) to search. Can be:
@@ -55,10 +55,10 @@ export function Datatable<T extends object>({
   data,
   columns,
   initialVisibleColumns,
-  HeaderButtons,
   datatypeLabel,
   searchColumn,
   enableGlobalFilter = false,
+  HeaderButtons,
 }: DatatableProps<T>): ReactElement {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -69,16 +69,27 @@ export function Datatable<T extends object>({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   // Determine search mode
-  const tanstackGlobalSearchEnabled: boolean = enableGlobalFilter || Array.isArray(searchColumn);
-  const searchableColumns: readonly string[] | undefined = Array.isArray(searchColumn) ? searchColumn : undefined;
+  const tanstackGlobalSearchEnabled: boolean =
+    enableGlobalFilter || Array.isArray(searchColumn);
+  const searchableColumns: readonly string[] | undefined = Array.isArray(
+    searchColumn,
+  )
+    ? searchColumn
+    : undefined;
 
   // Custom filter for multi-column search (when searchColumn is an array)
-  const multiColumnFilterFn: FilterFn<T> = (row, _columnId, filterValue: string): boolean => {
+  const multiColumnFilterFn: FilterFn<T> = (
+    row,
+    _columnId,
+    filterValue: string,
+  ): boolean => {
     if (!filterValue || !searchableColumns) return true;
     const search: string = filterValue.toLowerCase();
     return searchableColumns.some((colId: string) => {
       const value = row.getValue(colId);
-      return String(value ?? "").toLowerCase().includes(search);
+      return String(value ?? "")
+        .toLowerCase()
+        .includes(search);
     });
   };
 
@@ -94,7 +105,9 @@ export function Datatable<T extends object>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     ...(tanstackGlobalSearchEnabled && {
-      globalFilterFn: searchableColumns ? multiColumnFilterFn : "includesString",
+      globalFilterFn: searchableColumns
+        ? multiColumnFilterFn
+        : "includesString",
       onGlobalFilterChange: setGlobalFilter,
     }),
     state: {
@@ -107,7 +120,9 @@ export function Datatable<T extends object>({
   });
 
   if (enableGlobalFilter && searchColumn) {
-    throw new TypeError("The props 'searchColumn' and 'enableGlobalFilter' may not both be set.")
+    throw new TypeError(
+      "The props 'searchColumn' and 'enableGlobalFilter' may not both be set.",
+    );
   }
 
   return (
@@ -120,13 +135,17 @@ export function Datatable<T extends object>({
             value={
               tanstackGlobalSearchEnabled
                 ? globalFilter
-                : (table.getColumn(searchColumn as string)?.getFilterValue() as string) ?? ""
+                : ((table
+                    .getColumn(searchColumn as string)
+                    ?.getFilterValue() as string) ?? "")
             }
             onChange={(event) => {
               if (tanstackGlobalSearchEnabled) {
                 setGlobalFilter(event.target.value);
               } else if (typeof searchColumn === "string") {
-                table.getColumn(searchColumn)?.setFilterValue(event.target.value);
+                table
+                  .getColumn(searchColumn)
+                  ?.setFilterValue(event.target.value);
               }
             }}
             className="max-w-sm min-w-24 w-auto grow"
@@ -134,7 +153,7 @@ export function Datatable<T extends object>({
         )}
         <div className="ml-auto flex flex-row flex-wrap justify-end gap-2 md:gap-4">
           {/** Extra buttons */}
-          <HeaderButtons />
+          {typeof HeaderButtons === "function" && <HeaderButtons />}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
