@@ -1,6 +1,6 @@
 {
   "name": "@schemavaults/ui",
-  "version": "0.13.12",
+  "version": "0.13.13",
   "private": false,
   "license": "UNLICENSED",
   "description": "React.js UI components for SchemaVaults frontend applications",
@@ -28,6 +28,7 @@
     "@radix-ui/react-tabs": "1.1.13",
     "@radix-ui/react-tooltip": "1.2.7",
     "@radix-ui/react-visually-hidden": "1.2.3",
+    "@radix-ui/react-switch": "1.2.6",
     "@schemavaults/theme": "0.25.5",
     "@tanstack/react-table": "8.20.1",
     "class-variance-authority": "0.7.1",

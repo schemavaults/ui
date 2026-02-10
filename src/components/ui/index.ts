@@ -125,3 +125,6 @@ export type * from "./tabs";
 
 export * from "./slider";
 export type * from "./slider";
+
+export * from "./switch";
+export type * from "./switch";
