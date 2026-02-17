@@ -128,3 +128,6 @@ export type * from "./slider";
 
 export * from "./switch";
 export type * from "./switch";
+
+export * from "./progress-bar";
+export type * from "./progress-bar";
