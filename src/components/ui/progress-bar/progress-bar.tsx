@@ -1,6 +1,7 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
+import { m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 import type { ReactElement, HTMLAttributes } from "react";
 
@@ -62,13 +63,15 @@ export function ProgressBar({
       className={cn(progressBarVariants({ size }), className)}
       {...props}
     >
-      <div
+      <m.div
+        initial={{ width: 0 }}
+        animate={{ width: `${percentage}%` }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         className={cn(
-          "h-full rounded-full transition-all duration-300 ease-in-out",
+          "h-full rounded-full",
           "bg-gradient-to-r from-schemavaults-brand-blue to-schemavaults-brand-red",
           indicatorClassName,
         )}
-        style={{ width: `${percentage}%` }}
       />
     </div>
   );
