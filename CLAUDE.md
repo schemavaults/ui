@@ -8,7 +8,12 @@ This is `@schemavaults/ui`, a React component library package for SchemaVaults f
 
 ## Commands
 
+**Important:** Always run `bun install` first before running any of the commands below. Dependencies may not be installed in a fresh environment, and typecheck/lint/build will fail without them.
+
 ```bash
+# Install dependencies (run this first)
+bun install
+
 # Build the package (compiles TypeScript and resolves path aliases)
 bun run build
 
