@@ -14,7 +14,13 @@ import {
   useReactTable,
   type RowSelectionState,
 } from "@tanstack/react-table";
-import { ChevronDown } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +30,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -35,6 +48,9 @@ import {
 import { type ReactElement, useState, type FC } from "react";
 
 export type { ColumnDef };
+
+/** Default page size options shown in the rows-per-page selector. */
+const DEFAULT_PAGE_SIZE_OPTIONS: readonly number[] = [10, 20, 50, 100];
 
 export interface DatatableProps<TData extends object, TValue = unknown> {
   data: TData[];
@@ -52,6 +68,10 @@ export interface DatatableProps<TData extends object, TValue = unknown> {
   searchColumn?: string | string[];
   /** Enable global filtering across all columns. Overrides searchColumn if true. */
   enableGlobalFilter?: boolean;
+  /** Number of rows to show per page. Defaults to 10. */
+  defaultPageSize?: number;
+  /** Options shown in the rows-per-page selector. Defaults to [10, 20, 50, 100]. */
+  pageSizeOptions?: number[];
 }
 
 export function Datatable<TData extends object, TValue = unknown>({
@@ -62,6 +82,8 @@ export function Datatable<TData extends object, TValue = unknown>({
   searchColumn,
   enableGlobalFilter = false,
   HeaderButtons,
+  defaultPageSize = 10,
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS as unknown as number[],
 }: DatatableProps<TData, TValue>): ReactElement {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -99,6 +121,11 @@ export function Datatable<TData extends object, TValue = unknown>({
   const table = useReactTable({
     data,
     columns: columns satisfies ColumnDef<TData, TValue>[],
+    initialState: {
+      pagination: {
+        pageSize: defaultPageSize,
+      },
+    },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -236,28 +263,84 @@ export function Datatable<TData extends object, TValue = unknown>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+      {/* Pagination */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 w-full">
+        <div className="text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          {/* Rows per page selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              Rows per page
+            </span>
+            <Select
+              value={String(table.getState().pagination.pageSize)}
+              onValueChange={(value: string) => {
+                table.setPageSize(Number(value));
+              }}
+            >
+              <SelectTrigger size="sm" className="w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizeOptions.map((size: number) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Page indicator */}
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount()}
+          </span>
+          {/* Navigation buttons */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={() => table.firstPage()}
+              disabled={!table.getCanPreviousPage()}
+              aria-label="First page"
+            >
+              <ChevronsLeft className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              aria-label="Next page"
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={() => table.lastPage()}
+              disabled={!table.getCanNextPage()}
+              aria-label="Last page"
+            >
+              <ChevronsRight className="size-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
