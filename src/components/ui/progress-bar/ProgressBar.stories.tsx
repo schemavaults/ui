@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import type { ReactElement } from "react";
+import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
 import { ProgressBar, progressBarSizeIds } from "./progress-bar";
 
 const meta = {
@@ -41,8 +43,14 @@ const meta = {
     max: 100,
   },
   decorators: [
-    (Story) => {
-      return Story({ args: { style: { width: "320px" } } });
+    (Story): ReactElement => {
+      return (
+        <LazyFramerMotionProvider>
+          <div style={{ width: "320px" }}>
+            <Story />
+          </div>
+        </LazyFramerMotionProvider>
+      );
     },
   ],
 } satisfies Meta<typeof ProgressBar>;
