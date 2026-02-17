@@ -24,6 +24,15 @@ const users: User[] = [
   { id: "8", name: "Hannah Montana", email: "hannah@example.com", role: "Editor", status: "Inactive" },
 ];
 
+/** Larger dataset for pagination demos. */
+const manyUsers: User[] = Array.from({ length: 55 }, (_, i) => ({
+  id: String(i + 1),
+  name: `User ${i + 1}`,
+  email: `user${i + 1}@example.com`,
+  role: ["Admin", "Editor", "Viewer"][i % 3] as string,
+  status: ["Active", "Inactive", "Pending"][i % 3] as string,
+}));
+
 const columns: ColumnDef<User>[] = [
   {
     accessorKey: "name",
@@ -151,4 +160,41 @@ export const NoSearch: Story = {
 
 export const WithHiddenColumns: Story = {
   render: (): ReactElement => <WithHiddenColumnsDemo />,
+};
+
+function CustomPageSizeDemo(): ReactElement {
+  return (
+    <Datatable
+      data={manyUsers}
+      columns={columns}
+      initialVisibleColumns={{}}
+      HeaderButtons={ExampleHeaderButtons}
+      datatypeLabel="User"
+      searchColumn="name"
+      defaultPageSize={5}
+      pageSizeOptions={[5, 10, 25, 50]}
+    />
+  );
+}
+
+function LargePageSizeDemo(): ReactElement {
+  return (
+    <Datatable
+      data={manyUsers}
+      columns={columns}
+      initialVisibleColumns={{}}
+      HeaderButtons={ExampleHeaderButtons}
+      datatypeLabel="User"
+      searchColumn="name"
+      defaultPageSize={50}
+    />
+  );
+}
+
+export const CustomPageSize: Story = {
+  render: (): ReactElement => <CustomPageSizeDemo />,
+};
+
+export const LargeDefaultPageSize: Story = {
+  render: (): ReactElement => <LargePageSizeDemo />,
 };
