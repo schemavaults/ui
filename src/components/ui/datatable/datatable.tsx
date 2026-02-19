@@ -15,6 +15,9 @@ import {
   type RowSelectionState,
 } from "@tanstack/react-table";
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -45,7 +48,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type ReactElement, useState, type FC } from "react";
+import { type ReactElement, useMemo, useState, type FC } from "react";
 
 export type { ColumnDef };
 
@@ -72,6 +75,10 @@ export interface DatatableProps<TData extends object, TValue = unknown> {
   defaultPageSize?: number;
   /** Options shown in the rows-per-page selector. Defaults to [10, 20, 50, 100]. */
   pageSizeOptions?: number[];
+  /** Column IDs that should be sortable via clickable headers. If omitted, no columns are sortable. */
+  sortableColumns?: string[];
+  /** Initial sort state applied on mount. The column must also be listed in sortableColumns. */
+  defaultSort?: { id: string; desc: boolean };
 }
 
 export function Datatable<TData extends object, TValue = unknown>({
@@ -84,8 +91,12 @@ export function Datatable<TData extends object, TValue = unknown>({
   HeaderButtons,
   defaultPageSize = 10,
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS as unknown as number[],
+  sortableColumns,
+  defaultSort,
 }: DatatableProps<TData, TValue>): ReactElement {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>(
+    defaultSort ? [defaultSort] : [],
+  );
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -118,9 +129,30 @@ export function Datatable<TData extends object, TValue = unknown>({
     });
   };
 
+  // Set of column IDs that are sortable, for O(1) lookups.
+  const sortableSet = useMemo<ReadonlySet<string>>(
+    () => new Set(sortableColumns ?? []),
+    [sortableColumns],
+  );
+
+  // Override enableSorting per column so only sortableColumns are interactive.
+  const columnsWithSorting = useMemo<ColumnDef<TData, TValue>[]>(
+    () =>
+      columns.map((col) => {
+        const colId =
+          (col as { accessorKey?: string }).accessorKey ??
+          (col as { id?: string }).id;
+        return {
+          ...col,
+          enableSorting: colId ? sortableSet.has(colId) : false,
+        };
+      }),
+    [columns, sortableSet],
+  );
+
   const table = useReactTable({
     data,
-    columns: columns satisfies ColumnDef<TData, TValue>[],
+    columns: columnsWithSorting satisfies ColumnDef<TData, TValue>[],
     initialState: {
       pagination: {
         pageSize: defaultPageSize,
@@ -221,12 +253,34 @@ export function Datatable<TData extends object, TValue = unknown>({
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
+                      {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                        <Button
+                          variant="ghost"
+                          className="-ml-4"
+                          onClick={() =>
+                            header.column.toggleSorting(
+                              header.column.getIsSorted() === "asc",
+                            )
+                          }
+                        >
+                          {flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
                           )}
+                          {header.column.getIsSorted() === "asc" ? (
+                            <ArrowUp className="ml-2 h-4 w-4" />
+                          ) : header.column.getIsSorted() === "desc" ? (
+                            <ArrowDown className="ml-2 h-4 w-4" />
+                          ) : (
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          )}
+                        </Button>
+                      ) : (
+                        flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )
+                      )}
                     </TableHead>
                   );
                 })}

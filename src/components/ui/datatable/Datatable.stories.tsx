@@ -198,3 +198,40 @@ export const CustomPageSize: Story = {
 export const LargeDefaultPageSize: Story = {
   render: (): ReactElement => <LargePageSizeDemo />,
 };
+
+function SortableColumnsDemo(): ReactElement {
+  return (
+    <Datatable
+      data={users}
+      columns={columns}
+      initialVisibleColumns={{}}
+      HeaderButtons={ExampleHeaderButtons}
+      datatypeLabel="User"
+      searchColumn="name"
+      sortableColumns={["name", "role", "status"]}
+    />
+  );
+}
+
+function DefaultSortDemo(): ReactElement {
+  return (
+    <Datatable
+      data={manyUsers}
+      columns={columns}
+      initialVisibleColumns={{}}
+      HeaderButtons={ExampleHeaderButtons}
+      datatypeLabel="User"
+      searchColumn="name"
+      sortableColumns={["name", "email", "role", "status"]}
+      defaultSort={{ id: "name", desc: false }}
+    />
+  );
+}
+
+export const SortableColumns: Story = {
+  render: (): ReactElement => <SortableColumnsDemo />,
+};
+
+export const DefaultSort: Story = {
+  render: (): ReactElement => <DefaultSortDemo />,
+};
