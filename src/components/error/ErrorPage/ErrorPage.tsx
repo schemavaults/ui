@@ -1,13 +1,17 @@
 "use client";
 
 import type { ReactElement } from "react";
+import { RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/ui/wordmark";
 
 export type ErrorPageProps = {
   error: Error;
+  reset?: () => void;
 } | {
   error: number | string;
   message: string;
+  reset?: () => void;
 };
 
 export function ErrorPage(props: ErrorPageProps): ReactElement {
@@ -36,6 +40,7 @@ export function ErrorPage(props: ErrorPageProps): ReactElement {
       </h1>
 
       <p className="text-md">{errorMsg}</p>
+      {props.reset && <Button onClick={props.reset} className="mt-4 flex flex-row gap-2"><RotateCcw size={16} /> Try Again</Button>}
     </div>
   );
 }
