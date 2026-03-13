@@ -1,18 +1,18 @@
+import { useState, type ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import Input from "./input";
 import { fn } from "@storybook/test";
+import { Dices, KeyRound } from "lucide-react";
 
-// More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
+import Input from "./input";
+import { Button } from "@/components/ui/button";
+
 const meta = {
   title: "Components/Input",
   component: Input,
   parameters: {
-    // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
     layout: "centered",
   },
-  // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
   tags: ["autodocs"],
-  // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {
     placeholder: {
       type: "string",
@@ -26,7 +26,6 @@ const meta = {
       },
     },
   },
-  // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
     onChange: (): void => {
       fn();
@@ -37,7 +36,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const DefaultTextInput: Story = {
   args: {},
 };
@@ -61,4 +59,30 @@ export const WithPlaceholder: Story = {
   args: {
     placeholder: "This text input has placeholder text!",
   },
+};
+
+function UUIDWithRandomizeRenderer(): ReactElement {
+  const [value, setValue] = useState<string>(crypto.randomUUID());
+  return (
+    <Input
+      icon={KeyRound}
+      value={value}
+      onChange={(e): void => setValue(e.target.value)}
+      rightButton={
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 mr-1"
+          onClick={(): void => setValue(crypto.randomUUID())}
+        >
+          <Dices className="h-4 w-4" />
+        </Button>
+      }
+    />
+  );
+}
+
+export const UUIDWithRandomize: Story = {
+  render: (): ReactElement => <UUIDWithRandomizeRenderer />,
 };
