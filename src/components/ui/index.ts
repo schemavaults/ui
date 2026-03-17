@@ -1,3 +1,6 @@
+export * from "./accordion";
+export type * from "./accordion";
+
 export * from "./alert";
 export type * from "./alert";
 
