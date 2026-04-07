@@ -1,6 +1,6 @@
 {
   "name": "@schemavaults/ui",
-  "version": "0.14.6",
+  "version": "0.14.7",
   "private": false,
   "license": "UNLICENSED",
   "description": "React.js UI components for SchemaVaults frontend applications",
@@ -63,7 +63,7 @@
     "ignore-loader": "0.1.2",
     "postcss": "8.5.6",
     "postcss-loader": "8.1.1",
-    "storybook": "8.6.15",
+    "storybook": "8.6.17",
     "tailwindcss": "3.4.17",
     "tsc-alias": "1.8.16",
     "typescript": "5.9.3",
