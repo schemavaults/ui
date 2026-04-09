@@ -3,6 +3,9 @@ import type { ReactElement } from "react";
 
 import { Avatar, AvatarImage, AvatarFallback, AvatarGroup, avatarSizeIds, avatarShapeIds } from "./avatar";
 
+// Sample image within storybook-assets/ folder for demo purposes
+const avatarImage: string = "/media/example_images/avatar-placeholder.svg";
+
 const meta = {
   title: "Components/Avatar",
   component: Avatar,
@@ -34,7 +37,7 @@ export const WithImage: Story = {
   render: (args): ReactElement => (
     <Avatar {...args}>
       <AvatarImage
-        src="https://api.dicebear.com/9.x/initials/svg?seed=SV&backgroundColor=3b82f6"
+        src={avatarImage}
         alt="SchemaVaults"
       />
       <AvatarFallback>SV</AvatarFallback>
