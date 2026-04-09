@@ -1,3 +1,6 @@
+export * from "./avatar";
+export type * from "./avatar";
+
 export * from "./accordion";
 export type * from "./accordion";
 
