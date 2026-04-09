@@ -68,6 +68,14 @@ const meta = {
   component: ToasterDemo,
   parameters: {
     layout: "centered",
+    docs: {
+      description: {
+        component:
+          "Toaster is the container component that subscribes to the `useToast` hook and renders active toasts. " +
+          "Mount it once at your app root. " +
+          "For details on individual toast variants and styling, see the [Toast](?path=/docs/components-toast--docs) component.",
+      },
+    },
   },
   tags: ["autodocs"],
 } satisfies Meta<typeof ToasterDemo>;

@@ -42,6 +42,14 @@ const meta = {
   parameters: {
     // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
     layout: "centered",
+    docs: {
+      description: {
+        component:
+          "Toast is the individual notification element with variants for `default`, `destructive`, and `warning` styles. " +
+          "Use the `useToast` hook to trigger toasts imperatively. " +
+          "To render toasts in your app, mount the [Toaster](?path=/docs/components-toaster--docs) container component — it subscribes to the toast state and displays active toasts.",
+      },
+    },
   },
   // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
   tags: ["autodocs"],
