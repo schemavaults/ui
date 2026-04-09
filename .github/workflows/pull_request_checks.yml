@@ -18,7 +18,7 @@ permissions:
   packages: read
 
 jobs:
-  lint:
+  Lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +38,7 @@ jobs:
       - name: Lint
         run: bun run lint
 
-  typecheck:
+  Typecheck:
     name: Typecheck
     runs-on: ubuntu-latest
     steps:
@@ -58,7 +58,7 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
-  build:
+  Build:
     name: Build
     needs:
       - Lint
