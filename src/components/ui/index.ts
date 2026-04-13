@@ -140,3 +140,6 @@ export type * from "./switch";
 
 export * from "./progress-bar";
 export type * from "./progress-bar";
+
+export * from "./breadcrumb";
+export type * from "./breadcrumb";
