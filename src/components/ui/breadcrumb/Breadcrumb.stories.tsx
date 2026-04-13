@@ -36,7 +36,7 @@ function BreadcrumbExample({
     <Breadcrumb separator={separator} size={size} variant={variant}>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          <BreadcrumbLink href="#">Home</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         {withEllipsis ? (
@@ -49,13 +49,13 @@ function BreadcrumbExample({
         ) : (
           <>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/vaults">Vaults</BreadcrumbLink>
+              <BreadcrumbLink href="#">Vaults</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
           </>
         )}
         <BreadcrumbItem>
-          <BreadcrumbLink href="/vaults/customers">Customers</BreadcrumbLink>
+          <BreadcrumbLink href="#">Customers</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
@@ -162,7 +162,7 @@ export const CollapsedLongPath: Story = {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          <BreadcrumbLink href="#">Home</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
@@ -170,9 +170,7 @@ export const CollapsedLongPath: Story = {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbLink href="/vaults/customers/schemas">
-            Schemas
-          </BreadcrumbLink>
+          <BreadcrumbLink href="#">Schemas</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
@@ -188,11 +186,11 @@ export const CustomSeparator: Story = {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          <BreadcrumbLink href="#">Home</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator>{"\u2022"}</BreadcrumbSeparator>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/settings">Settings</BreadcrumbLink>
+          <BreadcrumbLink href="#">Settings</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator>{"\u2022"}</BreadcrumbSeparator>
         <BreadcrumbItem>
