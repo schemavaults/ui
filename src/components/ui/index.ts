@@ -143,3 +143,6 @@ export type * from "./progress-bar";
 
 export * from "./breadcrumb";
 export type * from "./breadcrumb";
+
+export * from "./kbd";
+export type * from "./kbd";
