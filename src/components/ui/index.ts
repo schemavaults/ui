@@ -146,3 +146,6 @@ export type * from "./breadcrumb";
 
 export * from "./kbd";
 export type * from "./kbd";
+
+export * from "./spinner";
+export type * from "./spinner";
