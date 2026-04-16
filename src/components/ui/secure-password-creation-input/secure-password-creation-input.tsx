@@ -36,7 +36,7 @@ export function SecurePasswordCreationInput({
     <div className={cn("flex flex-col w-full", className)}>
       <PasswordInput value={value} onChange={onChange} {...passwordInputProps} />
 
-      {!hideProgressBar && value.length > 0 && (
+      {!hideProgressBar && (
         <ProgressBar
           value={validation.percentage}
           label="Password strength"
@@ -47,7 +47,7 @@ export function SecurePasswordCreationInput({
         />
       )}
 
-      {!hideChecklist && value.length > 0 && (
+      {!hideChecklist && (
         <PasswordRequirementChecklist results={validation.results} />
       )}
     </div>
