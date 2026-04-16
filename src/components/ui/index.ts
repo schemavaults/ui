@@ -152,3 +152,6 @@ export type * from "./kbd";
 
 export * from "./spinner";
 export type * from "./spinner";
+
+export * from "./banner";
+export type * from "./banner";
