@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactElement } from "react";
 import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
-import { ProgressBar, progressBarSizeIds } from "./progress-bar";
+import {
+  ProgressBar,
+  progressBarSizeIds,
+  progressBarColorIds,
+} from "./progress-bar";
 
 const meta = {
   title: "Components/ProgressBar",
@@ -21,6 +25,12 @@ const meta = {
     },
     size: {
       options: progressBarSizeIds,
+      control: {
+        type: "radio",
+      },
+    },
+    color: {
+      options: progressBarColorIds,
       control: {
         type: "radio",
       },
@@ -101,5 +111,29 @@ export const CustomRange: Story = {
     label: "Steps completed",
     min: 0,
     max: 10,
+  },
+};
+
+export const Positive: Story = {
+  args: {
+    value: 100,
+    label: "Success",
+    color: "positive",
+  },
+};
+
+export const Warning: Story = {
+  args: {
+    value: 60,
+    label: "Moderate progress",
+    color: "warning",
+  },
+};
+
+export const Destructive: Story = {
+  args: {
+    value: 25,
+    label: "Low progress",
+    color: "destructive",
   },
 };

@@ -21,13 +21,41 @@ export const progressBarVariants = cva(
   },
 );
 
+export const progressBarIndicatorVariants = cva(
+  "h-full rounded-full transition-colors duration-300",
+  {
+    variants: {
+      color: {
+        default:
+          "bg-gradient-to-r from-schemavaults-brand-blue to-schemavaults-brand-red",
+        positive: "bg-green-500",
+        warning: "bg-yellow-500",
+        destructive: "bg-red-500",
+      },
+    },
+    defaultVariants: {
+      color: "default",
+    },
+  },
+);
+
 export const progressBarSizeIds = ["sm", "default", "lg"] as const;
 
 export type ProgressBarSizeId = (typeof progressBarSizeIds)[number];
 
+export const progressBarColorIds = [
+  "default",
+  "positive",
+  "warning",
+  "destructive",
+] as const;
+
+export type ProgressBarColorId = (typeof progressBarColorIds)[number];
+
 export interface ProgressBarProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "role">,
-    VariantProps<typeof progressBarVariants> {
+  extends Omit<HTMLAttributes<HTMLDivElement>, "role" | "color">,
+    VariantProps<typeof progressBarVariants>,
+    VariantProps<typeof progressBarIndicatorVariants> {
   /** Current progress value (0-100) */
   value: number;
   /** Accessible label describing what the progress bar represents */
@@ -46,6 +74,7 @@ export function ProgressBar({
   min = 0,
   max = 100,
   size,
+  color,
   className,
   indicatorClassName,
   ...props
@@ -68,8 +97,7 @@ export function ProgressBar({
         animate={{ width: `${percentage}%` }}
         transition={{ duration: 0.4, ease: "easeOut" }}
         className={cn(
-          "h-full rounded-full",
-          "bg-gradient-to-r from-schemavaults-brand-blue to-schemavaults-brand-red",
+          progressBarIndicatorVariants({ color }),
           indicatorClassName,
         )}
       />
