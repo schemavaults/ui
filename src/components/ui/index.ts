@@ -155,3 +155,6 @@ export type * from "./spinner";
 
 export * from "./banner";
 export type * from "./banner";
+
+export * from "./empty-state";
+export type * from "./empty-state";
