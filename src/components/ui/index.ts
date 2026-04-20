@@ -158,3 +158,6 @@ export type * from "./banner";
 
 export * from "./empty-state";
 export type * from "./empty-state";
+
+export * from "./stat-card";
+export type * from "./stat-card";
