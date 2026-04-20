@@ -151,3 +151,118 @@ type Story = StoryObj<typeof meta>;
 export const DefaultStepper: Story = {
   args: {},
 };
+
+// Verifies that the stepper body fills the available vertical space of a
+// bounded flex-column parent and resizes with the viewport — the body should
+// grow to fill the column, and scroll only when its content overflows.
+export const InBoundedFlexColumn: Story = {
+  args: {},
+  decorators: [
+    (Story): ReactElement => (
+      <div
+        className="flex flex-col w-full"
+        style={{ height: "80vh", border: "1px dashed #999" }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+// Verifies that the `min-h-[40vh]` safety floor still renders a usable body
+// when the caller has NOT wired up a bounded vertical flex column (legacy
+// behavior preserved).
+export const InUnboundedParent: Story = {
+  args: {},
+  decorators: [
+    (Story): ReactElement => (
+      <div style={{ border: "1px dashed #999" }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+function TallStepContent(): ReactElement {
+  return (
+    <div className="flex flex-col gap-2">
+      {Array.from({ length: 60 }).map((_, i) => (
+        <p key={i} className="font-bold">
+          Tall content line {i + 1} — this step has a lot of content so the
+          body has to scroll internally.
+        </p>
+      ))}
+    </div>
+  );
+}
+
+const tallSteps: Step<ExampleStepperState>[] = [
+  {
+    id: "step-1",
+    label: "Step 1",
+    stepComponent: (): ReactElement => <TallStepContent />,
+    state: "unfilled",
+    beforeNextStep: async (): Promise<boolean> => true,
+  },
+  {
+    id: "step-2",
+    label: "Step 2",
+    stepComponent: (): ReactElement => <TallStepContent />,
+    state: "unfilled",
+    beforeNextStep: async (): Promise<boolean> => true,
+  },
+];
+
+function TallContentStepper(props: ExampleStepperProps): ReactElement {
+  const [state, setState] = useState<ExampleStepperState>({ currentStep: 0 });
+  const { toast } = useToast();
+
+  return (
+    <Stepper
+      {...props}
+      steps={tallSteps}
+      state={state}
+      setCurrentStep={(newStep: number): void =>
+        setState({ currentStep: newStep })
+      }
+      getCurrentStep={(s: ExampleStepperState): number => s.currentStep}
+      canGoNext={(opts): boolean =>
+        opts.getCurrentStep(opts.state) < tallSteps.length
+      }
+      canGoBack={(opts): boolean => opts.getCurrentStep(opts.state) > 0}
+      FinalStepSubmitButton={() => (
+        <Button
+          onClick={() => {
+            fn();
+            toast({
+              variant: "default",
+              title: "Pretending to submit <Stepper />",
+              description: "This is just a drill 🤙 Remain calm.",
+            });
+          }}
+        >
+          Submit Stepper
+        </Button>
+      )}
+    />
+  );
+}
+
+// Verifies that content taller than the body scrolls inside the body only.
+export const WithOverflowingContent: StoryObj<typeof TallContentStepper> = {
+  render: (args): ReactElement => <TallContentStepper {...args} />,
+  args: { id: "stepper-overflow" },
+  decorators: [
+    (Story): ReactElement => (
+      <LazyFramerMotionProvider>
+        <div
+          className="flex flex-col w-full"
+          style={{ height: "70vh", border: "1px dashed #999" }}
+        >
+          <Story />
+        </div>
+        <Toaster />
+      </LazyFramerMotionProvider>
+    ),
+  ],
+};
