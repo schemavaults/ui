@@ -53,7 +53,7 @@ export function Stepper<
       canGoBack={canGoBackFn}
       setCurrentStep={setCurrentStep}
     >
-      <div className="flex flex-col w-full grow gap-2">
+      <div className="flex flex-col w-full grow min-h-0 gap-2">
         <StepsIndicator />
 
         <Separator />

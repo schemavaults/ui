@@ -6,6 +6,11 @@ import type { ReactNode } from "react";
 import type { Step } from "./step_definition";
 import type { BaseStepperState } from "./base-stepper-state-type";
 
+// Caller contract: <Stepper> (which renders <StepperBody />) must be rendered
+// inside a parent that establishes a bounded vertical flex column — e.g.
+// <div className="h-full flex flex-col"> or a `grow flex flex-col` subtree
+// inside a flex-column ancestor with a defined height. Without a bounded
+// ancestor, `flex-1` has nothing to grow into and the body collapses to 0.
 export function StepperBody<StepperState extends BaseStepperState>() {
   const stepperContext = useStepperContext<StepperState>();
   if (!stepperContext) {
@@ -17,7 +22,7 @@ export function StepperBody<StepperState extends BaseStepperState>() {
     <div
       className="
         flex flex-col
-        w-full h-[40vh]
+        w-full flex-1 min-h-0
         justify-start items-start
         overflow-x-hidden
         schemavaults-stepper-body
@@ -44,8 +49,9 @@ export function StepperBody<StepperState extends BaseStepperState>() {
               transition={{ duration: 0.3 }}
               style={{
                 width: "100%",
-                overflowY: "scroll",
-                height: "40vh",
+                overflowY: "auto",
+                minHeight: 0,
+                flex: 1,
                 position: "relative",
                 top: 0,
                 left: 0,
