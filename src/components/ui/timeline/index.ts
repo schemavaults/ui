@@ -1,0 +1,32 @@
+export {
+  Timeline,
+  Timeline as default,
+  TimelineItem,
+  TimelineIndicator,
+  TimelineDot,
+  TimelineConnector,
+  TimelineContent,
+  TimelineHeader,
+  TimelineTitle,
+  TimelineTime,
+  TimelineDescription,
+  timelineDotVariants,
+  timelineConnectorVariants,
+  timelineVariantIds,
+  timelineSizeIds,
+} from "./timeline";
+
+export type {
+  TimelineProps,
+  TimelineItemProps,
+  TimelineIndicatorProps,
+  TimelineDotProps,
+  TimelineConnectorProps,
+  TimelineContentProps,
+  TimelineHeaderProps,
+  TimelineTitleProps,
+  TimelineTimeProps,
+  TimelineDescriptionProps,
+  TimelineVariantId,
+  TimelineSizeId,
+} from "./timeline";
