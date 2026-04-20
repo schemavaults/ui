@@ -9,10 +9,8 @@ import type { BaseStepperState } from "./base-stepper-state-type";
 // Caller contract: <Stepper> (which renders <StepperBody />) must be rendered
 // inside a parent that establishes a bounded vertical flex column — e.g.
 // <div className="h-full flex flex-col"> or a `grow flex flex-col` subtree
-// inside a flex-column ancestor with a defined height. Without that, `flex-1`
-// has nothing to grow into and the body would collapse, which is why we keep a
-// `min-h-[40vh]` safety floor that preserves the legacy fixed-height behavior
-// when a consumer hasn't wired up the column chain.
+// inside a flex-column ancestor with a defined height. Without a bounded
+// ancestor, `flex-1` has nothing to grow into and the body collapses to 0.
 export function StepperBody<StepperState extends BaseStepperState>() {
   const stepperContext = useStepperContext<StepperState>();
   if (!stepperContext) {
@@ -24,7 +22,7 @@ export function StepperBody<StepperState extends BaseStepperState>() {
     <div
       className="
         flex flex-col
-        w-full flex-1 min-h-0 min-h-[40vh]
+        w-full flex-1 min-h-0
         justify-start items-start
         overflow-x-hidden
         schemavaults-stepper-body

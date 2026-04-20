@@ -169,9 +169,10 @@ export const InBoundedFlexColumn: Story = {
   ],
 };
 
-// Verifies that the `min-h-[40vh]` safety floor still renders a usable body
-// when the caller has NOT wired up a bounded vertical flex column (legacy
-// behavior preserved).
+// Demonstrates the caller contract: without a bounded vertical flex-column
+// ancestor, `flex-1` has nothing to grow into and the body collapses. Consumers
+// must wrap <Stepper /> in a `h-full flex flex-col` (or equivalent bounded
+// column) for the body to render usably.
 export const InUnboundedParent: Story = {
   args: {},
   decorators: [
