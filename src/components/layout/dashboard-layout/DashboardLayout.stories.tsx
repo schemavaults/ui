@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 // import { fn } from "@storybook/test";
 
-import type { ReactElement, ReactNode } from "react";
+import { useState, type ReactElement, type ReactNode } from "react";
 
 import DashboardLayout, { type DashboardLayoutProps } from "./dashboard-layout";
 import LoremIpsumText from "@/stories/LoremImpsumText";
@@ -9,6 +9,10 @@ import { PageColumnContainer } from "@/components/layout/page-column-container";
 import { AlarmClock, Lock, Plane, Share2, Tornado, Users } from "lucide-react";
 import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
 import { Button, TooltipProvider, Wordmark } from "@/components/ui";
+import { Stepper, type Step } from "@/components/ui/stepper";
+import type { BaseStepperState } from "@/components/ui/stepper/base-stepper-state-type";
+import Toaster from "@/components/ui/toaster";
+import { useToast } from "@/components/hooks/use-toast";
 import { AnimatePresence, m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
@@ -222,4 +226,113 @@ export const WithAdminOnlyLinks: Story = {
       },
     ],
   } satisfies Partial<DashboardLayoutProps>,
+};
+
+// --- Full-screen Stepper page content ----------------------------------
+
+interface FullScreenStepperState extends BaseStepperState {
+  currentStep: number;
+}
+
+function FullScreenStepContent({ message }: { message: string }): ReactElement {
+  return (
+    <div className="relative">
+      <p className="font-bold">{message}</p>
+    </div>
+  );
+}
+
+const fullScreenSteps: Step<FullScreenStepperState>[] = [
+  {
+    id: "account",
+    label: "Account",
+    stepComponent: (): ReactElement => (
+      <FullScreenStepContent message="Configure your account details." />
+    ),
+    state: "unfilled",
+    beforeNextStep: async (): Promise<boolean> => true,
+  },
+  {
+    id: "team",
+    label: "Team",
+    stepComponent: (): ReactElement => (
+      <FullScreenStepContent message="Invite your teammates." />
+    ),
+    state: "unfilled",
+    beforeNextStep: async (): Promise<boolean> => true,
+  },
+  {
+    id: "review",
+    label: "Review",
+    stepComponent: (): ReactElement => (
+      <FullScreenStepContent message="Review and submit." />
+    ),
+    state: "unfilled",
+    beforeNextStep: async (): Promise<boolean> => true,
+  },
+];
+
+function FullScreenStepperPageContent(): ReactElement {
+  const [state, setState] = useState<FullScreenStepperState>({
+    currentStep: 0,
+  });
+  const { toast } = useToast();
+
+  // Stepper's body uses flex-1, so it needs a bounded flex-column ancestor to
+  // grow into. Sizing to the viewport minus the dashboard header keeps the
+  // outer dashboard content container from introducing page-level scroll —
+  // the stepper body handles its own overflow.
+  return (
+    <div
+      className="flex flex-col w-full"
+      style={{ height: "calc(100svh - 56px)" }}
+    >
+      <Stepper
+        id="dashboard-full-screen-stepper"
+        steps={fullScreenSteps}
+        state={state}
+        getCurrentStep={(s: FullScreenStepperState): number => s.currentStep}
+        setCurrentStep={(next: number): void =>
+          setState({ currentStep: next })
+        }
+        canGoNext={(opts): boolean =>
+          opts.getCurrentStep(opts.state) < fullScreenSteps.length
+        }
+        canGoBack={(opts): boolean => opts.getCurrentStep(opts.state) > 0}
+        FinalStepSubmitButton={(): ReactElement => (
+          <Button
+            onClick={(): void => {
+              toast({
+                variant: "default",
+                title: "Pretending to submit Stepper",
+                description: "This is a Storybook demo.",
+              });
+            }}
+          >
+            Submit
+          </Button>
+        )}
+      />
+    </div>
+  );
+}
+
+export const WithFullScreenStepper: Story = {
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Onboarding",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <DashboardLayout {...args}>
+      <FullScreenStepperPageContent />
+    </DashboardLayout>
+  ),
+  decorators: [
+    (Story): ReactElement => (
+      <>
+        <Story />
+        <Toaster />
+      </>
+    ),
+  ],
 };
