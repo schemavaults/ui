@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactElement } from "react";
 
+import { useToast } from "@/components/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 import { CopyButton } from "./copy-button";
 import {
   copyButtonSizeIds,
@@ -226,5 +228,66 @@ export const LongResetDelay: Story = {
     copiedLabel: "Copied — visible for 5s",
     resetDelay: 5000,
     value: "Copied with a 5s reset delay",
+  },
+};
+
+function CopyButtonWithToastDemo(): ReactElement {
+  const { toast } = useToast();
+  const snippet: string = "npm install @schemavaults/ui";
+
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 p-1 pl-3 font-mono text-sm text-foreground">
+      <code>{snippet}</code>
+      <CopyButton
+        variant="ghost"
+        size="icon-sm"
+        value={snippet}
+        onCopy={(success, value): void => {
+          if (success) {
+            toast({
+              variant: "default",
+              title: "Copied successfully",
+              description: `"${value}" was copied to your clipboard.`,
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Copy failed",
+              description:
+                "We couldn't access the clipboard. Try again or copy manually.",
+            });
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * Pairs the CopyButton with the Toaster to surface a success notification
+ * after the clipboard write completes. Uses the onCopy callback to dispatch
+ * the toast — the CopyButton's own "copied" state (icon swap) and the toast
+ * are independent surfaces that stack naturally.
+ */
+export const WithSuccessToast: Story = {
+  render: (): ReactElement => <CopyButtonWithToastDemo />,
+  decorators: [
+    (Story): ReactElement => (
+      <>
+        <Story />
+        <Toaster />
+      </>
+    ),
+  ],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Click the copy button to fire a \"Copied successfully\" toast. " +
+          "The toast is dispatched from the `onCopy` callback, which receives " +
+          "the success flag and the original value written to the clipboard. " +
+          "If the clipboard write fails, a destructive toast is shown instead.",
+      },
+    },
   },
 };
