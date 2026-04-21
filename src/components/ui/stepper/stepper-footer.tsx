@@ -8,6 +8,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { Button } from "../button";
 import { useToast } from "@/components/hooks/use-toast";
 import type { BaseStepperState } from "./base-stepper-state-type";
+import { cn } from "@/lib/utils";
 
 export type FooterDecorator = ({ children }: PropsWithChildren) => ReactElement;
 
@@ -118,15 +119,13 @@ export function StepperFooter<StepperState extends BaseStepperState>({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          style={{
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "end",
-            flexWrap: "nowrap",
-            gap: 2,
-          }}
+          className={cn(
+            "flex flex-row",
+            "items-center justify-end",
+            "flex-nowrap",
+            "gap-2",
+            "flex-shrink-0",
+          )}
         >
           {isPreviousButtonVisible && (
             <Button
