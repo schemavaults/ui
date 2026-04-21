@@ -1,3 +1,21 @@
+function insecureContextCopyToClipboard(value: string): boolean {
+  if (typeof document === "undefined") return false;
+  const textarea: HTMLTextAreaElement = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "0";
+  textarea.style.left = "0";
+  textarea.style.opacity = "0";
+  textarea.style.pointerEvents = "none";
+  document.body.appendChild(textarea);
+  textarea.select();
+  textarea.setSelectionRange(0, value.length);
+  const succeeded: boolean = document.execCommand("copy");
+  document.body.removeChild(textarea);
+  return succeeded;
+}
+
 /**
  * Write `value` to the user's clipboard. Returns true if the write succeeded.
  *
@@ -18,28 +36,18 @@ export async function copyToClipboard(value: string): Promise<boolean> {
       await navigator.clipboard.writeText(value);
       return true;
     } catch {
+      console.error(
+        "Failed to use navigator.clipboard.writeText to copy content to clipboard!",
+      );
       // Fall through to the textarea-based fallback below.
     }
   }
 
-  if (typeof document === "undefined") return false;
-
   try {
-    const textarea: HTMLTextAreaElement = document.createElement("textarea");
-    textarea.value = value;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.top = "0";
-    textarea.style.left = "0";
-    textarea.style.opacity = "0";
-    textarea.style.pointerEvents = "none";
-    document.body.appendChild(textarea);
-    textarea.select();
-    textarea.setSelectionRange(0, value.length);
-    const succeeded: boolean = document.execCommand("copy");
-    document.body.removeChild(textarea);
-    return succeeded;
+    return insecureContextCopyToClipboard(value);
   } catch {
     return false;
   }
 }
+
+export default copyToClipboard;
