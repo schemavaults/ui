@@ -150,6 +150,9 @@ export type * from "./breadcrumb";
 export * from "./kbd";
 export type * from "./kbd";
 
+export * from "./copy-button";
+export type * from "./copy-button";
+
 export * from "./spinner";
 export type * from "./spinner";
 
