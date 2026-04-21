@@ -3,7 +3,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Check, Copy } from "lucide-react";
 import {
-  forwardRef,
   useCallback,
   useEffect,
   useRef,
@@ -12,9 +11,11 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactElement,
   type ReactNode,
+  type Ref,
 } from "react";
 
 import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/copyToClipboard";
 import {
   type CopyButtonSize,
   type CopyButtonVariant,
@@ -101,137 +102,96 @@ export interface CopyButtonProps
    * lucide.
    */
   copiedIcon?: ReactNode;
+  ref?: Ref<HTMLButtonElement>;
 }
 
-async function writeToClipboard(value: string): Promise<boolean> {
-  if (
-    typeof navigator !== "undefined" &&
-    navigator.clipboard &&
-    typeof navigator.clipboard.writeText === "function" &&
-    typeof window !== "undefined" &&
-    window.isSecureContext !== false
-  ) {
-    try {
-      await navigator.clipboard.writeText(value);
-      return true;
-    } catch {
-      // Fall through to the textarea-based fallback below.
-    }
-  }
+function CopyButton({
+  value,
+  variant,
+  size,
+  resetDelay = 2000,
+  label,
+  copiedLabel,
+  ariaLabel = "Copy to clipboard",
+  copiedAriaLabel = "Copied to clipboard",
+  onCopy,
+  icon,
+  copiedIcon,
+  className,
+  onClick,
+  disabled,
+  type = "button",
+  ref,
+  ...props
+}: CopyButtonProps): ReactElement {
+  const [copied, setCopied] = useState<boolean>(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  if (typeof document === "undefined") return false;
+  useEffect((): (() => void) => {
+    return (): void => {
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
-  try {
-    const textarea: HTMLTextAreaElement = document.createElement("textarea");
-    textarea.value = value;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.top = "0";
-    textarea.style.left = "0";
-    textarea.style.opacity = "0";
-    textarea.style.pointerEvents = "none";
-    document.body.appendChild(textarea);
-    textarea.select();
-    textarea.setSelectionRange(0, value.length);
-    const succeeded: boolean = document.execCommand("copy");
-    document.body.removeChild(textarea);
-    return succeeded;
-  } catch {
-    return false;
-  }
-}
+  const handleClick = useCallback(
+    async (event: ReactMouseEvent<HTMLButtonElement>): Promise<void> => {
+      onClick?.(event);
+      if (event.defaultPrevented) return;
 
-const CopyButton = forwardRef<HTMLButtonElement, CopyButtonProps>(
-  function CopyButton(
-    {
-      value,
-      variant,
-      size,
-      resetDelay = 2000,
-      label,
-      copiedLabel,
-      ariaLabel = "Copy to clipboard",
-      copiedAriaLabel = "Copied to clipboard",
-      onCopy,
-      icon,
-      copiedIcon,
-      className,
-      onClick,
-      disabled,
-      type = "button",
-      ...props
+      const success: boolean = await copyToClipboard(value);
+      onCopy?.(success, value);
+
+      if (!success) return;
+
+      setCopied(true);
+      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout((): void => {
+        setCopied(false);
+        timeoutRef.current = null;
+      }, resetDelay);
     },
-    ref,
-  ): ReactElement {
-    const [copied, setCopied] = useState<boolean>(false);
-    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    [onClick, onCopy, resetDelay, value],
+  );
 
-    useEffect((): (() => void) => {
-      return (): void => {
-        if (timeoutRef.current !== null) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-      };
-    }, []);
+  const resolvedIdleIcon: ReactNode = icon ?? <Copy aria-hidden="true" />;
+  const resolvedCopiedIcon: ReactNode = copiedIcon ?? (
+    <Check aria-hidden="true" />
+  );
 
-    const handleClick = useCallback(
-      async (event: ReactMouseEvent<HTMLButtonElement>): Promise<void> => {
-        onClick?.(event);
-        if (event.defaultPrevented) return;
+  const hasLabel: boolean = label !== undefined && label !== null;
+  const effectiveCopiedLabel: ReactNode =
+    copiedLabel !== undefined ? copiedLabel : hasLabel ? "Copied!" : null;
 
-        const success: boolean = await writeToClipboard(value);
-        onCopy?.(success, value);
+  const currentAriaLabel: string = copied ? copiedAriaLabel : ariaLabel;
 
-        if (!success) return;
-
-        setCopied(true);
-        if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout((): void => {
-          setCopied(false);
-          timeoutRef.current = null;
-        }, resetDelay);
-      },
-      [onClick, onCopy, resetDelay, value],
-    );
-
-    const resolvedIdleIcon: ReactNode = icon ?? <Copy aria-hidden="true" />;
-    const resolvedCopiedIcon: ReactNode = copiedIcon ?? (
-      <Check aria-hidden="true" />
-    );
-
-    const hasLabel: boolean = label !== undefined && label !== null;
-    const effectiveCopiedLabel: ReactNode =
-      copiedLabel !== undefined ? copiedLabel : hasLabel ? "Copied!" : null;
-
-    const currentAriaLabel: string = copied ? copiedAriaLabel : ariaLabel;
-
-    return (
-      <button
-        ref={ref}
-        type={type}
-        data-slot="copy-button"
-        data-copied={copied ? "true" : "false"}
-        aria-label={currentAriaLabel}
-        aria-live="polite"
-        disabled={disabled}
-        onClick={handleClick}
-        className={cn(copyButtonVariants({ variant, size }), className)}
-        {...props}
+  return (
+    <button
+      ref={ref}
+      type={type}
+      data-slot="copy-button"
+      data-copied={copied ? "true" : "false"}
+      aria-label={currentAriaLabel}
+      aria-live="polite"
+      disabled={disabled}
+      onClick={handleClick}
+      className={cn(copyButtonVariants({ variant, size }), className)}
+      {...props}
+    >
+      <span
+        aria-hidden="true"
+        className="inline-flex items-center justify-center"
       >
-        <span
-          aria-hidden="true"
-          className="inline-flex items-center justify-center"
-        >
-          {copied ? resolvedCopiedIcon : resolvedIdleIcon}
-        </span>
-        {hasLabel ? (
-          <span>{copied ? effectiveCopiedLabel : label}</span>
-        ) : null}
-      </button>
-    );
-  },
-);
+        {copied ? resolvedCopiedIcon : resolvedIdleIcon}
+      </span>
+      {hasLabel ? (
+        <span>{copied ? effectiveCopiedLabel : label}</span>
+      ) : null}
+    </button>
+  );
+}
 CopyButton.displayName = "CopyButton";
 
 export {
