@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
 import type { ReactElement } from "react";
 
 import { useToast } from "@/components/hooks/use-toast";
@@ -208,14 +209,28 @@ export const InlineWithSecret: Story = {
   },
 };
 
+/**
+ * Wires the `onCopy` prop to Storybook's `fn()` spy so every call appears in
+ * the Actions panel with both of its arguments (`success: boolean`,
+ * `value: string`). Click the button and switch to the Actions tab to see
+ * the captured invocations.
+ */
 export const WithOnCopyCallback: Story = {
   args: {
     variant: "outline",
     size: "md",
     label: "Copy",
     value: "onCopy fires with (success, value)",
-    onCopy: (success, value): void => {
-      console.log("Copy succeeded:", success, "value:", value);
+    onCopy: fn(),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Click the button and switch to the **Actions** tab to see each " +
+          "`onCopy(success, value)` invocation captured by Storybook's " +
+          "`fn()` spy.",
+      },
     },
   },
 };
