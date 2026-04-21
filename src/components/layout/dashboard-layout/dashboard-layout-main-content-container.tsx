@@ -7,8 +7,7 @@ import {
 } from "./dashboard-sidebar";
 import { cn } from "@/lib/utils";
 
-export interface DashboardLayoutMainContentContainerProps
-  extends PropsWithChildren {}
+export interface DashboardLayoutMainContentContainerProps extends PropsWithChildren {}
 
 export function DashboardLayoutMainContentContainer({
   children,
@@ -23,6 +22,7 @@ export function DashboardLayoutMainContentContainer({
         "absolute",
         "h-full grow",
         "overflow-x-hidden overflow-y-scroll",
+        "overscroll-none",
         "no-scrollbar",
         "max-md:w-screen",
         "transition-[width,left] ease-linear will-change-[width]",

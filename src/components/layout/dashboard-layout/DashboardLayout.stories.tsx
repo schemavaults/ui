@@ -284,17 +284,15 @@ function FullScreenStepperPageContent(): ReactElement {
   // the stepper body handles its own overflow.
   return (
     <div
-      className="flex flex-col w-full"
-      style={{ height: "calc(100svh - 56px)" }}
+      className={cn("flex flex-col w-full", "p-2 md:p-4 lg:p-6 xl:p-8")}
+      style={{ height: "calc(100dvh - 80px)" }}
     >
       <Stepper
         id="dashboard-full-screen-stepper"
         steps={fullScreenSteps}
         state={state}
         getCurrentStep={(s: FullScreenStepperState): number => s.currentStep}
-        setCurrentStep={(next: number): void =>
-          setState({ currentStep: next })
-        }
+        setCurrentStep={(next: number): void => setState({ currentStep: next })}
         canGoNext={(opts): boolean =>
           opts.getCurrentStep(opts.state) < fullScreenSteps.length
         }
