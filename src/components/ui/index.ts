@@ -25,6 +25,9 @@ export type * from "./input";
 export * from "./password-input";
 export type * from "./password-input";
 
+export * from "./otp-input";
+export type * from "./otp-input";
+
 export * from "./secure-password-creation-input";
 export type * from "./secure-password-creation-input";
 
