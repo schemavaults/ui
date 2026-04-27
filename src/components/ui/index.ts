@@ -150,6 +150,9 @@ export type * from "./progress-bar";
 export * from "./breadcrumb";
 export type * from "./breadcrumb";
 
+export * from "./pagination";
+export type * from "./pagination";
+
 export * from "./kbd";
 export type * from "./kbd";
 
