@@ -19,10 +19,6 @@ import {
   ArrowUp,
   ArrowUpDown,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { PaginationControls } from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -347,54 +344,20 @@ export function Datatable<TData extends object, TValue = unknown>({
               </SelectContent>
             </Select>
           </div>
-          {/* Page indicator */}
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
-          </span>
-          {/* Navigation buttons */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={() => table.firstPage()}
-              disabled={!table.getCanPreviousPage()}
-              aria-label="First page"
-            >
-              <ChevronsLeft className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              aria-label="Next page"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={() => table.lastPage()}
-              disabled={!table.getCanNextPage()}
-              aria-label="Last page"
-            >
-              <ChevronsRight className="size-4" />
-            </Button>
-          </div>
+          {/* Page navigation */}
+          <PaginationControls
+            className="mx-0 w-auto justify-end"
+            size="sm"
+            variant="outline"
+            page={table.getState().pagination.pageIndex + 1}
+            totalPages={Math.max(1, table.getPageCount())}
+            onPageChange={(nextPage) => {
+              table.setPageIndex(nextPage - 1);
+            }}
+            showFirstLast
+            iconOnlyPrevNext
+            disabled={table.getPageCount() <= 1}
+          />
         </div>
       </div>
     </div>
