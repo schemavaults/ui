@@ -176,3 +176,6 @@ export type * from "./timeline";
 
 export * from "./rating";
 export type * from "./rating";
+
+export * from "./number-input";
+export type * from "./number-input";
