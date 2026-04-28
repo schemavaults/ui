@@ -179,3 +179,6 @@ export type * from "./rating";
 
 export * from "./number-input";
 export type * from "./number-input";
+
+export * from "./code-block";
+export type * from "./code-block";
