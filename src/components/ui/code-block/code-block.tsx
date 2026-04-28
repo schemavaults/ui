@@ -135,6 +135,22 @@ export interface CodeBlockProps
    */
   maxHeight?: string;
   /**
+   * Optional render function that returns highlighted nodes for a piece of
+   * code. When omitted, code is rendered as plain text. When `showLineNumbers`
+   * is enabled this is invoked once per line (with the line's text); when
+   * disabled it is invoked once with the full `value`. The `language` prop is
+   * passed through unchanged so consumers can dispatch on it.
+   *
+   * Example using a third-party highlighter:
+   *
+   *     <CodeBlock
+   *       value={code}
+   *       language="ts"
+   *       highlight={(code, lang) => <SyntaxHighlighter language={lang}>{code}</SyntaxHighlighter>}
+   *     />
+   */
+  highlight?: (value: string, language?: string) => ReactNode;
+  /**
    * Optional ref to the outermost wrapper element.
    */
   ref?: Ref<HTMLDivElement>;
@@ -150,6 +166,7 @@ function CodeBlock({
   showCopyButton = true,
   wrap = false,
   maxHeight,
+  highlight,
   className,
   ref,
   ...props
@@ -223,13 +240,14 @@ function CodeBlock({
                 <LineRow
                   key={idx}
                   number={idx + 1}
-                  content={line}
+                  content={highlight ? highlight(line, language) : line}
+                  empty={line.length === 0}
                   variant={resolvedVariant}
                 />
               ))}
             </code>
           ) : (
-            <code>{value}</code>
+            <code>{highlight ? highlight(value, language) : value}</code>
           )}
         </pre>
       </div>
@@ -240,11 +258,17 @@ CodeBlock.displayName = "CodeBlock";
 
 interface LineRowProps {
   number: number;
-  content: string;
+  content: ReactNode;
+  empty: boolean;
   variant: CodeBlockVariant;
 }
 
-function LineRow({ number, content, variant }: LineRowProps): ReactElement {
+function LineRow({
+  number,
+  content,
+  empty,
+  variant,
+}: LineRowProps): ReactElement {
   return (
     <>
       <span
@@ -254,9 +278,7 @@ function LineRow({ number, content, variant }: LineRowProps): ReactElement {
       >
         {number}
       </span>
-      <span data-slot="code-block-line">
-        {content.length === 0 ? "​" : content}
-      </span>
+      <span data-slot="code-block-line">{empty ? "​" : content}</span>
     </>
   );
 }

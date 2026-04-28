@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import {
   CodeBlock,
@@ -189,6 +189,97 @@ function AllVariantsExample(): ReactElement {
 
 export const AllVariants: Story = {
   render: (): ReactElement => <AllVariantsExample />,
+};
+
+// Demo highlighter: a deliberately-tiny regex tokenizer for JSON to show
+// how the `highlight` prop seam works. Real consumers should plug in
+// shiki / prism / highlight.js / etc.
+function highlightJson(input: string): ReactNode {
+  const tokenPattern: RegExp =
+    /("(?:\\.|[^"\\])*"\s*:)|("(?:\\.|[^"\\])*")|\b(true|false|null)\b|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g;
+
+  const nodes: ReactNode[] = [];
+  let lastIndex: number = 0;
+  let match: RegExpExecArray | null;
+  let key: number = 0;
+
+  while ((match = tokenPattern.exec(input)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(input.slice(lastIndex, match.index));
+    }
+    const [whole, propKey, str, bool, num] = match;
+    if (propKey !== undefined) {
+      nodes.push(
+        <span key={key++} className="text-sky-600 dark:text-sky-400">
+          {whole}
+        </span>,
+      );
+    } else if (str !== undefined) {
+      nodes.push(
+        <span key={key++} className="text-emerald-700 dark:text-emerald-400">
+          {whole}
+        </span>,
+      );
+    } else if (bool !== undefined) {
+      nodes.push(
+        <span key={key++} className="text-violet-600 dark:text-violet-400">
+          {whole}
+        </span>,
+      );
+    } else if (num !== undefined) {
+      nodes.push(
+        <span key={key++} className="text-amber-600 dark:text-amber-400">
+          {whole}
+        </span>,
+      );
+    }
+    lastIndex = match.index + whole.length;
+  }
+  if (lastIndex < input.length) {
+    nodes.push(input.slice(lastIndex));
+  }
+  return <>{nodes}</>;
+}
+
+export const WithCustomHighlight: Story = {
+  args: {
+    value: sampleJson,
+    language: "json",
+    title: "user.profile.schema.json",
+    showLineNumbers: true,
+    highlight: highlightJson,
+  },
+};
+
+function HighlightSeamExample(): ReactElement {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-xs text-muted-foreground">
+        Same code, the right block plugs a 30-line regex tokenizer into the
+        <code className="mx-1 rounded bg-muted px-1">highlight</code>
+        prop.
+      </span>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <CodeBlock
+          value={sampleJson}
+          language="json"
+          title="plain"
+          showLineNumbers
+        />
+        <CodeBlock
+          value={sampleJson}
+          language="json"
+          title="highlighted"
+          showLineNumbers
+          highlight={highlightJson}
+        />
+      </div>
+    </div>
+  );
+}
+
+export const HighlightSeamComparison: Story = {
+  render: (): ReactElement => <HighlightSeamExample />,
 };
 
 function AllSizesExample(): ReactElement {
