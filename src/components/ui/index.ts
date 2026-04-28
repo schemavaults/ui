@@ -173,3 +173,6 @@ export type * from "./stat-card";
 
 export * from "./timeline";
 export type * from "./timeline";
+
+export * from "./rating";
+export type * from "./rating";
