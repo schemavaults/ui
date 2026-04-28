@@ -44,6 +44,14 @@ export const NumberInput: Story = {
   args: {
     type: "number",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a basic numeric `<input type="number" />`. For richer numeric entry — increment / decrement stepper buttons, min / max bounds, fractional `step` with `precision`, prefix / suffix slots, multiple sizes & variants, and `ArrowUp` / `ArrowDown` keyboard support — use the dedicated [`NumberInput` component](?path=/docs/components-numberinput--docs) instead.',
+      },
+    },
+  },
 };
 
 export const RangeInput: Story = {
