@@ -182,3 +182,6 @@ export type * from "./number-input";
 
 export * from "./code-block";
 export type * from "./code-block";
+
+export * from "./segmented-control";
+export type * from "./segmented-control";
