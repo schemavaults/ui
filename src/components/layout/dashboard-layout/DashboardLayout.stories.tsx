@@ -284,8 +284,8 @@ function FullScreenStepperPageContent(): ReactElement {
   // the stepper body handles its own overflow.
   return (
     <div
-      className={cn("flex flex-col w-full", "p-2 md:p-4 lg:p-6 xl:p-8")}
-      style={{ height: "calc(100dvh - 80px)" }}
+      id="example-dashboard-full-screen-stepper-container"
+      className={cn("grow flex flex-col w-full", "p-2 md:p-4 lg:p-6 xl:p-8")}
     >
       <Stepper
         id="dashboard-full-screen-stepper"
@@ -302,7 +302,7 @@ function FullScreenStepperPageContent(): ReactElement {
             onClick={(): void => {
               toast({
                 variant: "default",
-                title: "Pretending to submit Stepper",
+                title: "Pretending to submit example Stepper!",
                 description: "This is a Storybook demo.",
               });
             }}

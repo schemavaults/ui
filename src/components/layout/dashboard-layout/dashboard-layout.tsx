@@ -58,7 +58,7 @@ export function DashboardLayout({
       onOpenSidebar={props.onOpenSidebar}
       onCloseSidebar={props.onCloseSidebar}
     >
-      <div className="w-screen h-screen min-h-screen">
+      <div id="dashboard-layout-container" className="w-full h-dvh min-h-dvh">
         <DashboardSidebar
           wordmark={wordmark}
           Link={Link}
@@ -68,12 +68,13 @@ export function DashboardLayout({
         />
         <DashboardLayoutMainContentContainer>
           <header
+            id="dashboard-layout-main-content-header"
             className={cn(
               "sticky top-0",
               "flex shrink-0 items-center gap-2",
               "transition-[width,height] ease-linear",
               "bg-background",
-              "border-b",
+              "border-b border-border",
               size.sidebar_and_header_z_index_classname,
             )}
             style={{

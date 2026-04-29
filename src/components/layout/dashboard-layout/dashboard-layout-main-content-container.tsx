@@ -21,10 +21,11 @@ export function DashboardLayoutMainContentContainer({
       className={cn(
         "absolute",
         "h-full grow",
+        "flex flex-col flex-nowrap justify-start items-stretch",
         "overflow-x-hidden overflow-y-scroll",
         "overscroll-none",
         "no-scrollbar",
-        "max-md:w-screen",
+        "max-md:w-full",
         "transition-[width,left] ease-linear will-change-[width]",
         openState.open
           ? size.content_container_desktop_sidebar_open_width_classname
