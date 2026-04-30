@@ -6,6 +6,7 @@ export {
   domAnimation,
   LazyMotion,
   useAnimate,
+  useAnimationFrame,
   useTransform,
   useMotionValue,
   usePresence,

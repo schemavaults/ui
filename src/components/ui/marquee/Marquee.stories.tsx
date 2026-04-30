@@ -5,7 +5,6 @@ import {
   Cloud,
   Database,
   GitBranch,
-  Github,
   Globe,
   Layers,
   Lock,
@@ -13,6 +12,7 @@ import {
   Shield,
   Sparkles,
   Star,
+  Tag,
   Zap,
 } from "lucide-react";
 
@@ -33,15 +33,16 @@ interface DemoArgs {
   repeat?: number;
 }
 
+// All company names below are fictional and used for demo purposes only.
 const partnerLogos: Array<{ label: string; icon: ReactElement }> = [
-  { label: "Vercel", icon: <Globe className="h-4 w-4" /> },
-  { label: "GitHub", icon: <Github className="h-4 w-4" /> },
-  { label: "Cloudflare", icon: <Cloud className="h-4 w-4" /> },
-  { label: "Postgres", icon: <Database className="h-4 w-4" /> },
-  { label: "Auth0", icon: <Lock className="h-4 w-4" /> },
-  { label: "Stripe", icon: <Zap className="h-4 w-4" /> },
-  { label: "AWS", icon: <Server className="h-4 w-4" /> },
-  { label: "Datadog", icon: <Activity className="h-4 w-4" /> },
+  { label: "Acme Co", icon: <Globe className="h-4 w-4" /> },
+  { label: "Globex", icon: <Tag className="h-4 w-4" /> },
+  { label: "Initech", icon: <Cloud className="h-4 w-4" /> },
+  { label: "Hooli", icon: <Database className="h-4 w-4" /> },
+  { label: "Contoso", icon: <Lock className="h-4 w-4" /> },
+  { label: "Fabrikam", icon: <Zap className="h-4 w-4" /> },
+  { label: "Northwind", icon: <Server className="h-4 w-4" /> },
+  { label: "Tailspin", icon: <Activity className="h-4 w-4" /> },
 ];
 
 function LogoStripDemo({
@@ -189,7 +190,7 @@ function CardRowDemo(): ReactElement {
     {
       icon: <Layers className="h-4 w-4 text-primary" />,
       title: "Composable",
-      body: "Stack vaults like Lego.",
+      body: "Stack vaults like building blocks.",
     },
     {
       icon: <Sparkles className="h-4 w-4 text-primary" />,
@@ -199,7 +200,7 @@ function CardRowDemo(): ReactElement {
     {
       icon: <Star className="h-4 w-4 text-primary" />,
       title: "Audited",
-      body: "SOC 2 Type II.",
+      body: "Independently reviewed controls.",
     },
   ];
   return (
@@ -224,11 +225,12 @@ export const FeatureCards: Story = {
 };
 
 function VerticalDemo(): ReactElement {
+  // example.com is reserved by RFC 2606 for documentation, so it's safe to use here.
   const items: string[] = [
     "alice@example.com signed up",
     "vault-prod migrated successfully",
     "schema 'orders' updated",
-    "new region us-west-2 added",
+    "new region 'west-2' added",
     "audit log exported",
     "billing-cycle closed",
     "team 'platform' invited 3 members",
@@ -266,25 +268,27 @@ export const VerticalScrolling: Story = {
 };
 
 function OpposingRowsDemo(): ReactElement {
+  // Both lists below are fictional / invented tag names — they intentionally avoid
+  // any real product, protocol, or trademark.
   const tagsTop: string[] = [
-    "postgres",
-    "mysql",
-    "sqlite",
-    "mongodb",
-    "redis",
-    "snowflake",
-    "bigquery",
-    "duckdb",
+    "bluestone",
+    "redspire",
+    "monolith",
+    "stardust",
+    "nimbus",
+    "helix",
+    "octopus",
+    "pyrite",
   ];
   const tagsBottom: string[] = [
-    "graphql",
-    "rest",
-    "grpc",
-    "trpc",
-    "websockets",
-    "sse",
-    "webhooks",
-    "kafka",
+    "alphalink",
+    "echobus",
+    "relay-rpc",
+    "meshnet",
+    "pulsewire",
+    "skyhook",
+    "pigeon",
+    "flotilla",
   ];
   return (
     <div className="flex w-[640px] flex-col gap-3 rounded-lg border border-border bg-background p-6">

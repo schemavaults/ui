@@ -6,12 +6,16 @@ import {
   type HTMLAttributes,
   type ReactElement,
   type ReactNode,
+  useCallback,
+  useRef,
 } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import {
   domAnimation,
   LazyMotion,
   m,
+  useAnimationFrame,
+  useMotionValue,
   useReducedMotion,
 } from "@/framer-motion";
 
@@ -161,8 +165,8 @@ export function Marquee({
   const safeRepeat = Math.max(2, Math.floor(repeat));
   const gapSize = gapPx[gap];
 
-  // Spacing is baked into each item via margin so the total track width is an exact
-  // integer multiple of one copy's width. This keeps the -50% loop perfectly seamless.
+  // Spacing is baked into each item via margin so the total track size is an exact
+  // integer multiple of one copy's size. This is what makes the modulo wrap seamless.
   const itemSpacingStyle: CSSProperties =
     orientation === "horizontal"
       ? { marginRight: gapSize }
@@ -189,16 +193,49 @@ export function Marquee({
     </div>
   ));
 
-  const loopEnd: string = `-${100 / safeRepeat}%`;
-  const animateProp = orientation === "horizontal"
-    ? { x: isReversed ? [loopEnd, "0%"] : ["0%", loopEnd] }
-    : { y: isReversed ? [loopEnd, "0%"] : ["0%", loopEnd] };
+  // We drive the transform manually with useAnimationFrame so we can wrap with
+  // strict modulo arithmetic at the copy boundary — there's no array→array
+  // restart frame, no "snap back to start" between cycles, and no
+  // whileHover-induced reset. The result is a perfectly seamless loop in either
+  // direction at any duration, including when the user hovers in/out.
+  const offset = useMotionValue(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const isHoveredRef = useRef<boolean>(false);
+
+  useAnimationFrame((_t, deltaMs) => {
+    if (prefersReducedMotion) return;
+    if (pauseOnHover && isHoveredRef.current) return;
+    const el = trackRef.current;
+    if (!el) return;
+    const fullSize =
+      orientation === "horizontal" ? el.scrollWidth : el.scrollHeight;
+    const oneCopy = fullSize / safeRepeat;
+    if (oneCopy <= 0 || duration <= 0) return;
+
+    const pxPerMs = oneCopy / (duration * 1000);
+    // Negative direction (left / up) walks toward -oneCopy then wraps to 0.
+    // Positive direction (right / down) walks toward +oneCopy then wraps to 0.
+    const sign = isReversed ? 1 : -1;
+    let next = offset.get() + sign * pxPerMs * deltaMs;
+    if (next <= -oneCopy) next += oneCopy;
+    else if (next >= oneCopy) next -= oneCopy;
+    offset.set(next);
+  });
+
+  const handleMouseEnter = useCallback((): void => {
+    isHoveredRef.current = true;
+  }, []);
+  const handleMouseLeave = useCallback((): void => {
+    isHoveredRef.current = false;
+  }, []);
 
   return (
     <LazyMotion features={domAnimation} strict>
       <div
         role="marquee"
         aria-label={props["aria-label"] ?? "Scrolling content"}
+        onMouseEnter={pauseOnHover ? handleMouseEnter : undefined}
+        onMouseLeave={pauseOnHover ? handleMouseLeave : undefined}
         className={cn(marqueeRootVariants({ orientation }), className)}
         {...props}
       >
@@ -207,27 +244,16 @@ export function Marquee({
         ) : null}
 
         <m.div
+          ref={trackRef}
           className={cn(
             "flex w-max",
             orientation === "horizontal" ? "flex-row" : "h-max flex-col",
           )}
-          animate={prefersReducedMotion ? undefined : animateProp}
-          transition={
-            prefersReducedMotion
-              ? undefined
-              : {
-                  duration,
-                  ease: "linear",
-                  repeat: Infinity,
-                  repeatType: "loop",
-                }
+          style={
+            orientation === "horizontal"
+              ? { x: offset, willChange: "transform" }
+              : { y: offset, willChange: "transform" }
           }
-          whileHover={
-            pauseOnHover && !prefersReducedMotion
-              ? { transition: { duration: 0 } }
-              : undefined
-          }
-          style={{ willChange: "transform" }}
         >
           {copies}
         </m.div>
