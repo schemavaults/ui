@@ -185,3 +185,6 @@ export type * from "./code-block";
 
 export * from "./segmented-control";
 export type * from "./segmented-control";
+
+export * from "./marquee";
+export type * from "./marquee";
