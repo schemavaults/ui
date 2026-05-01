@@ -188,3 +188,6 @@ export type * from "./segmented-control";
 
 export * from "./marquee";
 export type * from "./marquee";
+
+export * from "./toggle";
+export type * from "./toggle";
