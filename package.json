@@ -1,6 +1,6 @@
 {
   "name": "@schemavaults/ui",
-  "version": "0.29.1",
+  "version": "0.30.1",
   "private": false,
   "license": "UNLICENSED",
   "description": "React.js UI components for SchemaVaults frontend applications",
@@ -78,7 +78,7 @@
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.0.1",
     "eslint-plugin-jsx-a11y": "6.10.2",
-    "@schemavaults/send-email": "0.0.16"
+    "@schemavaults/send-email": "0.0.18"
   },
   "scripts": {
     "build:pkg": "tsc --project tsconfig.pkg.json && tsc-alias --project tsconfig.pkg.json",
