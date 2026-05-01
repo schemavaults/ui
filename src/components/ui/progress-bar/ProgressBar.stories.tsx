@@ -12,6 +12,12 @@ const meta = {
   component: ProgressBar,
   parameters: {
     layout: "centered",
+    docs: {
+      description: {
+        component:
+          "Horizontal progress bar. For a circular/ring-style progress indicator with the same API and theming, see [`CircularProgress`](?path=/docs/components-circularprogress--docs) — useful for compact dashboard tiles and fixed-width areas where a horizontal bar would not fit.\n\n**See also:** [CircularProgress](?path=/docs/components-circularprogress--docs) — the circular counterpart.",
+      },
+    },
   },
   tags: ["autodocs"],
   argTypes: {
