@@ -40,7 +40,7 @@
         "tailwind-merge": "3.0.2",
       },
       "devDependencies": {
-        "@schemavaults/send-email": "0.0.16",
+        "@schemavaults/send-email": "0.0.18",
         "@storybook/addon-essentials": "8.6.17",
         "@storybook/addon-webpack5-compiler-swc": "3.0.0",
         "@storybook/blocks": "8.6.15",
@@ -329,7 +329,7 @@
 
     "@schemavaults/app-definitions": ["@schemavaults/app-definitions@0.6.23", "", { "dependencies": { "zod": "3.25.8" } }, "sha512-gdI1PVujXrcHObcjiqO0/aeiKCKSzsGzWu8fWwOwCp9BQeDu2iovAJRp3Gme9iWBnWz1Yv+Mg4A5Y/G3HXp1jA=="],
 
-    "@schemavaults/send-email": ["@schemavaults/send-email@0.0.16", "", { "dependencies": { "@schemavaults/app-definitions": "0.6.23", "commander": "^14.0.1", "zod": "3.25.8" }, "bin": { "schemavaults-send-email": "dist/cli.js" } }, "sha512-/wg52Zmf2N+Uabs4ejWyhPK4x2c8l9FZsHALc7wh+AYHm+IhLlFlDR/AAvnqR3c91Frv4iviO0d9V4VWchqAkw=="],
+    "@schemavaults/send-email": ["@schemavaults/send-email@0.0.18", "", { "dependencies": { "@schemavaults/app-definitions": "0.6.23", "commander": "^14.0.1", "zod": "3.25.8" }, "bin": { "schemavaults-send-email": "dist/cli.js" } }, "sha512-do4LCUTpKT9I0Sy3PJRCPQrHrlah/hswj7oG08PknqTgV5S1VXxeS4rGOOIwz4iUl9TJ1F8pbpMdU2mLiafZnA=="],
 
     "@schemavaults/theme": ["@schemavaults/theme@0.25.9", "", { "dependencies": { "resolve": "1.22.11", "tailwindcss-animate": "1.0.7" } }, "sha512-obU5tZGcCgdzA/JaSmzjDchVzQu6zZcfTvPuWvqTu0RRGlDwNmXQeBtV81C3xTVjVLXG86x0CXheUOfy5hyFsQ=="],
 
