@@ -194,3 +194,6 @@ export type * from "./marquee";
 
 export * from "./toggle";
 export type * from "./toggle";
+
+export * from "./chip";
+export type * from "./chip";
