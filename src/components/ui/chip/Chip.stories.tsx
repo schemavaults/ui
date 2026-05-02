@@ -78,7 +78,17 @@ export const WithAvatar: Story = {
     children: "Ada Lovelace",
     leading: (
       <Avatar size="xs" className="-ml-1 size-4">
-        <AvatarImage src="https://i.pravatar.cc/64?img=47" alt="" />
+        <AvatarImage
+          src={`data:image/svg+xml;utf8,${encodeURIComponent(
+            "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'>" +
+              "<rect width='32' height='32' fill='#7c3aed'/>" +
+              "<text x='50%' y='50%' text-anchor='middle' dominant-baseline='central' " +
+              "fill='white' font-family='ui-sans-serif,system-ui,sans-serif' " +
+              "font-size='14' font-weight='600'>AL</text>" +
+              "</svg>",
+          )}`}
+          alt=""
+        />
         <AvatarFallback className="text-[8px]">AL</AvatarFallback>
       </Avatar>
     ),
