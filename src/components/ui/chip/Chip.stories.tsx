@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
 import {
   Bell,
   Check,
@@ -49,6 +50,7 @@ const meta = {
     removable: false,
     selected: false,
     disabled: false,
+    onRemove: fn(),
   },
 } satisfies Meta<typeof Chip>;
 
@@ -88,7 +90,7 @@ export const WithAvatar: Story = {
 export const Clickable: Story = {
   args: {
     children: "Click me",
-    onClick: (): void => undefined,
+    onClick: fn(),
     leading: <Sparkles />,
   },
 };
@@ -97,7 +99,7 @@ export const Selected: Story = {
   args: {
     children: "Selected filter",
     selected: true,
-    onClick: (): void => undefined,
+    onClick: fn(),
     leading: <Check />,
     variant: "primary",
   },
@@ -108,7 +110,7 @@ export const Disabled: Story = {
     children: "Disabled",
     disabled: true,
     removable: true,
-    onClick: (): void => undefined,
+    onClick: fn(),
   },
 };
 
@@ -365,7 +367,7 @@ export const AddNewChip: Story = {
       <Chip
         variant="outline"
         leading={<Plus />}
-        onClick={(): void => undefined}
+        onClick={fn()}
       >
         Add tag
       </Chip>
