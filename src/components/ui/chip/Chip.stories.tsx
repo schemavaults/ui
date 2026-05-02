@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
 import {
   Bell,
   Check,
@@ -49,6 +50,7 @@ const meta = {
     removable: false,
     selected: false,
     disabled: false,
+    onRemove: fn(),
   },
 } satisfies Meta<typeof Chip>;
 
@@ -76,7 +78,17 @@ export const WithAvatar: Story = {
     children: "Ada Lovelace",
     leading: (
       <Avatar size="xs" className="-ml-1 size-4">
-        <AvatarImage src="https://i.pravatar.cc/64?img=47" alt="" />
+        <AvatarImage
+          src={`data:image/svg+xml;utf8,${encodeURIComponent(
+            "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'>" +
+              "<rect width='32' height='32' fill='#7c3aed'/>" +
+              "<text x='50%' y='50%' text-anchor='middle' dominant-baseline='central' " +
+              "fill='white' font-family='ui-sans-serif,system-ui,sans-serif' " +
+              "font-size='14' font-weight='600'>AL</text>" +
+              "</svg>",
+          )}`}
+          alt=""
+        />
         <AvatarFallback className="text-[8px]">AL</AvatarFallback>
       </Avatar>
     ),
@@ -88,7 +100,7 @@ export const WithAvatar: Story = {
 export const Clickable: Story = {
   args: {
     children: "Click me",
-    onClick: (): void => undefined,
+    onClick: fn(),
     leading: <Sparkles />,
   },
 };
@@ -97,7 +109,7 @@ export const Selected: Story = {
   args: {
     children: "Selected filter",
     selected: true,
-    onClick: (): void => undefined,
+    onClick: fn(),
     leading: <Check />,
     variant: "primary",
   },
@@ -108,7 +120,7 @@ export const Disabled: Story = {
     children: "Disabled",
     disabled: true,
     removable: true,
-    onClick: (): void => undefined,
+    onClick: fn(),
   },
 };
 
@@ -365,7 +377,7 @@ export const AddNewChip: Story = {
       <Chip
         variant="outline"
         leading={<Plus />}
-        onClick={(): void => undefined}
+        onClick={fn()}
       >
         Add tag
       </Chip>

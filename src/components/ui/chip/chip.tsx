@@ -41,9 +41,9 @@ const chipVariants = cva(
           "bg-transparent text-foreground border-input data-[interactive=true]:hover:bg-accent data-[interactive=true]:hover:text-accent-foreground data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground data-[selected=true]:border-foreground/40",
       } satisfies Record<ChipVariant, string>,
       size: {
-        sm: "h-6 px-2 text-xs [&>svg]:size-3",
-        default: "h-7 px-2.5 text-xs [&>svg]:size-3.5",
-        lg: "h-9 px-3 text-sm [&>svg]:size-4",
+        sm: "h-6 px-2 text-xs [&_[data-slot=chip-leading]>svg]:size-3",
+        default: "h-7 px-2.5 text-xs [&_[data-slot=chip-leading]>svg]:size-3",
+        lg: "h-9 px-3 text-sm [&_[data-slot=chip-leading]>svg]:size-3.5",
       } satisfies Record<ChipSize, string>,
       disabled: {
         true: "opacity-50 pointer-events-none",
