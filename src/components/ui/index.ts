@@ -197,3 +197,6 @@ export type * from "./toggle";
 
 export * from "./chip";
 export type * from "./chip";
+
+export * from "./number-ticker";
+export type * from "./number-ticker";
