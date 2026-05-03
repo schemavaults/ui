@@ -2,6 +2,7 @@
 
 export {
   m,
+  animate,
   AnimatePresence,
   domAnimation,
   LazyMotion,
