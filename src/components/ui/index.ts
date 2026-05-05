@@ -7,6 +7,9 @@ export type * from "./accordion";
 export * from "./alert";
 export type * from "./alert";
 
+export * from "./callout";
+export type * from "./callout";
+
 export * from "./badge";
 export type * from "./badge";
 
