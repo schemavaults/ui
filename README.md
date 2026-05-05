@@ -6,7 +6,7 @@ SchemaVaults React.js UI component library package. [Here's the @schemavaults/ui
 
 ## Usage
 
-### Ensure that globals.css is imported from @schemavaults/theme
+### Ensure that globals.css is imported from [@schemavaults/theme](https://github.com/schemavaults/theme)
 
 ```javascript
 import "@schemavaults/theme/globals.css"
