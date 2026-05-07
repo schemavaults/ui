@@ -23,7 +23,7 @@ export function ThemedPageBackground({
 }: ThemedPageBackgroundProps): ReactElement {
   const backgroundClassNames: string[] = [
     "schemavaults-themed-page-background",
-    "relative min-h-full w-full",
+    "relative min-h-full w-full shrink-0",
     "bg-schemavaults-brand-blue bg-gradient-to-b from-schemavaults-brand-red to-transparent",
   ];
   if (typeof props.backgroundClassName === "string") {

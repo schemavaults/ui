@@ -54,7 +54,6 @@ export function ThemedPageContainer({
     <ThemedPageBackground
       className={cn(
         "grow",
-        "overflow-y-scroll no-scrollbar",
         "flex flex-col items-stretch justify-start",
         backgroundContentClassName,
       )}
