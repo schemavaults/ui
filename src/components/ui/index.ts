@@ -75,6 +75,9 @@ export type * from "./popover";
 export * from "./command";
 export type * from "./command";
 
+export * from "./combobox";
+export type * from "./combobox";
+
 export * from "./table";
 export type * from "./table";
 
