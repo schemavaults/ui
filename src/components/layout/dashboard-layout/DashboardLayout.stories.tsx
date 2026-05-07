@@ -386,9 +386,7 @@ function ThemedExampleCardSection({
 function ThemedDashboardPageContent(): ReactElement {
   const SECTION_COUNT: number = 6;
   return (
-    <ThemedPageContainer
-      backgroundClassName="min-h-full p-2 sm:p-4 lg:p-6 overflow-y-visible"
-    >
+    <ThemedPageContainer>
       {Array.from({ length: SECTION_COUNT }).map((_, index) => (
         <ThemedExampleCardSection
           key={`themed-section-${index}`}
