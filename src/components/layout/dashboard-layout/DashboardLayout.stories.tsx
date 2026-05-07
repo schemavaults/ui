@@ -8,7 +8,18 @@ import LoremIpsumText from "@/stories/LoremImpsumText";
 import { PageColumnContainer } from "@/components/layout/page-column-container";
 import { AlarmClock, Lock, Plane, Share2, Tornado, Users } from "lucide-react";
 import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
-import { Button, TooltipProvider, Wordmark } from "@/components/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  TooltipProvider,
+  Wordmark,
+} from "@/components/ui";
+import ThemedPageContainer from "@/components/layout/themed-page-container";
 import { Stepper, type Step } from "@/components/ui/stepper";
 import type { BaseStepperState } from "@/components/ui/stepper/base-stepper-state-type";
 import Toaster from "@/components/ui/toaster";
@@ -333,4 +344,67 @@ export const WithFullScreenStepper: Story = {
       </>
     ),
   ],
+};
+
+// --- DashboardLayout + ThemedPageContainer (branded gradient) ----------
+
+function LoremParagraphs({ n }: { n: number }): ReactElement {
+  return (
+    <>
+      {Array.from({ length: n }).map((_, index) => (
+        <p key={index}>{LoremIpsumText satisfies string}</p>
+      ))}
+    </>
+  );
+}
+
+function ThemedExampleCardSection({
+  title,
+  n_paragraphs = 5,
+}: {
+  title: string;
+  n_paragraphs?: number;
+}): ReactElement {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>
+          This is an example description for {title}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <LoremParagraphs n={n_paragraphs} />
+      </CardContent>
+      <CardFooter>
+        <p>This is the footer for {title}!</p>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function ThemedDashboardPageContent(): ReactElement {
+  const SECTION_COUNT: number = 6;
+  return (
+    <ThemedPageContainer>
+      {Array.from({ length: SECTION_COUNT }).map((_, index) => (
+        <ThemedExampleCardSection
+          key={`themed-section-${index}`}
+          title={`Section ${index + 1}`}
+        />
+      ))}
+    </ThemedPageContainer>
+  );
+}
+
+export const WithThemedPageContainer: Story = {
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Themed Page",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <DashboardLayout {...args}>
+      <ThemedDashboardPageContent />
+    </DashboardLayout>
+  ),
 };
