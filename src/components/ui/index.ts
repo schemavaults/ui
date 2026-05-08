@@ -209,3 +209,6 @@ export type * from "./tags-input";
 
 export * from "./number-ticker";
 export type * from "./number-ticker";
+
+export * from "./sparkline";
+export type * from "./sparkline";
