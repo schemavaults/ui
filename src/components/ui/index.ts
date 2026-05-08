@@ -212,3 +212,6 @@ export type * from "./number-ticker";
 
 export * from "./sparkline";
 export type * from "./sparkline";
+
+export * from "./aspect-ratio";
+export type * from "./aspect-ratio";
