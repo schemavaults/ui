@@ -62,10 +62,43 @@ type Story = StoryObj<typeof meta>;
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const TooltipExample: Story = {
   args: {},
+  parameters: {
+    docs: {
+      source: {
+        code: `<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <Button>Hover over me</Button>
+    </TooltipTrigger>
+    <TooltipContent>
+      <p>This is a tooltip</p>
+    </TooltipContent>
+  </Tooltip>
+</TooltipProvider>`,
+      },
+    },
+  },
 };
 
 export const WithArrow: Story = {
   args: {
     withArrow: true,
+  },
+  parameters: {
+    docs: {
+      source: {
+        code: `<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <Button>Hover over me</Button>
+    </TooltipTrigger>
+    <TooltipContent>
+      <p>This is a tooltip</p>
+      <TooltipArrow />
+    </TooltipContent>
+  </Tooltip>
+</TooltipProvider>`,
+      },
+    },
   },
 };
