@@ -215,3 +215,6 @@ export type * from "./sparkline";
 
 export * from "./aspect-ratio";
 export type * from "./aspect-ratio";
+
+export * from "./color-swatch";
+export type * from "./color-swatch";
