@@ -46,7 +46,7 @@ const SIZE_TO_DIMENSIONS: Record<
 };
 
 const calendarHeatmapVariants = cva(
-  "inline-flex w-fit max-w-full flex-col gap-2 text-foreground",
+  "inline-flex w-fit min-w-0 max-w-full flex-col gap-2 text-foreground",
   {
     variants: {
       size: {
@@ -374,7 +374,11 @@ function CalendarHeatmap({
       className={cn(calendarHeatmapVariants({ size }), className)}
       {...props}
     >
-      <div className="flex" style={{ gap: gapPx }}>
+      <div
+        className="flex max-w-full min-w-0 overflow-x-auto"
+        style={{ gap: gapPx }}
+        data-slot="calendar-heatmap-scroll"
+      >
         {showWeekdayLabels ? (
           <div
             aria-hidden="true"
