@@ -218,3 +218,6 @@ export type * from "./aspect-ratio";
 
 export * from "./color-swatch";
 export type * from "./color-swatch";
+
+export * from "./calendar-heatmap";
+export type * from "./calendar-heatmap";
