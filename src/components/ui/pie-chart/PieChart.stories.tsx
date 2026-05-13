@@ -33,6 +33,12 @@ const meta = {
     diameter: {
       control: { type: "number" },
     },
+    showSegmentLabels: {
+      control: { type: "boolean" },
+    },
+    minSegmentLabelAngle: {
+      control: { type: "range", min: 0, max: 1, step: 0.05 },
+    },
   },
   args: {
     label: "Sample distribution",
@@ -178,6 +184,62 @@ export const ClickableSegments: Story = {
       );
     };
     return <InteractiveChart />;
+  },
+};
+
+export const WithSegmentLabels: Story = {
+  args: {
+    segments: SAMPLE_SEGMENTS,
+    size: "lg",
+    showSegmentLabels: true,
+  },
+};
+
+export const WithSegmentLabelsDonut: Story = {
+  args: {
+    segments: SAMPLE_SEGMENTS,
+    size: "lg",
+    innerRadius: 0.55,
+    showSegmentLabels: true,
+  },
+};
+
+export const PercentageLabels: Story = {
+  args: {
+    segments: SAMPLE_SEGMENTS,
+    size: "lg",
+    showSegmentLabels: true,
+    segmentLabelFormatter: ({ percentage }): string =>
+      `${percentage.toFixed(0)}%`,
+  },
+};
+
+export const NameAndPercentageLabels: Story = {
+  args: {
+    segments: SAMPLE_SEGMENTS,
+    size: "xl",
+    innerRadius: 0.4,
+    showSegmentLabels: true,
+    segmentLabelFormatter: ({ segment, percentage }): string =>
+      `${segment.label} (${percentage.toFixed(0)}%)`,
+  },
+};
+
+export const SkipSmallSegmentLabels: Story = {
+  args: {
+    segments: [
+      { id: "a", value: 50, label: "Major", color: "default" },
+      { id: "b", value: 30, label: "Medium", color: "positive" },
+      { id: "c", value: 15, label: "Minor", color: "warning" },
+      { id: "d", value: 3, label: "Tiny", color: "destructive" },
+      { id: "e", value: 2, label: "Trace", color: "muted" },
+    ],
+    size: "lg",
+    showSegmentLabels: true,
+    // ~17° threshold — segments under that will not be labeled.
+    minSegmentLabelAngle: 0.3,
+    segmentLabelFormatter: ({ segment, percentage }): string =>
+      `${segment.label} ${percentage.toFixed(0)}%`,
   },
 };
 

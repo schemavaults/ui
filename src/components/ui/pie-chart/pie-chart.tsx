@@ -128,6 +128,32 @@ export interface PieChartProps
   children?: ReactNode;
   /** Extra classes for the centered content wrapper. */
   centerClassName?: string;
+  /**
+   * When true, renders each segment's `label` inside the slice. Use
+   * `segmentLabelFormatter` to customize the displayed string (e.g. show a
+   * percentage instead of the raw label).
+   */
+  showSegmentLabels?: boolean;
+  /**
+   * Customize the in-segment label text. Return `null` to skip a segment.
+   * Defaults to `segment.label ?? segment.id`.
+   */
+  segmentLabelFormatter?: (params: {
+    segment: PieChartSegment;
+    value: number;
+    /** Share of the total, in the range 0–1. */
+    fraction: number;
+    /** Share of the total, in the range 0–100. */
+    percentage: number;
+    index: number;
+  }) => string | null;
+  /**
+   * Minimum segment sweep (in radians) required to render its label. Smaller
+   * segments are skipped to avoid overlap. Defaults to ~11.5° (0.2 rad).
+   */
+  minSegmentLabelAngle?: number;
+  /** Extra classes applied to every segment-label `<text>` element. */
+  segmentLabelClassName?: string;
   /** Optional ref forwarded to the wrapper element. */
   ref?: Ref<HTMLDivElement>;
 }
@@ -240,6 +266,10 @@ function PieChart({
   children,
   className,
   centerClassName,
+  showSegmentLabels = false,
+  segmentLabelFormatter,
+  minSegmentLabelAngle = 0.2,
+  segmentLabelClassName,
   ref,
   ...props
 }: PieChartProps): ReactElement {
@@ -365,6 +395,57 @@ function PieChart({
             );
           })
         )}
+        {showSegmentLabels && resolved.length > 0 ? (
+          <g
+            aria-hidden="true"
+            data-slot="pie-chart-segment-labels"
+            className="pointer-events-none select-none"
+          >
+            {resolved.map(({ segment, startAngle, endAngle }, index) => {
+              const sweep: number = endAngle - startAngle;
+              if (sweep < minSegmentLabelAngle) return null;
+              const value: number = segment.value;
+              const fraction: number = value / total;
+              const percentage: number = fraction * 100;
+              const text: string | null = segmentLabelFormatter
+                ? segmentLabelFormatter({
+                    segment,
+                    value,
+                    fraction,
+                    percentage,
+                    index,
+                  })
+                : (segment.label ?? segment.id);
+              if (text === null || text === "") return null;
+              const midAngle: number = (startAngle + endAngle) / 2;
+              const labelRadius: number =
+                innerR > 0
+                  ? (innerR + outerRadius) / 2
+                  : outerRadius * 0.65;
+              const [lx, ly] = polarToCartesian(
+                cx,
+                cy,
+                labelRadius,
+                midAngle,
+              );
+              return (
+                <text
+                  key={`${segment.id}-label`}
+                  x={lx}
+                  y={ly}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  className={cn(
+                    "fill-white text-[11px] font-medium [paint-order:stroke] [stroke:rgba(0,0,0,0.35)] [stroke-width:2px]",
+                    segmentLabelClassName,
+                  )}
+                >
+                  {text}
+                </text>
+              );
+            })}
+          </g>
+        ) : null}
       </svg>
       {children ? (
         <div
