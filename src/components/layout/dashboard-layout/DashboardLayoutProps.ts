@@ -18,4 +18,10 @@ export interface DashboardLayoutProps extends PropsWithChildren {
   sizing?: DashboardLayoutSidebarSizing;
   onOpenSidebar?: () => void;
   onCloseSidebar?: () => void;
+  /**
+   * Optional `usePathname` hook (e.g. from `next/navigation`). When provided,
+   * the mobile sidebar will automatically close whenever the pathname
+   * changes. Pass the hook itself, not its return value.
+   */
+  usePathname?: () => string;
 }
