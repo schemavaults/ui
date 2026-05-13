@@ -156,6 +156,9 @@ export type * from "./progress-bar";
 export * from "./circular-progress";
 export type * from "./circular-progress";
 
+export * from "./gauge";
+export type * from "./gauge";
+
 export * from "./breadcrumb";
 export type * from "./breadcrumb";
 
