@@ -224,3 +224,6 @@ export type * from "./color-swatch";
 
 export * from "./calendar-heatmap";
 export type * from "./calendar-heatmap";
+
+export * from "./pie-chart";
+export type * from "./pie-chart";
