@@ -4,7 +4,17 @@ import {
   PieChart,
   pieChartSizeIds,
   type PieChartSegment,
+  type PieChartSegmentColorId,
 } from "./pie-chart";
+
+const LEGEND_SWATCH_CLASSES: Record<PieChartSegmentColorId, string> = {
+  default: "bg-schemavaults-brand-blue",
+  primary: "bg-primary",
+  positive: "bg-emerald-500 dark:bg-emerald-400",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
+  muted: "bg-muted-foreground",
+};
 
 const meta = {
   title: "Components/PieChart",
@@ -167,18 +177,24 @@ export const ClickableSegments: Story = {
             )}
           </PieChart>
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-            {args.segments.map((segment) => (
-              <span
-                key={segment.id}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1"
-              >
+            {args.segments.map((segment) => {
+              const swatchClass: string = segment.color
+                ? LEGEND_SWATCH_CLASSES[segment.color]
+                : LEGEND_SWATCH_CLASSES.default;
+              return (
                 <span
-                  aria-hidden="true"
-                  className="inline-block h-2 w-2 rounded-full bg-current"
-                />
-                {segment.label}
-              </span>
-            ))}
+                  key={segment.id}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`inline-block h-2 w-2 rounded-full ${swatchClass}`}
+                    style={segment.fill ? { backgroundColor: segment.fill } : undefined}
+                  />
+                  {segment.label}
+                </span>
+              );
+            })}
           </div>
         </div>
       );
