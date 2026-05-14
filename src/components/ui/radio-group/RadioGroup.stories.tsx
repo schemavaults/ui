@@ -1,6 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "storybook/test";
-
 import { RadioGroup, RadioGroupItem } from "./radio-group";
 import type { ReactElement } from "react";
 import { fn } from "storybook/test";
