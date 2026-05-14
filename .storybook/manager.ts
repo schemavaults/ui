@@ -1,7 +1,7 @@
 // .storybook/manager.ts
 
-import { addons } from "@storybook/manager-api";
-import { create as createTheme } from "@storybook/theming";
+import { addons } from "storybook/manager-api";
+import { create as createTheme } from "storybook/theming";
 
 addons.setConfig({
   theme: createTheme({

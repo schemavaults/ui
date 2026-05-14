@@ -7,7 +7,7 @@ import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
 import Toaster from "@/components/ui/toaster";
 import { useToast } from "@/components/hooks/use-toast";
 import Button from "@/components/ui/button";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 
 interface ExampleStepperState extends BaseStepperState {
   currentStep: number;

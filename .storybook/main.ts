@@ -3,8 +3,14 @@
 
 import type { StorybookConfig } from "@storybook/react-webpack5";
 import type { Options as SwcOptions } from "@swc/core";
-import { resolve } from "path";
+import { createRequire } from "module";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import webpack from "webpack";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const require = createRequire(import.meta.url);
 
 type StorybookWebpackConfig = Awaited<
   ReturnType<NonNullable<StorybookConfig["webpackFinal"]>>
@@ -20,7 +26,7 @@ const storybookAssetsDirectory: string = resolve(
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
   addons: [
-    "@storybook/addon-essentials",
+    "@storybook/addon-docs",
     "@storybook/addon-webpack5-compiler-swc",
   ],
   staticDirs: [storybookAssetsDirectory],

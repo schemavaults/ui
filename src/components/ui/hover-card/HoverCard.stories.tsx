@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
+// import { fn } from "storybook/test";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card";
 import type { ReactElement } from "react";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 import Button from "@/components/ui/button";
 
 function HoverCardDemo(): ReactElement {

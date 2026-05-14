@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 import { AtSign, Hash, Mail, Tag } from "lucide-react";
 import { useState, type ReactElement } from "react";
 
