@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "storybook/test";
 import { FullscreenImage } from "./fullscreen-image";
 import type { ComponentProps, ReactElement } from "react";
 import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
@@ -41,6 +42,10 @@ const meta = {
       control: "text",
       description: "Custom className for the fullscreen image",
     },
+  },
+  args: {
+    onOpen: fn(),
+    onClose: fn(),
   },
   decorators: [
     (Story): ReactElement => {
@@ -122,8 +127,14 @@ export const WithCallbacks: Story = {
     src: sampleImage,
     alt: "Image with callbacks",
     className: "w-[400px] h-[300px]",
-    onOpen: () => console.log("Fullscreen opened"),
-    onClose: () => console.log("Fullscreen closed"),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Each invocation of `onOpen` / `onClose` is logged in the Actions panel via Storybook's `fn()` spies (configured on the meta `args`).",
+      },
+    },
   },
 };
 

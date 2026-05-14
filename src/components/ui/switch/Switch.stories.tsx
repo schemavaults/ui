@@ -26,9 +26,10 @@ const meta = {
   decorators: [
     (Story, context): ReactElement => {
       const [args, setArgs] = useArgs<SwitchProps>();
+      const spy = context.args.onCheckedChange;
 
       function onCheckedChange(checked: boolean): void {
-        fn();
+        spy?.(checked);
         setArgs({ checked });
       }
 

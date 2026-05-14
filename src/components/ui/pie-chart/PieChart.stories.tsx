@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ReactElement } from "react";
+import { fn } from "storybook/test";
 import {
   PieChart,
   pieChartSizeIds,
@@ -55,6 +56,7 @@ const meta = {
     size: "md",
     innerRadius: 0,
     segmentGap: 1,
+    onSegmentClick: fn(),
   },
 } satisfies Meta<typeof PieChart>;
 
@@ -149,7 +151,11 @@ export const ClickableSegments: Story = {
       const segments: ReadonlyArray<PieChartSegment> = args.segments.map(
         (segment) => ({
           ...segment,
-          onClick: (s) => {
+          onClick: (s, event) => {
+            // Per-segment `onClick` shadows the chart-level `onSegmentClick`
+            // (see pie-chart.tsx: `segment.onClick ?? onSegmentClick`), so
+            // forward to the spy explicitly to keep the Actions panel wired up.
+            args.onSegmentClick?.(s, event);
             setSelected(s);
           },
         }),

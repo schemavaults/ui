@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "storybook/test";
 import Slider from "./slider";
 import { useArgs } from "storybook/preview-api";
 
@@ -35,11 +36,14 @@ const meta = {
       },
     },
   },
-  // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
-  args: {},
+  // Use `fn` to spy on the onValueChange arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
+  args: {
+    onValueChange: fn(),
+  },
   decorators: [
     (Story, { ...context }) => {
       const [{ value }, updateArgs] = useArgs();
+      const spy = context.args.onValueChange;
       return (
         <Story
           {...context}
@@ -47,6 +51,7 @@ const meta = {
             ...context.args,
             value: typeof value === "number" ? [value] : value,
             onValueChange: (value: number[]) => {
+              spy?.(value);
               updateArgs({
                 ...context.args,
                 value,

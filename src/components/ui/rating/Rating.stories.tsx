@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ReactElement } from "react";
+import { fn } from "storybook/test";
 
 import { Rating } from "./rating";
 import {
@@ -47,6 +48,7 @@ const meta = {
     allowHalf: false,
     readOnly: false,
     disabled: false,
+    onValueChange: fn(),
   },
 } satisfies Meta<typeof Rating>;
 
