@@ -195,6 +195,9 @@ export type * from "./number-input";
 export * from "./code-block";
 export type * from "./code-block";
 
+export * from "./json-viewer";
+export type * from "./json-viewer";
+
 export * from "./segmented-control";
 export type * from "./segmented-control";
 
