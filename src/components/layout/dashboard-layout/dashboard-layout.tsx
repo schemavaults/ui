@@ -4,6 +4,7 @@ import type { ReactNode, ReactElement, FC } from "react";
 import DashboardSidebar, {
   DashboardLayoutSidebarTrigger,
   DashboardSidebarContextProvider,
+  useCloseDashboardSidebarOnRouteChange,
   useDashboardSidebarOpenState,
   useDashboardSidebarSizing,
 } from "./dashboard-sidebar";
@@ -21,6 +22,19 @@ export type { DashboardLayoutProps };
  *
  * @returns A layout component wrapping the page content of 'children'
  */
+// Sibling component that subscribes to `usePathname` and closes the mobile
+// sidebar on navigation. Rendered conditionally only when consumers opt in
+// by passing `usePathname` — keeping the hook call out of the parent avoids
+// the rule-of-hooks issue of a conditionally-called hook.
+function AutoCloseSidebarOnNavigation({
+  usePathname,
+}: {
+  usePathname: () => string;
+}): null {
+  useCloseDashboardSidebarOnRouteChange(usePathname);
+  return null;
+}
+
 export function DashboardLayout({
   children,
   wordmark,
@@ -28,6 +42,7 @@ export function DashboardLayout({
   Link,
   brandHref,
   topBarTitle,
+  usePathname,
   ...props
 }: DashboardLayoutProps): ReactElement {
   const size = useDashboardSidebarSizing();
@@ -58,6 +73,9 @@ export function DashboardLayout({
       onOpenSidebar={props.onOpenSidebar}
       onCloseSidebar={props.onCloseSidebar}
     >
+      {typeof usePathname === "function" && (
+        <AutoCloseSidebarOnNavigation usePathname={usePathname} />
+      )}
       <div id="dashboard-layout-container" className="w-full h-dvh min-h-dvh">
         <DashboardSidebar
           wordmark={wordmark}
