@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import type { FC, ReactElement } from "react";
+import type { ReactElement } from "react";
 import BackgroundBlur, {
   backgroundBlurIntensityVariants,
   type BackgroundBlurProps,
@@ -60,28 +60,10 @@ const meta = {
         type: "radio",
       },
     },
-    foreground: {
-      type: "function",
-      table: {
-        type: {
-          summary: "FC",
-        },
-      },
-      description: "Component to render in front of blur effect.",
-    },
-    background: {
-      type: "function",
-      table: {
-        type: {
-          summary: "FC",
-        },
-      },
-      description: "Component to render behind blur effect.",
-    },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {},
-} satisfies Meta<typeof BackgroundBlurExample & FC<BackgroundBlurProps>>;
+} satisfies Meta<typeof BackgroundBlurExample>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

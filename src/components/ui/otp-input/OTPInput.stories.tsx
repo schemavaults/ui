@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 
 import { OTPInput, type OTPInputHandle } from "./otp-input";
 import { Button } from "@/components/ui/button";

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 import type { ReactElement } from "react";
 import { Copy, Edit, Trash2, Share, Download, Settings } from "lucide-react";
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
+// import { fn } from "storybook/test";
 
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import type { ReactElement } from "react";

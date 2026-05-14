@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 
 import Switch from "./switch";
 import type { ReactElement } from "react";
 import { SwitchProps } from "@radix-ui/react-switch";
-import { useArgs } from "@storybook/preview-api";
+import { useArgs } from "storybook/preview-api";
 
 const meta = {
   title: "Components/Switch",

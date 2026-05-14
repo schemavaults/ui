@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
+// import { fn } from "storybook/test";
 import SplitPane, { type SplitPaneProps } from "./split-pane";
 import type { ReactElement } from "react";
 import {
@@ -7,7 +7,7 @@ import {
   type SplitPaneDirection,
   validSplitPaneDirections,
 } from "./split-pane-directions";
-import { useArgs } from "@storybook/preview-api";
+import { useArgs } from "storybook/preview-api";
 import {
   EVEN_SPLIT_PERCENTAGE,
   MAX_SPLIT_PERCENTAGE,

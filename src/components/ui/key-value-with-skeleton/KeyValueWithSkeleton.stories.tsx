@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
+// import { fn } from "storybook/test";
 
 import KeyValueWithSkeleton from "./key-value-with-skeleton";
 import type { ReactElement } from "react";

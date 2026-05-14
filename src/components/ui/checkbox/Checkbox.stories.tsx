@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 
 import Checkbox from "./checkbox";
 import type { ReactElement } from "react";
 import { CheckboxProps, CheckedState } from "@radix-ui/react-checkbox";
-import { useArgs } from "@storybook/preview-api";
+import { useArgs } from "storybook/preview-api";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -32,9 +32,10 @@ const meta = {
   decorators: [
     (Story, context): ReactElement => {
       const [args, setArgs] = useArgs<CheckboxProps>();
+      const argsOnCheckedChange = args.onCheckedChange;
 
       function onCheckedChange(checked: CheckedState): void {
-        fn();
+        argsOnCheckedChange?.(checked);
         setArgs({ checked });
       }
 

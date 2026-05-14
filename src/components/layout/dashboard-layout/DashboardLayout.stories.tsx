@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "@storybook/test";
+// import { fn } from "storybook/test";
 
 import { useState, type ReactElement, type ReactNode } from "react";
 
@@ -33,7 +33,7 @@ import type {
   ICustomizableDashboardLayoutComponentProps,
 } from "./customizable-dashboard-component-type";
 import type { LinkComponentProps, LinkComponentType } from "@/types/Link";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 
 function ExampleChildrenForContainer(): ReactNode {
   const REPEAT_TEXT: number = 25;

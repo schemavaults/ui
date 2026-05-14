@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import FileInput from "./FileInput";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 import Toaster from "@/components/ui/toaster";
 import base64url from "base64url";
 import { Buffer } from "buffer";
