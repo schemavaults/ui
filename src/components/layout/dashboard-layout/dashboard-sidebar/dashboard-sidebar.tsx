@@ -30,7 +30,6 @@ export function DashboardSidebar(
         onOpenChange={(newOpenState: boolean): void => {
           setOpen(newOpenState);
         }}
-        defaultOpen={openState.open}
       >
         <SheetContent
           side="left"
