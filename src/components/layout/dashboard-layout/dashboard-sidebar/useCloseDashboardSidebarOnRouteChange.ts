@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import useDashboardSidebarOpenStateDispatch from "./useDashboardSidebarOpenStateDispatch";
 import useDebug from "@/components/hooks/use-debug";
 
-// Auto-closes the sidebar on route changes. Only acts on mobile — on desktop
-// the sidebar's expanded/collapsed state is the user's preference and should
-// persist across navigation. Closing the desktop sidebar on every route
-// change would also re-animate the wordmark (via AnimatePresence) every
-// navigation, which is undesirable.
+// Close the mobile sidebar when the pathname changes. The pre-0.46.6 version
+// listed `open` and `mobile` in the deps array alongside `pathname`, which
+// meant the effect re-fired the moment the user tapped the mobile trigger
+// (open: false -> true) and immediately closed the Sheet they just opened.
+// Reading `mobile`/`open`/`setOpen`/`debug` via `useEffectEvent` keeps them
+// out of the deps so the effect only runs on actual pathname transitions.
 export function useCloseDashboardSidebarOnRouteChange(
   usePathname: () => string,
 ): void {
@@ -20,7 +21,7 @@ export function useCloseDashboardSidebarOnRouteChange(
   const mobile: boolean = state.mobile ?? false;
   const setOpen = useDashboardSidebarOpenStateDispatch();
 
-  useEffect((): void => {
+  const closeIfOpenOnMobile = useEffectEvent((): void => {
     if (mobile && open) {
       if (debug) {
         console.log(
@@ -29,7 +30,11 @@ export function useCloseDashboardSidebarOnRouteChange(
       }
       setOpen(false);
     }
-  }, [pathname, open, mobile, setOpen, debug]);
+  });
+
+  useEffect((): void => {
+    closeIfOpenOnMobile();
+  }, [pathname]);
 }
 
 export default useCloseDashboardSidebarOnRouteChange;

@@ -408,3 +408,62 @@ export const WithThemedPageContainer: Story = {
     </DashboardLayout>
   ),
 };
+
+// Exercises the `usePathname` integration so reviewers can verify two
+// behaviours that 0.46.6 regressed/fixed: (1) on mobile, tapping the trigger
+// must open the Sheet and keep it open (previously the close-on-route-change
+// hook re-fired on every `open` flip and slammed it shut); (2) on a true
+// pathname change, the sidebar must auto-close on mobile but persist on
+// desktop. Switch Storybook's viewport between Mobile and Desktop to see
+// both halves.
+function WithUsePathnamePageContent({
+  pathname,
+  onSimulateNavigation,
+}: {
+  pathname: string;
+  onSimulateNavigation: () => void;
+}): ReactElement {
+  return (
+    <div className="flex flex-col gap-3 p-4 items-start">
+      <p>
+        Current pathname: <code>{pathname}</code>
+      </p>
+      <Button onClick={onSimulateNavigation}>Simulate navigation</Button>
+      <p className="text-sm text-muted-foreground max-w-prose">
+        On a mobile viewport: tap the sidebar trigger — the Sheet should stay
+        open. Then click &ldquo;Simulate navigation&rdquo; — the sidebar
+        should auto-close. On desktop, expanding the sidebar should persist
+        across navigation.
+      </p>
+      <ExampleChildrenForContainer />
+    </div>
+  );
+}
+
+function WithUsePathnameStoryRender(
+  args: Partial<DashboardLayoutProps>,
+): ReactElement {
+  const [pathname, setPathname] = useState<string>("/dashboard");
+  const usePathname = (): string => pathname;
+  return (
+    <DashboardLayout
+      {...(args as DashboardLayoutProps)}
+      usePathname={usePathname}
+    >
+      <WithUsePathnamePageContent
+        pathname={pathname}
+        onSimulateNavigation={(): void => {
+          setPathname(`/dashboard/${Date.now()}`);
+        }}
+      />
+    </DashboardLayout>
+  );
+}
+
+export const WithUsePathname: Story = {
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Mobile open + usePathname",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => <WithUsePathnameStoryRender {...args} />,
+};
