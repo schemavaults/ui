@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ReactElement } from "react";
+import { fn } from "storybook/test";
 import {
   PieChart,
   pieChartSizeIds,
@@ -55,6 +56,7 @@ const meta = {
     size: "md",
     innerRadius: 0,
     segmentGap: 1,
+    onSegmentClick: fn(),
   },
 } satisfies Meta<typeof PieChart>;
 

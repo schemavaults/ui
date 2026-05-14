@@ -13,6 +13,11 @@ interface ExampleStepperState extends BaseStepperState {
   currentStep: number;
 }
 
+// Hoisted spy so that clicks on the final-step submit button appear in
+// Storybook's Actions panel. Inline `fn()` calls inside onClick would create a
+// brand-new spy per click and immediately discard it.
+const onFinalStepSubmit = fn();
+
 function ExampleStepComponent({ message }: { message: string }): ReactElement {
   return (
     <div className="relative">
@@ -100,7 +105,7 @@ function ExampleStepper(props: ExampleStepperProps): ReactElement {
         return (
           <Button
             onClick={() => {
-              fn();
+              onFinalStepSubmit();
               toast({
                 variant: "default",
                 title: "Pretending to submit <Stepper />",
@@ -234,7 +239,7 @@ function TallContentStepper(props: ExampleStepperProps): ReactElement {
       FinalStepSubmitButton={() => (
         <Button
           onClick={() => {
-            fn();
+            onFinalStepSubmit();
             toast({
               variant: "default",
               title: "Pretending to submit <Stepper />",

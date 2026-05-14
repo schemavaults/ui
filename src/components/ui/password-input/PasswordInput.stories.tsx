@@ -20,9 +20,7 @@ const meta = {
     },
   },
   args: {
-    onChange: (): void => {
-      fn();
-    },
+    onChange: fn(),
   },
 } satisfies Meta<typeof PasswordInput>;
 

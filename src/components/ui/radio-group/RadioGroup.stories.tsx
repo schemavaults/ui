@@ -4,9 +4,13 @@ import type { ReactElement } from "react";
 import { fn } from "storybook/test";
 import Label from "@/components/ui/label";
 
-function RadioGroupDemo(): ReactElement {
+interface RadioGroupDemoProps {
+  onValueChange?: (value: string) => void;
+}
+
+function RadioGroupDemo({ onValueChange }: RadioGroupDemoProps): ReactElement {
   return (
-    <RadioGroup defaultValue="comfortable">
+    <RadioGroup defaultValue="comfortable" onValueChange={onValueChange}>
       <div className="flex items-center gap-3">
         <RadioGroupItem value="default" id="r1" />
         <Label htmlFor="r1">Default</Label>
@@ -35,13 +39,11 @@ const meta = {
   tags: ["autodocs"],
   // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {},
-  // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
+  // Use `fn` to spy on the onValueChange arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
-    onChange: (): void => {
-      fn();
-    },
+    onValueChange: fn(),
   },
-} satisfies Meta<typeof RadioGroup>;
+} satisfies Meta<typeof RadioGroupDemo>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
