@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-// import { fn } from "storybook/test";
+import { fn } from "storybook/test";
 import SplitPane, { type SplitPaneProps } from "./split-pane";
 import type { ReactElement } from "react";
 import {
@@ -29,12 +29,10 @@ const meta = {
   decorators: [
     (Story, context) => {
       const [args, setArgs] = useArgs<SplitPaneProps>();
-      // Use the wrapper component instead of modifying Story args
+      const spy = context.args.setSplitPercentage;
 
       const handleSplitChange = (newSplit: number): void => {
-        if (process.env.NODE_ENV === "development") {
-          console.log("[handleSplitChange] newSplit: ", newSplit);
-        }
+        spy?.(newSplit);
         setArgs({ splitPercentage: newSplit });
       };
 
@@ -101,12 +99,13 @@ const meta = {
       },
     },
   },
-  // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
+  // Use `fn` to spy on the setSplitPercentage arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
     First: () => <ExamplePane message="<FirstPane />" />,
     Second: () => <ExamplePane message="<SecondPane />" />,
     containerClassName: "w-full h-screen",
     splitPercentage: EVEN_SPLIT_PERCENTAGE,
+    setSplitPercentage: fn(),
   } satisfies SplitPaneProps,
 } satisfies Meta<typeof SplitPane>;
 
