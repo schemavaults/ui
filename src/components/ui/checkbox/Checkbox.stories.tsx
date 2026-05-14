@@ -32,9 +32,10 @@ const meta = {
   decorators: [
     (Story, context): ReactElement => {
       const [args, setArgs] = useArgs<CheckboxProps>();
+      const argsOnCheckedChange = args.onCheckedChange;
 
       function onCheckedChange(checked: CheckedState): void {
-        fn();
+        argsOnCheckedChange?.(checked);
         setArgs({ checked });
       }
 
