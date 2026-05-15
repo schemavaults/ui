@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  forwardRef,
   useCallback,
   useEffect,
   useId,
@@ -152,6 +151,8 @@ export interface ComparisonSliderProps
   disabled?: boolean;
   /** className passed to the root container. */
   className?: string;
+  /** Imperative handle exposing setPosition / getPosition. Passed directly as a React 19 prop. */
+  ref?: Ref<ComparisonSliderRef>;
 }
 
 export interface ComparisonSliderRef {
@@ -161,25 +162,23 @@ export interface ComparisonSliderRef {
   getPosition: () => number;
 }
 
-function ComparisonSliderImpl(
-  {
-    before,
-    after,
-    label,
-    beforeLabel,
-    afterLabel,
-    position,
-    defaultPosition = 50,
-    onPositionChange,
-    keyboardStep = 2,
-    orientation = "horizontal",
-    handleVariant = "default",
-    disabled = false,
-    className,
-    ...rest
-  }: ComparisonSliderProps,
-  ref: Ref<ComparisonSliderRef>,
-): ReactElement {
+export function ComparisonSlider({
+  before,
+  after,
+  label,
+  beforeLabel,
+  afterLabel,
+  position,
+  defaultPosition = 50,
+  onPositionChange,
+  keyboardStep = 2,
+  orientation = "horizontal",
+  handleVariant = "default",
+  disabled = false,
+  className,
+  ref,
+  ...rest
+}: ComparisonSliderProps): ReactElement {
   const isControlled = typeof position === "number";
   const [internalPosition, setInternalPosition] = useState<number>(
     clampPercentage(defaultPosition),
@@ -424,10 +423,6 @@ function ComparisonSliderImpl(
   );
 }
 
-export const ComparisonSlider = forwardRef<
-  ComparisonSliderRef,
-  ComparisonSliderProps
->(ComparisonSliderImpl);
 ComparisonSlider.displayName = "ComparisonSlider";
 
 export default ComparisonSlider;
