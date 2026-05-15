@@ -230,3 +230,6 @@ export type * from "./calendar-heatmap";
 
 export * from "./pie-chart";
 export type * from "./pie-chart";
+
+export * from "./comparison-slider";
+export type * from "./comparison-slider";
