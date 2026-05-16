@@ -3,6 +3,7 @@
 import {
   ThemeProvider as NextThemesProvider,
   useTheme as useBrightnessTheme,
+  type UseThemeProps as UseBrightnessThemeReturn,
 } from "next-themes";
 
 export type BrightnessThemeProviderProps = Parameters<
@@ -25,3 +26,4 @@ export function BrightnessThemeProvider({
 export default BrightnessThemeProvider;
 
 export { useBrightnessTheme };
+export type { UseBrightnessThemeReturn };
