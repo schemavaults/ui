@@ -16,7 +16,7 @@ import { themeSelectorSizeIds } from "./theme-selector";
  * selection persists across stories and page reloads.
  */
 const meta = {
-  title: "Components/ThemeSelector",
+  title: "Theme/ThemeSelector",
   component: ThemeSelector,
   parameters: {
     layout: "centered",
