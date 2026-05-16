@@ -233,3 +233,6 @@ export type * from "./pie-chart";
 
 export * from "./comparison-slider";
 export type * from "./comparison-slider";
+
+export * from "./theme-selector";
+export type * from "./theme-selector";
