@@ -1,6 +1,5 @@
 "use client";
 
-import { cva, type VariantProps } from "class-variance-authority";
 import { Monitor, Moon, Sun, type LucideIcon } from "lucide-react";
 import {
   useEffect,
@@ -10,6 +9,11 @@ import {
 } from "react";
 
 import { cn } from "@/lib/utils";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+  type SegmentedControlSizeId,
+} from "@/components/ui/segmented-control";
 import { useBrightnessTheme } from "@/providers/brightness-theme";
 
 export const themeSelectorOptionIds = [
@@ -23,40 +27,8 @@ export const themeSelectorSizeIds = [
   "sm",
   "default",
   "lg",
-] as const satisfies readonly string[];
+] as const satisfies readonly SegmentedControlSizeId[];
 export type ThemeSelectorSizeId = (typeof themeSelectorSizeIds)[number];
-
-export const themeSelectorVariants = cva(
-  "inline-flex items-center gap-1 rounded-lg border border-input bg-background p-1 text-muted-foreground",
-  {
-    variants: {
-      size: {
-        sm: "h-8",
-        default: "h-9",
-        lg: "h-11",
-      } satisfies Record<ThemeSelectorSizeId, string>,
-    },
-    defaultVariants: {
-      size: "default",
-    },
-  },
-);
-
-export const themeSelectorItemVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md font-medium ring-offset-background transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 aria-[checked=true]:bg-accent aria-[checked=true]:text-accent-foreground cursor-pointer",
-  {
-    variants: {
-      size: {
-        sm: "h-6 px-2 text-xs",
-        default: "h-7 px-2.5 text-sm",
-        lg: "h-9 px-3 text-base",
-      } satisfies Record<ThemeSelectorSizeId, string>,
-    },
-    defaultVariants: {
-      size: "default",
-    },
-  },
-);
 
 interface ThemeSelectorOption {
   id: ThemeSelectorOptionId;
@@ -77,8 +49,9 @@ const iconSizeBySize: Record<ThemeSelectorSizeId, string> = {
 };
 
 export interface ThemeSelectorProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "onChange">,
-    VariantProps<typeof themeSelectorVariants> {
+  extends Omit<HTMLAttributes<HTMLDivElement>, "onChange" | "defaultValue"> {
+  /** Size of the underlying SegmentedControl. */
+  size?: ThemeSelectorSizeId;
   /** Render only the icons, hiding the text labels. */
   iconOnly?: boolean;
   /** Disable interaction with every option. */
@@ -86,18 +59,21 @@ export interface ThemeSelectorProps
 }
 
 /**
- * A brightness theme switcher driven by {@link useBrightnessTheme}.
+ * A brightness theme switcher driven by {@link useBrightnessTheme}, built on
+ * top of the {@link SegmentedControl} component.
  *
  * Must be rendered inside a `<BrightnessThemeProvider />`. To avoid a
  * server/client hydration mismatch the active option is not highlighted until
- * the component has mounted on the client.
+ * the component has mounted on the client (the controlled value is held empty
+ * until then so the SegmentedControl stays controlled throughout).
  *
  * @see BrightnessThemeProvider
  * @see useBrightnessTheme
+ * @see SegmentedControl
  */
 export function ThemeSelector({
   className,
-  size,
+  size = "default",
   iconOnly = false,
   disabled = false,
   ...props
@@ -109,39 +85,31 @@ export function ThemeSelector({
     setMounted(true);
   }, []);
 
-  const resolvedSize: ThemeSelectorSizeId = size ?? "default";
-
   return (
-    <div
-      role="radiogroup"
+    <SegmentedControl
+      value={mounted ? (theme ?? "") : ""}
+      onValueChange={setTheme}
+      variant="outline"
+      size={size}
+      disabled={disabled}
       aria-label="Color theme"
-      aria-disabled={disabled || undefined}
-      className={cn(themeSelectorVariants({ size }), className)}
+      className={className}
       {...props}
     >
       {themeOptions.map((option): ReactElement => {
         const Icon = option.icon;
-        const isActive = mounted && theme === option.id;
         return (
-          <button
+          <SegmentedControlItem
             key={option.id}
-            type="button"
-            role="radio"
-            aria-checked={isActive}
+            value={option.id}
             aria-label={option.label}
-            disabled={disabled}
-            onClick={(): void => setTheme(option.id)}
-            className={cn(themeSelectorItemVariants({ size }))}
           >
-            <Icon
-              className={cn(iconSizeBySize[resolvedSize])}
-              aria-hidden="true"
-            />
+            <Icon className={cn(iconSizeBySize[size])} aria-hidden="true" />
             {iconOnly ? null : <span>{option.label}</span>}
-          </button>
+          </SegmentedControlItem>
         );
       })}
-    </div>
+    </SegmentedControl>
   );
 }
 ThemeSelector.displayName = "ThemeSelector";
