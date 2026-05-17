@@ -75,6 +75,29 @@ function DisplayValue({
   }
 }
 
+function ValueWithLabel({
+  label,
+  className,
+  labelClassName,
+  children,
+}: PropsWithChildren<{
+  label: string;
+  className?: string;
+  labelClassName?: string;
+}>): ReactElement {
+  return (
+    <div
+      className={cn(
+        "grow w-full flex flex-row items-center justify-start gap-4",
+        className,
+      )}
+    >
+      <p className={cn("text-lg font-bold", labelClassName)}>{label}:</p>
+      {children}
+    </div>
+  );
+}
+
 export function KeyValueWithSkeleton({
   label,
   value,
@@ -82,22 +105,12 @@ export function KeyValueWithSkeleton({
   labelClassName,
   valueClassName,
 }: KeyValueWithSkeletonProps): ReactElement {
-  function ValueWithLabel({ children }: PropsWithChildren): ReactElement {
-    return (
-      <div
-        className={cn(
-          "grow w-full flex flex-row items-center justify-start gap-4",
-          className,
-        )}
-      >
-        <p className={cn("text-lg font-bold", labelClassName)}>{label}:</p>
-        {children}
-      </div>
-    );
-  }
-
   return (
-    <ValueWithLabel>
+    <ValueWithLabel
+      label={label}
+      className={className}
+      labelClassName={labelClassName}
+    >
       <DisplayValue value={value} className={valueClassName} />
     </ValueWithLabel>
   );
