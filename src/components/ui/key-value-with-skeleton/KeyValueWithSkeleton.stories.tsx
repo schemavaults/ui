@@ -24,19 +24,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const NeverResolves: Story = {
-  args: {
-    label: "Null Value",
-  },
-};
-
-export const FixedValue: Story = {
-  args: {
-    label: "Fixed Value",
-    value: "some fixed string value!",
-  },
-};
-
 function createExamplePromise(): Promise<string> {
   return new Promise((resolve, reject) => {
     void reject;
@@ -71,4 +58,25 @@ export const PromiseValue: Story = {
       );
     },
   ],
+};
+
+export const NeverResolves: Story = {
+  args: {
+    label: "Null Value",
+  },
+};
+
+export const FixedValue: Story = {
+  args: {
+    label: "Fixed Value",
+    value: "some fixed string value!",
+  },
+};
+
+export const ItalicValue: Story = {
+  args: {
+    label: "Italic Value",
+    value: "this value is rendered in italic!",
+    valueClassName: "italic",
+  },
 };
