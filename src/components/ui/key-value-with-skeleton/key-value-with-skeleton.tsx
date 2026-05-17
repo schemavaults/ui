@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import {
   type ReactElement,
   type ReactNode,
@@ -13,6 +14,9 @@ import {
 export interface KeyValueWithSkeletonProps {
   label: string;
   value?: string | Promise<string> | null;
+  className?: string;
+  labelClassName?: string;
+  valueClassName?: string;
 }
 
 function KeyValueFallbackSkeleton(): ReactElement {
@@ -21,16 +25,22 @@ function KeyValueFallbackSkeleton(): ReactElement {
   );
 }
 
-function DisplayValueText({ value }: { value: string }): ReactElement {
-  const displayValueClassName = "text-gray-400 grow" as const;
-
-  return <p className={displayValueClassName}>{value}</p>;
+function DisplayValueText({
+  value,
+  className,
+}: {
+  value: string;
+  className?: string;
+}): ReactElement {
+  return <p className={cn("text-gray-400 grow", className)}>{value}</p>;
 }
 
 function DisplayValue({
   value,
+  className,
 }: {
   value: Promise<string> | string | null | undefined;
+  className?: string;
 }): ReactNode {
   const [loaded, setLoaded] = useState<string | false>(false);
   const cancelSetValueRef = useRef<boolean>(false);
@@ -57,26 +67,30 @@ function DisplayValue({
   if (typeof value === "undefined") {
     return <KeyValueFallbackSkeleton />;
   } else if (typeof value === "string") {
-    return <DisplayValueText value={value} />;
+    return <DisplayValueText value={value} className={className} />;
   } else if (!loaded) {
     return <KeyValueFallbackSkeleton />;
   } else {
-    return <DisplayValueText value={loaded} />;
+    return <DisplayValueText value={loaded} className={className} />;
   }
 }
 
 export function KeyValueWithSkeleton({
   label,
   value,
+  className,
+  labelClassName,
+  valueClassName,
 }: KeyValueWithSkeletonProps): ReactElement {
-  const itemContainerDivClassName =
-    "grow w-full flex flex-row items-center justify-start gap-4" as const;
-  const displayValueLabelClassName = "text-lg font-bold" as const;
-
   function ValueWithLabel({ children }: PropsWithChildren): ReactElement {
     return (
-      <div className={itemContainerDivClassName}>
-        <p className={displayValueLabelClassName}>{label}:</p>
+      <div
+        className={cn(
+          "grow w-full flex flex-row items-center justify-start gap-4",
+          className,
+        )}
+      >
+        <p className={cn("text-lg font-bold", labelClassName)}>{label}:</p>
         {children}
       </div>
     );
@@ -84,7 +98,7 @@ export function KeyValueWithSkeleton({
 
   return (
     <ValueWithLabel>
-      <DisplayValue value={value} />
+      <DisplayValue value={value} className={valueClassName} />
     </ValueWithLabel>
   );
 }

@@ -37,6 +37,14 @@ export const FixedValue: Story = {
   },
 };
 
+export const ItalicValue: Story = {
+  args: {
+    label: "Italic Value",
+    value: "this value is rendered in italic!",
+    valueClassName: "italic",
+  },
+};
+
 function createExamplePromise(): Promise<string> {
   return new Promise((resolve, reject) => {
     void reject;
