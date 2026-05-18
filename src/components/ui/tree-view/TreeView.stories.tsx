@@ -1,16 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ReactElement } from "react";
-import {
-  File,
-  FileCode,
-  FileText,
-  Database,
-  Folder,
-  Boxes,
-  KeyRound,
-  Table2,
-  Braces,
-} from "lucide-react";
+import { File, FileCode, FileText, Folder } from "lucide-react";
 
 import {
   TreeView,
@@ -123,69 +113,6 @@ export const Large: Story = {
 
 export const NoIndentGuides: Story = {
   args: { showGuides: false },
-};
-
-const vaultTree: TreeNode[] = [
-  {
-    id: "vault",
-    label: "production-vault",
-    icon: <Database />,
-    children: [
-      {
-        id: "users",
-        label: "users",
-        icon: <Table2 />,
-        children: [
-          { id: "users.id", label: "id: uuid", icon: <KeyRound /> },
-          { id: "users.email", label: "email: string", icon: <Braces /> },
-          { id: "users.created_at", label: "created_at: timestamp", icon: <Braces /> },
-        ],
-      },
-      {
-        id: "organizations",
-        label: "organizations",
-        icon: <Table2 />,
-        children: [
-          { id: "orgs.id", label: "id: uuid", icon: <KeyRound /> },
-          { id: "orgs.name", label: "name: string", icon: <Braces /> },
-        ],
-      },
-      {
-        id: "archived",
-        label: "archived (read-only)",
-        icon: <Boxes />,
-        disabled: true,
-        children: [
-          { id: "archived.legacy", label: "legacy_events", icon: <Table2 /> },
-        ],
-      },
-    ],
-  },
-];
-
-function VaultBrowserDemo(): ReactElement {
-  const [selected, setSelected] = useState<string | null>(null);
-  return (
-    <div className="w-96 rounded-lg border border-border bg-background p-2">
-      <TreeView
-        aria-label="Vault browser"
-        data={vaultTree}
-        defaultExpandedIds={["vault", "users"]}
-        selectedId={selected}
-        onSelectionChange={setSelected}
-      />
-      <p className="mt-3 px-2 text-xs text-muted-foreground">
-        Inspecting:{" "}
-        <span className="font-mono font-medium text-foreground">
-          {selected ?? "—"}
-        </span>
-      </p>
-    </div>
-  );
-}
-
-export const VaultBrowser: Story = {
-  render: () => <VaultBrowserDemo />,
 };
 
 function UncontrolledDemo(): ReactElement {
