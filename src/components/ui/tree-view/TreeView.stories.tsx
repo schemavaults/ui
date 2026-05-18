@@ -125,7 +125,7 @@ export const NoIndentGuides: Story = {
   args: { showGuides: false },
 };
 
-const schemaTree: TreeNode[] = [
+const vaultTree: TreeNode[] = [
   {
     id: "vault",
     label: "production-vault",
@@ -163,13 +163,13 @@ const schemaTree: TreeNode[] = [
   },
 ];
 
-function SchemaExplorerDemo(): ReactElement {
+function VaultBrowserDemo(): ReactElement {
   const [selected, setSelected] = useState<string | null>(null);
   return (
     <div className="w-96 rounded-lg border border-border bg-background p-2">
       <TreeView
-        aria-label="Schema explorer"
-        data={schemaTree}
+        aria-label="Vault browser"
+        data={vaultTree}
         defaultExpandedIds={["vault", "users"]}
         selectedId={selected}
         onSelectionChange={setSelected}
@@ -184,8 +184,8 @@ function SchemaExplorerDemo(): ReactElement {
   );
 }
 
-export const SchemaExplorer: Story = {
-  render: () => <SchemaExplorerDemo />,
+export const VaultBrowser: Story = {
+  render: () => <VaultBrowserDemo />,
 };
 
 function UncontrolledDemo(): ReactElement {
