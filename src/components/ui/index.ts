@@ -239,3 +239,6 @@ export type * from "./comparison-slider";
 
 export * from "./theme-selector";
 export type * from "./theme-selector";
+
+export * from "./tree-view";
+export type * from "./tree-view";
