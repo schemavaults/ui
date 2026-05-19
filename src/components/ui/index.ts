@@ -242,3 +242,6 @@ export type * from "./theme-selector";
 
 export * from "./tree-view";
 export type * from "./tree-view";
+
+export * from "./carousel";
+export type * from "./carousel";
