@@ -15,14 +15,7 @@ import {
 } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  animate,
-  domAnimation,
-  LazyMotion,
-  m,
-  useMotionValue,
-  useReducedMotion,
-} from "@/framer-motion";
+import { animate, m, useMotionValue, useReducedMotion } from "@/framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -382,7 +375,6 @@ export function Carousel({
   };
 
   return (
-    <LazyMotion features={domAnimation} strict>
     <div
       role="region"
       aria-roledescription="carousel"
@@ -490,7 +482,6 @@ export function Carousel({
         Slide {currentIndex + 1} of {count}
       </span>
     </div>
-    </LazyMotion>
   );
 }
 Carousel.displayName = "Carousel";

@@ -10,6 +10,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
+
 import {
   Carousel,
   CarouselItem,
@@ -162,6 +164,15 @@ const meta = {
     showArrows: true,
     showIndicators: true,
   },
+  decorators: [
+    (Story): ReactElement => {
+      return (
+        <LazyFramerMotionProvider>
+          <Story />
+        </LazyFramerMotionProvider>
+      );
+    },
+  ],
 } satisfies Meta<typeof CarouselDemo>;
 
 export default meta;
