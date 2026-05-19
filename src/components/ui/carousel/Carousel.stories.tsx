@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { type ReactElement, useState } from "react";
+import { type ReactElement, type ReactNode, useState } from "react";
 import {
   BarChart3,
+  Boxes,
   Database,
   GitBranch,
   Lock,
@@ -27,49 +28,101 @@ interface DemoArgs {
   showIndicators?: boolean;
 }
 
-const featurePanels: Array<{
+interface Panel {
   icon: ReactElement;
   title: string;
   body: string;
-}> = [
+  /** Theme-token classes so each slide is visually distinct at a glance. */
+  chip: string;
+  bar: string;
+}
+
+const featurePanels: Panel[] = [
   {
-    icon: <Shield className="h-7 w-7 text-primary" />,
+    icon: <Shield className="h-7 w-7" />,
     title: "Encrypted at rest",
     body: "Every vault is sealed with AES-256 before it ever touches disk.",
+    chip: "bg-primary/10 text-primary",
+    bar: "bg-primary",
   },
   {
-    icon: <GitBranch className="h-7 w-7 text-primary" />,
+    icon: <GitBranch className="h-7 w-7" />,
     title: "Versioned schemas",
     body: "Each change is a commit — diff, review and roll back with ease.",
+    chip: "bg-accent text-accent-foreground",
+    bar: "bg-accent-foreground/60",
   },
   {
-    icon: <Database className="h-7 w-7 text-primary" />,
+    icon: <Boxes className="h-7 w-7" />,
     title: "Composable vaults",
     body: "Stack and reference vaults like building blocks across teams.",
+    chip: "bg-secondary text-secondary-foreground",
+    bar: "bg-secondary-foreground/50",
   },
   {
-    icon: <Lock className="h-7 w-7 text-primary" />,
+    icon: <Lock className="h-7 w-7" />,
     title: "Scoped access",
     body: "Fine-grained, audited permissions down to a single secret.",
+    chip: "bg-warning/20 text-foreground",
+    bar: "bg-warning",
+  },
+  {
+    icon: <Sparkles className="h-7 w-7" />,
+    title: "Smart diffs",
+    body: "Only the deltas ship — fast syncs, tiny audit trails.",
+    chip: "bg-destructive/10 text-destructive",
+    bar: "bg-destructive",
   },
 ];
+
+function FeatureSlide({
+  panel,
+  position,
+  total,
+}: {
+  panel: Panel;
+  position: number;
+  total: number;
+}): ReactElement {
+  return (
+    <CarouselItem className="gap-3">
+      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        Slide {position} of {total}
+      </span>
+      <span
+        className={`flex h-14 w-14 items-center justify-center rounded-full ${panel.chip}`}
+      >
+        {panel.icon}
+      </span>
+      <h3 className="text-lg font-semibold text-foreground">{panel.title}</h3>
+      <p className="max-w-sm text-sm text-muted-foreground">{panel.body}</p>
+      <span className={`mt-1 h-1 w-12 rounded-full ${panel.bar}`} />
+    </CarouselItem>
+  );
+}
+
+function Hint(): ReactElement {
+  return (
+    <p className="mt-3 text-center text-xs text-muted-foreground">
+      Drag to swipe, or use the arrows, the dots, or ←/→ when a dot is focused.
+    </p>
+  );
+}
 
 function CarouselDemo(args: DemoArgs): ReactElement {
   return (
     <div className="w-[640px]">
       <Carousel aria-label="Product highlights" {...args}>
-        {featurePanels.map((panel) => (
-          <CarouselItem key={panel.title}>
-            {panel.icon}
-            <h3 className="text-lg font-semibold text-foreground">
-              {panel.title}
-            </h3>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              {panel.body}
-            </p>
-          </CarouselItem>
+        {featurePanels.map((panel, i) => (
+          <FeatureSlide
+            key={panel.title}
+            panel={panel}
+            position={i + 1}
+            total={featurePanels.length}
+          />
         ))}
       </Carousel>
+      <Hint />
     </div>
   );
 }
@@ -144,30 +197,52 @@ export const ArrowsOnly: Story = {
   args: { showIndicators: false },
 };
 
+function FullBleedSlide({
+  tint,
+  label,
+  position,
+  total,
+}: {
+  tint: string;
+  label: string;
+  position: number;
+  total: number;
+}): ReactElement {
+  return (
+    <div
+      className={`flex h-72 flex-col items-center justify-center gap-2 bg-gradient-to-br ${tint} to-background`}
+    >
+      <span className="text-xs font-medium uppercase tracking-wider text-foreground/60">
+        {position} / {total}
+      </span>
+      <BarChart3 className="h-10 w-10 text-foreground/70" />
+      <span className="text-xl font-semibold text-foreground">{label}</span>
+    </div>
+  );
+}
+
 function ImageCarouselDemo(): ReactElement {
-  const slides: Array<{ from: string; label: string }> = [
-    { from: "from-primary/30", label: "Overview" },
-    { from: "from-secondary/40", label: "Metrics" },
-    { from: "from-accent/50", label: "Activity" },
-    { from: "from-muted", label: "Settings" },
+  const slides: Array<{ tint: string; label: string }> = [
+    { tint: "from-primary/30", label: "Overview" },
+    { tint: "from-accent", label: "Metrics" },
+    { tint: "from-secondary", label: "Activity" },
+    { tint: "from-warning/30", label: "Audit log" },
+    { tint: "from-destructive/25", label: "Settings" },
   ];
   return (
     <div className="w-[680px]">
       <Carousel aria-label="Dashboard preview" loop>
-        {slides.map((slide) => (
-          <div
+        {slides.map((slide, i) => (
+          <FullBleedSlide
             key={slide.label}
-            className={`flex h-72 items-center justify-center bg-gradient-to-br ${slide.from} to-background`}
-          >
-            <div className="flex flex-col items-center gap-2">
-              <BarChart3 className="h-10 w-10 text-foreground/70" />
-              <span className="text-xl font-semibold text-foreground">
-                {slide.label}
-              </span>
-            </div>
-          </div>
+            tint={slide.tint}
+            label={slide.label}
+            position={i + 1}
+            total={slides.length}
+          />
         ))}
       </Carousel>
+      <Hint />
     </div>
   );
 }
@@ -177,6 +252,23 @@ export const FullBleedSlides: Story = {
 };
 
 function ControlledCarouselDemo(): ReactElement {
+  const steps: Array<{ icon: ReactNode; title: string; body: string }> = [
+    {
+      icon: <Database className="h-7 w-7" />,
+      title: "Connect a source",
+      body: "Point SchemaVaults at your database or API.",
+    },
+    {
+      icon: <GitBranch className="h-7 w-7" />,
+      title: "Map your schema",
+      body: "Review the inferred schema and adjust mappings.",
+    },
+    {
+      icon: <Sparkles className="h-7 w-7" />,
+      title: "Deploy the vault",
+      body: "Ship it — every change is versioned from here on.",
+    },
+  ];
   const [index, setIndex] = useState<number>(0);
   return (
     <div className="flex w-[560px] flex-col gap-4">
@@ -185,9 +277,9 @@ function ControlledCarouselDemo(): ReactElement {
           Controlled active index: <strong>{index}</strong>
         </span>
         <div className="flex gap-2">
-          {[0, 1, 2].map((i) => (
+          {steps.map((step, i) => (
             <button
-              key={i}
+              key={step.title}
               type="button"
               onClick={() => setIndex(i)}
               className={
@@ -207,17 +299,22 @@ function ControlledCarouselDemo(): ReactElement {
         aria-label="Onboarding steps"
         loop
       >
-        {["Connect a source", "Map your schema", "Deploy the vault"].map(
-          (text, i) => (
-            <CarouselItem key={text}>
-              <Sparkles className="h-7 w-7 text-primary" />
-              <h3 className="text-lg font-semibold text-foreground">
-                Step {i + 1}
-              </h3>
-              <p className="text-sm text-muted-foreground">{text}</p>
-            </CarouselItem>
-          ),
-        )}
+        {steps.map((step, i) => (
+          <CarouselItem key={step.title} className="gap-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Step {i + 1} of {steps.length}
+            </span>
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              {step.icon}
+            </span>
+            <h3 className="text-lg font-semibold text-foreground">
+              {step.title}
+            </h3>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              {step.body}
+            </p>
+          </CarouselItem>
+        ))}
       </Carousel>
     </div>
   );
