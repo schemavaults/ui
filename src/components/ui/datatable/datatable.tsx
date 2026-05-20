@@ -6,6 +6,7 @@ import {
   type SortingState,
   type VisibilityState,
   type FilterFn,
+  type Row,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -14,12 +15,7 @@ import {
   useReactTable,
   type RowSelectionState,
 } from "@tanstack/react-table";
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,7 +43,7 @@ import {
 } from "@/components/ui/table";
 import { type ReactElement, useMemo, useState, type FC } from "react";
 
-export type { ColumnDef };
+export type { ColumnDef, ColumnDef as DatatableColumnDef, Row as DatatableRow };
 
 /** Default page size options shown in the rows-per-page selector. */
 const DEFAULT_PAGE_SIZE_OPTIONS: readonly number[] = [10, 20, 50, 100];
