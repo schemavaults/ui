@@ -155,6 +155,22 @@ export const FromErrorCode: Story = {
   },
 };
 
+export const WithErrorBoundary: StoryObj = {
+  render: () => (
+    <StoryErrorBoundary>
+      <ThrowOnClick />
+    </StoryErrorBoundary>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Click "Break things" to trigger an error. The error boundary catches it and renders ErrorPage with a reset button. Clicking "Try Again" resets the boundary.',
+      },
+    },
+  },
+};
+
 export const WithCustomResetLabel: Story = {
   args: {
     error: new Error("Failed to load resource."),
@@ -172,21 +188,5 @@ export const WithAdditionalButtons: Story = {
       <Button key="home" variant="outline">Go Home</Button>,
       <Button key="support" variant="ghost">Contact Support</Button>,
     ],
-  },
-};
-
-export const WithErrorBoundary: StoryObj = {
-  render: () => (
-    <StoryErrorBoundary>
-      <ThrowOnClick />
-    </StoryErrorBoundary>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Click "Break things" to trigger an error. The error boundary catches it and renders ErrorPage with a reset button. Clicking "Try Again" resets the boundary.',
-      },
-    },
   },
 };
