@@ -4,7 +4,6 @@ import { Monitor, Moon, Sun, type LucideIcon } from "lucide-react";
 import {
   Suspense,
   use,
-  useCallback,
   type ButtonHTMLAttributes,
   type HTMLAttributes,
   type ReactElement,
@@ -17,6 +16,13 @@ import {
   SegmentedControlItem,
   type SegmentedControlSizeId,
 } from "@/components/ui/segmented-control";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useBrightnessTheme } from "@/providers/brightness-theme";
 
 export const themeSelectorOptionIds = [
@@ -98,15 +104,6 @@ function isThemeSelectorOptionId(
     value !== undefined &&
     (themeSelectorOptionIds as readonly string[]).includes(value)
   );
-}
-
-function getNextThemeId(
-  current: ThemeSelectorOptionId,
-): ThemeSelectorOptionId {
-  const index = themeSelectorOptionIds.indexOf(current);
-  return themeSelectorOptionIds[
-    (index + 1) % themeSelectorOptionIds.length
-  ] as ThemeSelectorOptionId;
 }
 
 /**
@@ -217,29 +214,49 @@ function CompactThemeSelectorContent({
     : "system";
   const activeOption = themeOptionsById[activeId];
   const ActiveIcon = activeOption.icon;
-  const nextId = getNextThemeId(activeId);
-  const nextLabel = themeOptionsById[nextId].label;
-
-  const handleClick = useCallback((): void => {
-    setTheme(nextId);
-  }, [setTheme, nextId]);
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={disabled}
-      aria-label={`Color theme: ${activeOption.label}. Click to switch to ${nextLabel}.`}
-      title={`Theme: ${activeOption.label}`}
-      className={cn(
-        compactButtonClass,
-        compactButtonSizeClasses[size],
-        className,
-      )}
-      {...rest}
-    >
-      <ActiveIcon className={cn(iconSizeBySize[size])} aria-hidden="true" />
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          disabled={disabled}
+          aria-label={`Color theme: ${activeOption.label}`}
+          title={`Theme: ${activeOption.label}`}
+          className={cn(
+            compactButtonClass,
+            compactButtonSizeClasses[size],
+            className,
+          )}
+          {...rest}
+        >
+          <ActiveIcon
+            className={cn(iconSizeBySize[size])}
+            aria-hidden="true"
+          />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuRadioGroup
+          value={activeId}
+          onValueChange={(value: string): void => {
+            if (isThemeSelectorOptionId(value)) {
+              setTheme(value);
+            }
+          }}
+        >
+          {themeOptions.map((option): ReactElement => {
+            const Icon = option.icon;
+            return (
+              <DropdownMenuRadioItem key={option.id} value={option.id}>
+                <Icon className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span>{option.label}</span>
+              </DropdownMenuRadioItem>
+            );
+          })}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -289,7 +306,7 @@ export interface ThemeSelectorProps
  * - `"segmented"` (default): a {@link SegmentedControl} with one item per
  *   available theme.
  * - `"compact"`: a single icon-only button that displays the currently active
- *   theme and cycles to the next theme on click.
+ *   theme; clicking it opens a dropdown menu of available themes.
  *
  * Must be rendered inside a `<BrightnessThemeProvider />`. The theme-aware UI
  * is wrapped in a `<Suspense>` boundary that renders an inert fallback until

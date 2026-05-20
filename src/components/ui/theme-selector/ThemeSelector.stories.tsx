@@ -81,8 +81,8 @@ export const Disabled: Story = {
 /**
  * The `"compact"` variant renders a single icon-only button that shows the
  * currently active theme (e.g. only the sun icon while in light mode).
- * Clicking it cycles to the next theme in the order: light → system → dark →
- * light.
+ * Clicking it opens a dropdown menu listing every available theme; the active
+ * theme is indicated with a radio-group check.
  */
 export const Compact: Story = {
   args: { variant: "compact" },
