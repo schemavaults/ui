@@ -4,6 +4,8 @@ import { Monitor, Moon, Sun, type LucideIcon } from "lucide-react";
 import {
   Suspense,
   use,
+  useCallback,
+  type ButtonHTMLAttributes,
   type HTMLAttributes,
   type ReactElement,
   type ReactNode,
@@ -31,6 +33,12 @@ export const themeSelectorSizeIds = [
 ] as const satisfies readonly SegmentedControlSizeId[];
 export type ThemeSelectorSizeId = (typeof themeSelectorSizeIds)[number];
 
+export const themeSelectorVariantIds = [
+  "segmented",
+  "compact",
+] as const satisfies readonly string[];
+export type ThemeSelectorVariantId = (typeof themeSelectorVariantIds)[number];
+
 interface ThemeSelectorOption {
   id: ThemeSelectorOptionId;
   label: string;
@@ -43,10 +51,25 @@ const themeOptions: readonly ThemeSelectorOption[] = [
   { id: "dark", label: "Dark", icon: Moon },
 ] as const;
 
+const themeOptionsById: Record<ThemeSelectorOptionId, ThemeSelectorOption> =
+  themeOptions.reduce(
+    (acc, option) => {
+      acc[option.id] = option;
+      return acc;
+    },
+    {} as Record<ThemeSelectorOptionId, ThemeSelectorOption>,
+  );
+
 const iconSizeBySize: Record<ThemeSelectorSizeId, string> = {
   sm: "h-3.5 w-3.5",
   default: "h-4 w-4",
   lg: "h-[1.125rem] w-[1.125rem]",
+};
+
+const compactButtonSizeClasses: Record<ThemeSelectorSizeId, string> = {
+  sm: "h-8 w-8",
+  default: "h-9 w-9",
+  lg: "h-11 w-11",
 };
 
 function renderThemeItems(
@@ -66,6 +89,24 @@ function renderThemeItems(
       </SegmentedControlItem>
     );
   });
+}
+
+function isThemeSelectorOptionId(
+  value: string | undefined,
+): value is ThemeSelectorOptionId {
+  return (
+    value !== undefined &&
+    (themeSelectorOptionIds as readonly string[]).includes(value)
+  );
+}
+
+function getNextThemeId(
+  current: ThemeSelectorOptionId,
+): ThemeSelectorOptionId {
+  const index = themeSelectorOptionIds.indexOf(current);
+  return themeSelectorOptionIds[
+    (index + 1) % themeSelectorOptionIds.length
+  ] as ThemeSelectorOptionId;
 }
 
 /**
@@ -91,7 +132,7 @@ function getHydrationPromise(): Promise<void> {
   return hydrationPromise;
 }
 
-interface ThemeSelectorContentProps {
+interface SegmentedThemeSelectorContentProps {
   size: ThemeSelectorSizeId;
   iconOnly: boolean;
   disabled: boolean;
@@ -102,13 +143,13 @@ interface ThemeSelectorContentProps {
   >;
 }
 
-function ThemeSelectorContent({
+function SegmentedThemeSelectorContent({
   size,
   iconOnly,
   disabled,
   className,
   rest,
-}: ThemeSelectorContentProps): ReactElement {
+}: SegmentedThemeSelectorContentProps): ReactElement {
   use(getHydrationPromise());
   const { theme, setTheme } = useBrightnessTheme();
   return (
@@ -127,7 +168,7 @@ function ThemeSelectorContent({
   );
 }
 
-function ThemeSelectorFallback({
+function SegmentedThemeSelectorFallback({
   size,
   iconOnly,
   className,
@@ -150,24 +191,110 @@ function ThemeSelectorFallback({
   );
 }
 
+const compactButtonClass =
+  "inline-flex items-center justify-center rounded-md border border-input bg-background text-foreground ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+
+interface CompactThemeSelectorContentProps {
+  size: ThemeSelectorSizeId;
+  disabled: boolean;
+  className?: string;
+  rest: Omit<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    "onChange" | "defaultValue" | "className" | "onClick" | "type"
+  >;
+}
+
+function CompactThemeSelectorContent({
+  size,
+  disabled,
+  className,
+  rest,
+}: CompactThemeSelectorContentProps): ReactElement {
+  use(getHydrationPromise());
+  const { theme, setTheme } = useBrightnessTheme();
+  const activeId: ThemeSelectorOptionId = isThemeSelectorOptionId(theme)
+    ? theme
+    : "system";
+  const activeOption = themeOptionsById[activeId];
+  const ActiveIcon = activeOption.icon;
+  const nextId = getNextThemeId(activeId);
+  const nextLabel = themeOptionsById[nextId].label;
+
+  const handleClick = useCallback((): void => {
+    setTheme(nextId);
+  }, [setTheme, nextId]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={disabled}
+      aria-label={`Color theme: ${activeOption.label}. Click to switch to ${nextLabel}.`}
+      title={`Theme: ${activeOption.label}`}
+      className={cn(
+        compactButtonClass,
+        compactButtonSizeClasses[size],
+        className,
+      )}
+      {...rest}
+    >
+      <ActiveIcon className={cn(iconSizeBySize[size])} aria-hidden="true" />
+    </button>
+  );
+}
+
+function CompactThemeSelectorFallback({
+  size,
+  className,
+}: {
+  size: ThemeSelectorSizeId;
+  className?: string;
+}): ReactElement {
+  return (
+    <button
+      type="button"
+      disabled
+      aria-hidden="true"
+      tabIndex={-1}
+      className={cn(
+        compactButtonClass,
+        compactButtonSizeClasses[size],
+        className,
+      )}
+    >
+      <Monitor className={cn(iconSizeBySize[size])} aria-hidden="true" />
+    </button>
+  );
+}
+
 export interface ThemeSelectorProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "onChange" | "defaultValue"> {
-  /** Size of the underlying SegmentedControl. */
+  extends Omit<HTMLAttributes<HTMLElement>, "onChange" | "defaultValue"> {
+  /** Visual layout of the selector. Defaults to `"segmented"`. */
+  variant?: ThemeSelectorVariantId;
+  /** Size of the underlying control. */
   size?: ThemeSelectorSizeId;
-  /** Render only the icons, hiding the text labels. */
+  /**
+   * Render only the icons, hiding the text labels. Has no effect when
+   * `variant` is `"compact"` (the compact variant is always icon-only).
+   */
   iconOnly?: boolean;
   /** Disable interaction with every option. */
   disabled?: boolean;
 }
 
 /**
- * A brightness theme switcher driven by {@link useBrightnessTheme}, built on
- * top of the {@link SegmentedControl} component.
+ * A brightness theme switcher driven by {@link useBrightnessTheme}.
+ *
+ * Two visual variants are supported:
+ * - `"segmented"` (default): a {@link SegmentedControl} with one item per
+ *   available theme.
+ * - `"compact"`: a single icon-only button that displays the currently active
+ *   theme and cycles to the next theme on click.
  *
  * Must be rendered inside a `<BrightnessThemeProvider />`. The theme-aware UI
- * is wrapped in a `<Suspense>` boundary that renders an inert, unselected
- * SegmentedControl fallback until the client has hydrated — this avoids the
- * next-themes server/client hydration mismatch without any mounted-flag state.
+ * is wrapped in a `<Suspense>` boundary that renders an inert fallback until
+ * the client has hydrated — this avoids the next-themes server/client
+ * hydration mismatch without any mounted-flag state.
  *
  * @see BrightnessThemeProvider
  * @see useBrightnessTheme
@@ -175,27 +302,53 @@ export interface ThemeSelectorProps
  */
 export function ThemeSelector({
   className,
+  variant = "segmented",
   size = "default",
   iconOnly = false,
   disabled = false,
   ...rest
 }: ThemeSelectorProps): ReactElement {
+  if (variant === "compact") {
+    const buttonRest = rest as Omit<
+      ButtonHTMLAttributes<HTMLButtonElement>,
+      "onChange" | "defaultValue" | "className" | "onClick" | "type"
+    >;
+    return (
+      <Suspense
+        fallback={
+          <CompactThemeSelectorFallback size={size} className={className} />
+        }
+      >
+        <CompactThemeSelectorContent
+          size={size}
+          disabled={disabled}
+          className={className}
+          rest={buttonRest}
+        />
+      </Suspense>
+    );
+  }
+
+  const divRest = rest as Omit<
+    HTMLAttributes<HTMLDivElement>,
+    "onChange" | "defaultValue" | "className"
+  >;
   return (
     <Suspense
       fallback={
-        <ThemeSelectorFallback
+        <SegmentedThemeSelectorFallback
           size={size}
           iconOnly={iconOnly}
           className={className}
         />
       }
     >
-      <ThemeSelectorContent
+      <SegmentedThemeSelectorContent
         size={size}
         iconOnly={iconOnly}
         disabled={disabled}
         className={className}
-        rest={rest}
+        rest={divRest}
       />
     </Suspense>
   );

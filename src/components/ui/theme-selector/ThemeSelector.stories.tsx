@@ -6,7 +6,10 @@ import {
   useBrightnessTheme,
 } from "@/providers/brightness-theme";
 import { ThemeSelector } from "./theme-selector";
-import { themeSelectorSizeIds } from "./theme-selector";
+import {
+  themeSelectorSizeIds,
+  themeSelectorVariantIds,
+} from "./theme-selector";
 
 /**
  * `ThemeSelector` reads and writes the active brightness theme through the
@@ -23,6 +26,10 @@ const meta = {
   },
   tags: ["autodocs"],
   argTypes: {
+    variant: {
+      options: themeSelectorVariantIds,
+      control: { type: "radio" },
+    },
     size: {
       options: themeSelectorSizeIds,
       control: { type: "radio" },
@@ -31,6 +38,7 @@ const meta = {
     disabled: { control: { type: "boolean" } },
   },
   args: {
+    variant: "segmented",
     size: "default",
     iconOnly: false,
     disabled: false,
@@ -68,6 +76,28 @@ export const Large: Story = {
 
 export const Disabled: Story = {
   args: { disabled: true },
+};
+
+/**
+ * The `"compact"` variant renders a single icon-only button that shows the
+ * currently active theme (e.g. only the sun icon while in light mode).
+ * Clicking it cycles to the next theme in the order: light → system → dark →
+ * light.
+ */
+export const Compact: Story = {
+  args: { variant: "compact" },
+};
+
+export const CompactSmall: Story = {
+  args: { variant: "compact", size: "sm" },
+};
+
+export const CompactLarge: Story = {
+  args: { variant: "compact", size: "lg" },
+};
+
+export const CompactDisabled: Story = {
+  args: { variant: "compact", disabled: true },
 };
 
 /**
