@@ -1,18 +1,22 @@
 "use client";
 
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/ui/wordmark";
 
-export type ErrorPageProps = {
-  error: Error;
+type ErrorPageCommonProps = {
   reset?: () => void;
+  resetButtonLabel?: string;
+  additionalButtons?: ReactNode[];
+};
+
+export type ErrorPageProps = ({
+  error: Error;
 } | {
   error: number | string;
   message: string;
-  reset?: () => void;
-};
+}) & ErrorPageCommonProps;
 
 export function ErrorPage(props: ErrorPageProps): ReactElement {
   if (!("error" in props)) {
@@ -33,6 +37,8 @@ export function ErrorPage(props: ErrorPageProps): ReactElement {
   } else {
     errorMsg = "An unknown error occurred!" as const;
   }
+  const resetButtonLabel: string = props.resetButtonLabel ?? "Try Again";
+  const additionalButtons: ReactNode[] = props.additionalButtons ?? [];
   return (
     <div className="w-full grow flex flex-col justify-center items-center min-h-screen p-2 md:p-4 lg:p-8">
       <h1 className="text-xl flex flex-row gap-4">
@@ -40,7 +46,18 @@ export function ErrorPage(props: ErrorPageProps): ReactElement {
       </h1>
 
       <p className="text-md">{errorMsg}</p>
-      {props.reset && <Button onClick={props.reset} className="mt-4 flex flex-row gap-2"><RotateCcw size={16} /> Try Again</Button>}
+      {(props.reset || additionalButtons.length > 0) && (
+        <div className="mt-4 flex flex-row gap-2">
+          {props.reset && (
+            <Button onClick={props.reset} className="flex flex-row gap-2">
+              <RotateCcw size={16} /> {resetButtonLabel}
+            </Button>
+          )}
+          {additionalButtons.map((button, index) => (
+            <div key={index}>{button}</div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

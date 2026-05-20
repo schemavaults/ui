@@ -109,6 +109,25 @@ const meta = {
       description:
         "Pass an additional message (for when 'error' is a string/number error code rather than a detailed 'Error' instance.",
     },
+    resetButtonLabel: {
+      control: "text",
+      table: {
+        type: {
+          summary: "string | undefined",
+        },
+      },
+      description:
+        "Customize the label of the reset button (defaults to 'Try Again').",
+    },
+    additionalButtons: {
+      table: {
+        type: {
+          summary: "ReactNode[] | undefined",
+        },
+      },
+      description:
+        "Additional buttons rendered next to the reset button.",
+    },
   },
   args: {} satisfies Partial<ErrorPageProps>,
 } satisfies Meta<typeof ErrorPage>;
@@ -133,6 +152,26 @@ export const FromErrorCode: Story = {
   args: {
     error: "NOT_FOUND",
     message: "Resource was not found!",
+  },
+};
+
+export const WithCustomResetLabel: Story = {
+  args: {
+    error: new Error("Failed to load resource."),
+    reset: () => {},
+    resetButtonLabel: "Retry",
+  },
+};
+
+export const WithAdditionalButtons: Story = {
+  args: {
+    error: 404,
+    message: "Page not found",
+    reset: () => {},
+    additionalButtons: [
+      <Button key="home" variant="outline">Go Home</Button>,
+      <Button key="support" variant="ghost">Contact Support</Button>,
+    ],
   },
 };
 
