@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactElement } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
 
-import { Datatable } from "./datatable";
+import { Datatable, type ColumnDef } from "./datatable";
 import { Button } from "@/components/ui/button";
 
 interface User {
@@ -14,14 +13,62 @@ interface User {
 }
 
 const users: User[] = [
-  { id: "1", name: "Alice Johnson", email: "alice@example.com", role: "Admin", status: "Active" },
-  { id: "2", name: "Bob Smith", email: "bob@example.com", role: "Editor", status: "Active" },
-  { id: "3", name: "Charlie Brown", email: "charlie@example.com", role: "Viewer", status: "Inactive" },
-  { id: "4", name: "Diana Prince", email: "diana@example.com", role: "Admin", status: "Active" },
-  { id: "5", name: "Edward Norton", email: "edward@example.com", role: "Editor", status: "Pending" },
-  { id: "6", name: "Fiona Apple", email: "fiona@example.com", role: "Viewer", status: "Active" },
-  { id: "7", name: "George Lucas", email: "george@example.com", role: "Admin", status: "Active" },
-  { id: "8", name: "Hannah Montana", email: "hannah@example.com", role: "Editor", status: "Inactive" },
+  {
+    id: "1",
+    name: "Alice Johnson",
+    email: "alice@example.com",
+    role: "Admin",
+    status: "Active",
+  },
+  {
+    id: "2",
+    name: "Bob Smith",
+    email: "bob@example.com",
+    role: "Editor",
+    status: "Active",
+  },
+  {
+    id: "3",
+    name: "Charlie Brown",
+    email: "charlie@example.com",
+    role: "Viewer",
+    status: "Inactive",
+  },
+  {
+    id: "4",
+    name: "Diana Prince",
+    email: "diana@example.com",
+    role: "Admin",
+    status: "Active",
+  },
+  {
+    id: "5",
+    name: "Edward Norton",
+    email: "edward@example.com",
+    role: "Editor",
+    status: "Pending",
+  },
+  {
+    id: "6",
+    name: "Fiona Apple",
+    email: "fiona@example.com",
+    role: "Viewer",
+    status: "Active",
+  },
+  {
+    id: "7",
+    name: "George Lucas",
+    email: "george@example.com",
+    role: "Admin",
+    status: "Active",
+  },
+  {
+    id: "8",
+    name: "Hannah Montana",
+    email: "hannah@example.com",
+    role: "Editor",
+    status: "Inactive",
+  },
 ];
 
 /** Larger dataset for pagination demos. */
