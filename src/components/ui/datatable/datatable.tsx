@@ -7,6 +7,8 @@ import {
   type VisibilityState,
   type FilterFn,
   type Row,
+  type CellContext,
+  type Cell,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -43,7 +45,13 @@ import {
 } from "@/components/ui/table";
 import { type ReactElement, useMemo, useState, type FC } from "react";
 
-export type { ColumnDef, ColumnDef as DatatableColumnDef, Row as DatatableRow };
+export type {
+  ColumnDef,
+  ColumnDef as DatatableColumnDef,
+  Row as DatatableRow,
+  CellContext as DatatableCellContext,
+  Cell as DatatableCell,
+};
 
 /** Default page size options shown in the rows-per-page selector. */
 const DEFAULT_PAGE_SIZE_OPTIONS: readonly number[] = [10, 20, 50, 100];
