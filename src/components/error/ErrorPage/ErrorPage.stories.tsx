@@ -125,8 +125,7 @@ const meta = {
           summary: "ReactNode[] | undefined",
         },
       },
-      description:
-        "Additional buttons rendered next to the reset button.",
+      description: "Additional buttons rendered next to the reset button.",
     },
   },
   args: {} satisfies Partial<ErrorPageProps>,
@@ -152,6 +151,14 @@ export const FromErrorCode: Story = {
   args: {
     error: "NOT_FOUND",
     message: "Resource was not found!",
+  },
+};
+
+export const LongErrorMessage: Story = {
+  args: {
+    error: "SERVER_MISCONFIGURATION",
+    message:
+      "The server does not appear to be configured properly. If you are the site admin, please see the logs for more details on the root cause of this error!",
   },
 };
 
@@ -185,8 +192,12 @@ export const WithAdditionalButtons: Story = {
     message: "Page not found",
     reset: () => {},
     additionalButtons: [
-      <Button key="home" variant="outline">Go Home</Button>,
-      <Button key="support" variant="ghost">Contact Support</Button>,
+      <Button key="home" variant="outline">
+        Go Home
+      </Button>,
+      <Button key="support" variant="ghost">
+        Contact Support
+      </Button>,
     ],
   },
 };

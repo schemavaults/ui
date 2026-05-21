@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from "react";
 import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/ui/wordmark";
+import { cn } from "@/lib/utils";
 
 type ErrorPageCommonProps = {
   reset?: () => void;
@@ -11,26 +12,27 @@ type ErrorPageCommonProps = {
   additionalButtons?: ReactNode[];
 };
 
-export type ErrorPageProps = ({
-  error: Error;
-} | {
-  error: number | string;
-  message: string;
-}) & ErrorPageCommonProps;
+export type ErrorPageProps = (
+  | {
+      error: Error;
+    }
+  | {
+      error: number | string;
+      message: string;
+    }
+) &
+  ErrorPageCommonProps;
 
 export function ErrorPage(props: ErrorPageProps): ReactElement {
   if (!("error" in props)) {
-    throw new Error("ErrorPage did not receive an `error` prop")
+    throw new Error("ErrorPage did not receive an `error` prop");
   }
 
   const error = props.error;
   let errorMsg: string;
-  if (
-    typeof error === "number"
-    ||
-    typeof error === 'string'
-  ) {
-    const message: string = (props as { error: number, message: string }).message;
+  if (typeof error === "number" || typeof error === "string") {
+    const message: string = (props as { error: number; message: string })
+      .message;
     errorMsg = `${error}: ${message}`;
   } else if (error instanceof Error) {
     errorMsg = error.message;
@@ -40,12 +42,18 @@ export function ErrorPage(props: ErrorPageProps): ReactElement {
   const resetButtonLabel: string = props.resetButtonLabel ?? "Try Again";
   const additionalButtons: ReactNode[] = props.additionalButtons ?? [];
   return (
-    <div className="w-full grow flex flex-col justify-center items-center min-h-screen p-2 md:p-4 lg:p-8">
+    <div
+      className={cn(
+        "w-full grow min-h-screen",
+        "flex flex-col justify-center items-center",
+        "p-2 md:p-4 lg:p-8",
+      )}
+    >
       <h1 className="text-xl flex flex-row gap-4">
         <Wordmark /> Error
       </h1>
 
-      <p className="text-md">{errorMsg}</p>
+      <p className={cn("text-md", "mx-2 md:mx-4 lg:mx-8")}>{errorMsg}</p>
       {(props.reset || additionalButtons.length > 0) && (
         <div className="mt-4 flex flex-row gap-2">
           {props.reset && (
