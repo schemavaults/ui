@@ -3,6 +3,7 @@
 import {
   Fragment,
   useEffect,
+  useEffectEvent,
   useRef,
   useState,
   type HTMLAttributes,
@@ -267,11 +268,11 @@ export function Countdown({
     getTimeRemaining(targetTime, showDays),
   );
 
-  // Keep the latest onComplete callback without restarting the interval.
-  const onCompleteRef = useRef<(() => void) | undefined>(onComplete);
-  useEffect(() => {
-    onCompleteRef.current = onComplete;
-  }, [onComplete]);
+  // An Effect Event always sees the latest onComplete without making the
+  // interval Effect reactive to it.
+  const handleComplete = useEffectEvent((): void => {
+    onComplete?.();
+  });
 
   const completedFiredRef = useRef<boolean>(false);
 
@@ -282,7 +283,7 @@ export function Countdown({
     function fireCompleteOnce(): void {
       if (!completedFiredRef.current) {
         completedFiredRef.current = true;
-        onCompleteRef.current?.();
+        handleComplete();
       }
     }
 
