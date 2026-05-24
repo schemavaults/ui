@@ -32,20 +32,25 @@ interface FloatingActionButtonExampleProps {
 
 function FloatingActionButtonExample({
   label,
+  position,
   ...props
 }: FloatingActionButtonExampleProps): ReactElement {
+  const isFixed = position !== undefined && position !== "static";
   return (
-    <div className="relative h-[320px] w-full rounded-md border border-dashed border-border bg-muted/30 p-6">
+    <div className="relative h-[320px] w-full overflow-hidden rounded-md border border-dashed border-border bg-muted/30 p-6">
       <p className="text-sm text-muted-foreground">
-        The floating action button is rendered inside this container. Adjust the
-        controls in the side panel to explore the available variants, sizes, and
-        positions.
+        This box acts as a stand-in viewport so you can see how the FAB anchors
+        to each corner without it escaping into the Storybook chrome. In a real
+        app, non-<code>static</code> positions are <code>position: fixed</code>{" "}
+        relative to the browser viewport.
       </p>
       <FloatingActionButton
         {...props}
+        position={position}
         label={label}
         icon={<Plus />}
         aria-label="Create new item"
+        className={isFixed ? "absolute" : undefined}
       />
     </div>
   );
