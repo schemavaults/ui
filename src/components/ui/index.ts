@@ -248,3 +248,6 @@ export type * from "./carousel";
 
 export * from "./countdown";
 export type * from "./countdown";
+
+export * from "./floating-action-button";
+export type * from "./floating-action-button";
