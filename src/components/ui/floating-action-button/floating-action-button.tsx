@@ -2,12 +2,11 @@
 
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  forwardRef,
-  type ButtonHTMLAttributes,
-  type ReactElement,
-  type ReactNode,
-  type Ref,
+import type {
+  ButtonHTMLAttributes,
+  ReactElement,
+  ReactNode,
+  Ref,
 } from "react";
 
 import { cn } from "@/lib/utils";
@@ -93,6 +92,7 @@ const floatingActionButtonVariants = cva(
 export interface FloatingActionButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">,
     VariantProps<typeof floatingActionButtonVariants> {
+  ref?: Ref<HTMLButtonElement>;
   /**
    * Icon rendered inside the FAB. Required for icon-only mode.
    */
@@ -115,21 +115,19 @@ export interface FloatingActionButtonProps
   asChild?: boolean;
 }
 
-function FloatingActionButtonImpl(
-  {
-    className,
-    variant,
-    size,
-    position,
-    extended,
-    icon,
-    label,
-    asChild = false,
-    type = "button",
-    ...props
-  }: FloatingActionButtonProps,
-  ref: Ref<HTMLButtonElement>,
-): ReactElement {
+function FloatingActionButton({
+  className,
+  variant,
+  size,
+  position,
+  extended,
+  icon,
+  label,
+  asChild = false,
+  type = "button",
+  ref,
+  ...props
+}: FloatingActionButtonProps): ReactElement {
   const Comp = asChild ? Slot : "button";
   const isExtended = extended ?? Boolean(label);
 
@@ -168,13 +166,8 @@ function FloatingActionButtonImpl(
     </Comp>
   );
 }
-
-export const FloatingActionButton = forwardRef<
-  HTMLButtonElement,
-  FloatingActionButtonProps
->(FloatingActionButtonImpl);
 FloatingActionButton.displayName = "FloatingActionButton";
 
-export { floatingActionButtonVariants };
+export { FloatingActionButton, floatingActionButtonVariants };
 
 export default FloatingActionButton;
