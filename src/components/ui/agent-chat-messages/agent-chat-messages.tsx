@@ -348,15 +348,15 @@ function AgentTypingIndicator({
           <>
             <span
               aria-hidden="true"
-              className="h-1.5 w-1.5 rounded-full bg-current/60 animate-bounce [animation-delay:0ms] motion-reduce:animate-none"
+              className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce motion-reduce:animate-none"
             />
             <span
               aria-hidden="true"
-              className="h-1.5 w-1.5 rounded-full bg-current/60 animate-bounce [animation-delay:150ms] motion-reduce:animate-none"
+              className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms] motion-reduce:animate-none"
             />
             <span
               aria-hidden="true"
-              className="h-1.5 w-1.5 rounded-full bg-current/60 animate-bounce [animation-delay:300ms] motion-reduce:animate-none"
+              className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms] motion-reduce:animate-none"
             />
           </>
         )}
