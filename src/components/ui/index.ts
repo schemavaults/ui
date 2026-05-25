@@ -1,6 +1,9 @@
 export * from "./avatar";
 export type * from "./avatar";
 
+export * from "./agent-chat-messages";
+export type * from "./agent-chat-messages";
+
 export * from "./accordion";
 export type * from "./accordion";
 
