@@ -12,6 +12,7 @@ export {
   useMotionValue,
   usePresence,
   useScroll,
+  useSpring,
   useMotionValueEvent,
   useReducedMotion,
 } from "framer-motion";
