@@ -2,12 +2,7 @@
 
 import { Bell, BellRing } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  forwardRef,
-  type ButtonHTMLAttributes,
-  type ReactElement,
-  type Ref,
-} from "react";
+import type { ButtonHTMLAttributes, ReactElement, Ref } from "react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -130,25 +125,25 @@ export interface NotificationBellProps
    * `Notifications (N unread)` when a positive `count` is provided).
    */
   "aria-label"?: string;
+  /** Forwarded to the underlying `<button>` element. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
-function _NotificationBell(
-  {
-    className,
-    variant,
-    size,
-    count = 0,
-    maxCount = 99,
-    dot = false,
-    forceIndicator = false,
-    ping = false,
-    ringWhenActive = false,
-    indicatorVariant = "destructive",
-    type = "button",
-    ...props
-  }: NotificationBellProps,
-  ref: Ref<HTMLButtonElement>,
-): ReactElement {
+export function NotificationBell({
+  className,
+  variant,
+  size,
+  count = 0,
+  maxCount = 99,
+  dot = false,
+  forceIndicator = false,
+  ping = false,
+  ringWhenActive = false,
+  indicatorVariant = "destructive",
+  type = "button",
+  ref,
+  ...props
+}: NotificationBellProps): ReactElement {
   const resolvedSize: NotificationBellSize = size ?? "md";
   const safeCount: number = Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
   const showIndicator: boolean = forceIndicator || dot || safeCount > 0;
@@ -214,10 +209,6 @@ function _NotificationBell(
   );
 }
 
-export const NotificationBell = forwardRef<
-  HTMLButtonElement,
-  NotificationBellProps
->(_NotificationBell);
 NotificationBell.displayName = "NotificationBell";
 
 export { notificationBellTriggerVariants };
