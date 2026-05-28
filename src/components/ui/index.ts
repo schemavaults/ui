@@ -72,6 +72,9 @@ export type * from "./navigation-menu";
 export * from "./dialog";
 export type * from "./dialog";
 
+export * from "./alert-dialog";
+export type * from "./alert-dialog";
+
 export * from "./popover";
 export type * from "./popover";
 
