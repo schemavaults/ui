@@ -185,6 +185,17 @@ export const WithDisabledDates: Story = {
 };
 
 export const DatePickerField: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Shows how to compose `Calendar` into a date-field by hand. For " +
+          "ready-made inputs, prefer the dedicated `DatePicker` and " +
+          "`DateRangePicker` components, which wrap this exact Popover + Button " +
+          "+ Calendar pattern (single and range selection respectively).",
+      },
+    },
+  },
   render: (): ReactElement => {
     function DatePickerExample(): ReactElement {
       const [open, setOpen] = useState<boolean>(false);

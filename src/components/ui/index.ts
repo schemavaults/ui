@@ -266,3 +266,9 @@ export type * from "./notification-bell";
 
 export * from "./calendar";
 export type * from "./calendar";
+
+export * from "./date-picker";
+export type * from "./date-picker";
+
+export * from "./date-range-picker";
+export type * from "./date-range-picker";
