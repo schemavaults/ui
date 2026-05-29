@@ -1,4 +1,12 @@
-export { useForm, useFormContext, useFormState } from './form';
+export {
+  useForm,
+  useFormContext,
+  useFormState,
+  useFieldArray,
+  useController,
+  useWatch,
+  useFormField,
+} from "./form";
 export type {
   UseFormReturn,
   FormControllerRenderProps,
@@ -12,15 +20,15 @@ export type {
   FormFieldName,
   FormFieldArray,
   FormFieldError,
-} from './form';
+} from "./form";
 
 export {
-  useFormField,
   Form,
   FormItem,
   FormLabel,
   FormControl,
+  Controller,
   FormDescription,
   FormMessage,
   FormField,
-} from './form';
+} from "./form";
