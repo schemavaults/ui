@@ -8,8 +8,8 @@ import {
   type CalendarSizeId,
   type DateRange,
 } from "./calendar";
-import { Button } from "../button";
-import { Popover, PopoverContent, PopoverTrigger } from "../popover";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const meta = {
   title: "Components/Calendar",
