@@ -263,3 +263,6 @@ export type * from "./floating-action-button";
 
 export * from "./notification-bell";
 export type * from "./notification-bell";
+
+export * from "./calendar";
+export type * from "./calendar";
