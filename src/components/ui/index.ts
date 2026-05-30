@@ -272,3 +272,6 @@ export type * from "./date-picker";
 
 export * from "./date-range-picker";
 export type * from "./date-range-picker";
+
+export * from "./bento-grid";
+export type * from "./bento-grid";
