@@ -207,6 +207,9 @@ export type * from "./number-input";
 export * from "./code-block";
 export type * from "./code-block";
 
+export * from "./secret-reveal";
+export type * from "./secret-reveal";
+
 export * from "./json-viewer";
 export type * from "./json-viewer";
 
