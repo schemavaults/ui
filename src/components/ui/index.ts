@@ -13,6 +13,9 @@ export type * from "./alert";
 export * from "./callout";
 export type * from "./callout";
 
+export * from "./blockquote";
+export type * from "./blockquote";
+
 export * from "./badge";
 export type * from "./badge";
 
