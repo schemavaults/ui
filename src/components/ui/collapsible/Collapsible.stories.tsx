@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ReactElement } from "react";
 import { ChevronRight, Lock, Settings, Shield } from "lucide-react";
 
+import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -88,6 +90,13 @@ const meta = {
     triggerLabel: "Advanced settings",
     hideIcon: false,
   },
+  decorators: [
+    (Story): ReactElement => (
+      <LazyFramerMotionProvider>
+        <Story />
+      </LazyFramerMotionProvider>
+    ),
+  ],
 } satisfies Meta<typeof PlaygroundDemo>;
 
 export default meta;
