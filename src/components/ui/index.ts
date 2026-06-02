@@ -7,6 +7,9 @@ export type * from "./agent-chat-messages";
 export * from "./accordion";
 export type * from "./accordion";
 
+export * from "./collapsible";
+export type * from "./collapsible";
+
 export * from "./alert";
 export type * from "./alert";
 
