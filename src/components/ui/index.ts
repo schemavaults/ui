@@ -216,6 +216,9 @@ export type * from "./secret-reveal";
 export * from "./json-viewer";
 export type * from "./json-viewer";
 
+export * from "./diff-viewer";
+export type * from "./diff-viewer";
+
 export * from "./segmented-control";
 export type * from "./segmented-control";
 
