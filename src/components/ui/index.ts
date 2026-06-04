@@ -284,3 +284,6 @@ export type * from "./date-picker";
 
 export * from "./date-range-picker";
 export type * from "./date-range-picker";
+
+export * from "./inline-edit";
+export type * from "./inline-edit";
