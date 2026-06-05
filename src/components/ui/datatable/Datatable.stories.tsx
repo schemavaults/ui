@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 
-import { Datatable, type ColumnDef } from "./datatable";
+import {
+  Datatable,
+  type ColumnDef,
+  type RowSelectionState,
+} from "./datatable";
 import { Button } from "@/components/ui/button";
 
 interface User {
@@ -281,4 +285,134 @@ export const SortableColumns: Story = {
 
 export const DefaultSort: Story = {
   render: (): ReactElement => <DefaultSortDemo />,
+};
+
+/**
+ * Returns the names of the users whose ids are marked selected, preserving the
+ * original data order so the readout is stable.
+ */
+function selectedUserNames(selection: RowSelectionState): string[] {
+  return users.filter((user) => selection[user.id]).map((user) => user.name);
+}
+
+/**
+ * Controlled multi-row selection. The selection lives in this component's own
+ * `useState` and is passed back into the Datatable via `selected`, so the table
+ * renders exactly what the parent owns. `getRowId` keys the selection by
+ * `user.id` (rather than row index) so the external state stays meaningful and
+ * stable across sorting/filtering/pagination.
+ */
+function ControlledSelectionDemo(): ReactElement {
+  const [selected, setSelected] = useState<RowSelectionState>({});
+  const selectedNames: string[] = selectedUserNames(selected);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-row flex-wrap items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(): void => {
+            const everyone: RowSelectionState = {};
+            for (const user of users) {
+              everyone[user.id] = true;
+            }
+            setSelected(everyone);
+          }}
+        >
+          Select all
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(): void => {
+            const admins: RowSelectionState = {};
+            for (const user of users) {
+              if (user.role === "Admin") {
+                admins[user.id] = true;
+              }
+            }
+            setSelected(admins);
+          }}
+        >
+          Select admins
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(): void => setSelected({})}
+        >
+          Clear selection
+        </Button>
+      </div>
+      <div className="rounded-md border bg-muted/40 p-3 text-sm">
+        <span className="font-medium">{selectedNames.length}</span> selected
+        {selectedNames.length > 0 && (
+          <span className="text-muted-foreground">
+            {" "}
+            — {selectedNames.join(", ")}
+          </span>
+        )}
+      </div>
+      <Datatable
+        data={users}
+        columns={columns}
+        initialVisibleColumns={{}}
+        HeaderButtons={ExampleHeaderButtons}
+        datatypeLabel="User"
+        searchColumn="name"
+        enableRowSelection
+        getRowId={(user): string => user.id}
+        selected={selected}
+        onSelectedChange={setSelected}
+      />
+    </div>
+  );
+}
+
+/**
+ * Controlled selection that starts with several rows already selected, showing
+ * that the table renders whatever selection the parent provides on mount.
+ */
+function PreselectedRowsDemo(): ReactElement {
+  const [selected, setSelected] = useState<RowSelectionState>({
+    "1": true,
+    "3": true,
+    "5": true,
+  });
+  const selectedNames: string[] = selectedUserNames(selected);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-md border bg-muted/40 p-3 text-sm">
+        <span className="font-medium">{selectedNames.length}</span> selected
+        {selectedNames.length > 0 && (
+          <span className="text-muted-foreground">
+            {" "}
+            — {selectedNames.join(", ")}
+          </span>
+        )}
+      </div>
+      <Datatable
+        data={users}
+        columns={columns}
+        initialVisibleColumns={{}}
+        HeaderButtons={EmptyHeaderButtons}
+        datatypeLabel="User"
+        searchColumn="name"
+        enableRowSelection
+        getRowId={(user): string => user.id}
+        selected={selected}
+        onSelectedChange={setSelected}
+      />
+    </div>
+  );
+}
+
+export const ControlledSelection: Story = {
+  render: (): ReactElement => <ControlledSelectionDemo />,
+};
+
+export const PreselectedRows: Story = {
+  render: (): ReactElement => <PreselectedRowsDemo />,
 };
