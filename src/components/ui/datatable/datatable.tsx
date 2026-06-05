@@ -16,10 +16,12 @@ import {
   getSortedRowModel,
   useReactTable,
   type RowSelectionState,
+  type OnChangeFn,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -43,7 +45,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type ReactElement, useMemo, useState, type FC } from "react";
+import {
+  type ReactElement,
+  useCallback,
+  useMemo,
+  useState,
+  type FC,
+} from "react";
 
 export type {
   ColumnDef,
@@ -51,10 +59,15 @@ export type {
   Row as DatatableRow,
   CellContext as DatatableCellContext,
   Cell as DatatableCell,
+  RowSelectionState,
+  RowSelectionState as DatatableRowSelectionState,
 };
 
 /** Default page size options shown in the rows-per-page selector. */
 const DEFAULT_PAGE_SIZE_OPTIONS: readonly number[] = [10, 20, 50, 100];
+
+/** Column id for the built-in checkbox selection column. */
+const SELECTION_COLUMN_ID = "__select__";
 
 export interface DatatableProps<TData extends object, TValue = unknown> {
   data: TData[];
@@ -80,6 +93,36 @@ export interface DatatableProps<TData extends object, TValue = unknown> {
   sortableColumns?: string[];
   /** Initial sort state applied on mount. The column must also be listed in sortableColumns. */
   defaultSort?: { id: string; desc: boolean };
+  /**
+   * Renders a leading checkbox column (with a select-all checkbox in the header)
+   * so rows can be selected. Selection state is reflected by `row.getIsSelected()`
+   * and highlights the row. Defaults to false.
+   *
+   * Selection can be observed/controlled regardless of this flag via
+   * `selected` / `onSelectedChange`; this prop only toggles the built-in
+   * checkbox UI. Provide your own column if you want custom selection controls.
+   */
+  enableRowSelection?: boolean;
+  /**
+   * Controlled row-selection state, keyed by row id (see `getRowId`). When
+   * provided, the component becomes controlled and renders exactly this
+   * selection. Pair with `onSelectedChange` to update it. Omit for uncontrolled
+   * behavior with internally-managed selection.
+   */
+  selected?: RowSelectionState;
+  /**
+   * Called with the next row-selection state whenever the selection changes
+   * (e.g. a checkbox is toggled). Receives a fully-resolved `RowSelectionState`
+   * — a `Record<rowId, boolean>` — so a `useState` setter can be passed directly.
+   */
+  onSelectedChange?: (selected: RowSelectionState) => void;
+  /**
+   * Resolves the unique id for a row, which becomes the key used in the
+   * selection state. Defaults to the row index. Provide this (e.g.
+   * `(user) => user.id`) so controlled selection keys map to your own ids
+   * and stay stable across sorting, filtering, and pagination.
+   */
+  getRowId?: (originalRow: TData, index: number) => string;
 }
 
 export function Datatable<TData extends object, TValue = unknown>({
@@ -94,6 +137,10 @@ export function Datatable<TData extends object, TValue = unknown>({
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS as unknown as number[],
   sortableColumns,
   defaultSort,
+  enableRowSelection = false,
+  selected,
+  onSelectedChange,
+  getRowId,
 }: DatatableProps<TData, TValue>): ReactElement {
   const [sorting, setSorting] = useState<SortingState>(
     defaultSort ? [defaultSort] : [],
@@ -103,7 +150,28 @@ export function Datatable<TData extends object, TValue = unknown>({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     initialVisibleColumns,
   );
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  // Row selection supports both controlled (`selected` provided) and
+  // uncontrolled (internal state) usage. When controlled, `selected` is the
+  // source of truth; otherwise we manage it locally. Either way,
+  // `onSelectedChange` is notified with the fully-resolved next selection.
+  const [internalRowSelection, setInternalRowSelection] =
+    useState<RowSelectionState>({});
+  const isSelectionControlled: boolean = selected !== undefined;
+  const rowSelection: RowSelectionState = selected ?? internalRowSelection;
+  const handleRowSelectionChange = useCallback<OnChangeFn<RowSelectionState>>(
+    (updaterOrValue): void => {
+      const nextSelection: RowSelectionState =
+        typeof updaterOrValue === "function"
+          ? updaterOrValue(rowSelection)
+          : updaterOrValue;
+      if (!isSelectionControlled) {
+        setInternalRowSelection(nextSelection);
+      }
+      onSelectedChange?.(nextSelection);
+    },
+    [isSelectionControlled, onSelectedChange, rowSelection],
+  );
 
   // Determine search mode
   const tanstackGlobalSearchEnabled: boolean =
@@ -151,9 +219,45 @@ export function Datatable<TData extends object, TValue = unknown>({
     [columns, sortableSet],
   );
 
+  // Optionally prepend a checkbox column for row selection. The header holds a
+  // select-all checkbox (indeterminate when only some page rows are selected)
+  // and each cell toggles that row.
+  const tableColumns = useMemo<ColumnDef<TData, TValue>[]>(() => {
+    if (!enableRowSelection) {
+      return columnsWithSorting;
+    }
+    const selectionColumn: ColumnDef<TData, TValue> = {
+      id: SELECTION_COLUMN_ID,
+      header: ({ table }): ReactElement => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value): void =>
+            table.toggleAllPageRowsSelected(!!value)
+          }
+          aria-label="Select all rows on this page"
+        />
+      ),
+      cell: ({ row }): ReactElement => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          disabled={!row.getCanSelect()}
+          onCheckedChange={(value): void => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    };
+    return [selectionColumn, ...columnsWithSorting];
+  }, [enableRowSelection, columnsWithSorting]);
+
   const table = useReactTable({
     data,
-    columns: columnsWithSorting satisfies ColumnDef<TData, TValue>[],
+    columns: tableColumns satisfies ColumnDef<TData, TValue>[],
+    ...(getRowId && { getRowId }),
     initialState: {
       pagination: {
         pageSize: defaultPageSize,
@@ -166,7 +270,7 @@ export function Datatable<TData extends object, TValue = unknown>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
     ...(tanstackGlobalSearchEnabled && {
       globalFilterFn: searchableColumns
         ? multiColumnFilterFn
@@ -308,7 +412,7 @@ export function Datatable<TData extends object, TValue = unknown>({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={table.getVisibleLeafColumns().length}
                   className="h-24 text-center"
                 >
                   No results.
@@ -320,11 +424,13 @@ export function Datatable<TData extends object, TValue = unknown>({
       </div>
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 w-full">
-        <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
+        {(enableRowSelection || isSelectionControlled) && (
+          <div className="text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
+        )}
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:ml-auto">
           {/* Rows per page selector */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">
