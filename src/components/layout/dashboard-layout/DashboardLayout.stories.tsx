@@ -160,6 +160,11 @@ const meta = {
         disable: true,
       },
     },
+    printHidden: {
+      control: "boolean",
+      description:
+        "Hide the left sidebar and top header from printed output (`@media print`) so the system print dialog renders only the main page content. The on-screen layout is unaffected.",
+    },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
@@ -466,4 +471,42 @@ export const WithUsePathname: Story = {
     topBarTitle: "Mobile open + usePathname",
   } satisfies Partial<DashboardLayoutProps>,
   render: (args): ReactElement => <WithUsePathnameStoryRender {...args} />,
+};
+
+// --- printHidden: print only the main page content ---------------------
+//
+// With `printHidden` enabled, the dashboard "chrome" (the left sidebar and the
+// top header bar) is hidden from printed output via `@media print`, and the
+// main content area expands to the full page width. The on-screen layout is
+// unchanged — open the browser's print preview (or click the button in the
+// story) to watch the sidebar and header drop away, leaving just the page
+// content. This is handy for printable reports rendered inside the dashboard.
+function PrintablePageContent(): ReactElement {
+  return (
+    <PageColumnContainer>
+      <div className="flex flex-col gap-4 p-4 items-start">
+        <Button onClick={(): void => window.print()}>Open print dialog</Button>
+        <p className="text-sm text-muted-foreground max-w-prose">
+          This story sets <code>printHidden</code>. Open your browser&rsquo;s
+          print preview (or click &ldquo;Open print dialog&rdquo;) and notice
+          that the left sidebar and the top header are gone, while this content
+          fills the full page width. The on-screen layout is unaffected.
+        </p>
+        <ExampleChildrenForContainer />
+      </div>
+    </PageColumnContainer>
+  );
+}
+
+export const WithPrintHidden: Story = {
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Printable Report",
+    printHidden: true,
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <DashboardLayout {...args}>
+      <PrintablePageContent />
+    </DashboardLayout>
+  ),
 };
