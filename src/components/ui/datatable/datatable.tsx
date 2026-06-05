@@ -424,11 +424,13 @@ export function Datatable<TData extends object, TValue = unknown>({
       </div>
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 w-full">
-        <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
+        {(enableRowSelection || isSelectionControlled) && (
+          <div className="text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
+        )}
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:ml-auto">
           {/* Rows per page selector */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">
