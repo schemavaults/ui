@@ -33,7 +33,7 @@ export function DashboardSidebar(
       >
         <SheetContent
           side="left"
-          className={cn(size.mobile_expanded_width_classname)}
+          className={cn(size.mobile_expanded_width_classname, props.className)}
           style={{
             zIndex: 1000,
           }}
@@ -65,6 +65,7 @@ export function DashboardSidebar(
         Link={props.Link}
         brandHref={props.brandHref}
         sidebarFooterContent={props.sidebarFooterContent}
+        className={props.className}
       />
     );
   }

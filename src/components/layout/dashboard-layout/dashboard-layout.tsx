@@ -43,6 +43,7 @@ export function DashboardLayout({
   brandHref,
   topBarTitle,
   usePathname,
+  printHidden = false,
   ...props
 }: DashboardLayoutProps): ReactElement {
   const size = useDashboardSidebarSizing();
@@ -76,15 +77,25 @@ export function DashboardLayout({
       {typeof usePathname === "function" && (
         <AutoCloseSidebarOnNavigation usePathname={usePathname} />
       )}
-      <div id="dashboard-layout-container" className="w-full h-dvh min-h-dvh">
+      <div
+        id="dashboard-layout-container"
+        className={cn(
+          "w-full h-dvh min-h-dvh",
+          // When hiding chrome for print, let the container grow to fit all
+          // page content across printed pages instead of clamping to the
+          // on-screen viewport height.
+          printHidden && "print:h-auto print:min-h-0",
+        )}
+      >
         <DashboardSidebar
           wordmark={wordmark}
           Link={Link}
           brandHref={brandHref}
           logo={logo}
           sidebarFooterContent={props.sidebarFooterContent}
+          className={cn(printHidden && "print:hidden")}
         />
-        <DashboardLayoutMainContentContainer>
+        <DashboardLayoutMainContentContainer printHidden={printHidden}>
           <header
             id="dashboard-layout-main-content-header"
             className={cn(
@@ -94,6 +105,7 @@ export function DashboardLayout({
               "bg-background",
               "border-b border-border",
               size.sidebar_and_header_z_index_classname,
+              printHidden && "print:hidden",
             )}
             style={{
               height: size.header_height,
