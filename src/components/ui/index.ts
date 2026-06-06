@@ -57,6 +57,9 @@ export type * from "./toaster";
 export * from "./wordmark";
 export type * from "./wordmark";
 
+export * from "./package-version";
+export type * from "./package-version";
+
 export * from "./card";
 export type * from "./card";
 
