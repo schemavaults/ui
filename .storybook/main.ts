@@ -29,7 +29,12 @@ const config: StorybookConfig = {
     "@storybook/addon-docs",
     "@storybook/addon-webpack5-compiler-swc",
   ],
-  staticDirs: [storybookAssetsDirectory],
+  staticDirs: [
+    storybookAssetsDirectory,
+    // Serve the package's package.json at the Storybook site root (/package.json)
+    // so the deployed site exposes the exact version it was built from.
+    { from: "../package.json", to: "/package.json" },
+  ],
   core: {
     disableTelemetry: true,
   },
