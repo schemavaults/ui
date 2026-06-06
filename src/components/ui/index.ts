@@ -284,3 +284,6 @@ export type * from "./date-picker";
 
 export * from "./date-range-picker";
 export type * from "./date-range-picker";
+
+export * from "./time-picker";
+export type * from "./time-picker";
