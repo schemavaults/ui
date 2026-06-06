@@ -51,29 +51,31 @@ export function PackageVersion({
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchVersion(): Promise<void> {
-      try {
-        const response = await fetch(packageJsonUrl, {
-          headers: { Accept: "application/json" },
-        });
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-        const version = extractVersion(await response.json());
-        if (!version) {
-          throw new Error("No 'version' field found in package.json");
-        }
+    async function fetchVersion(): Promise<string> {
+      const response = await fetch(packageJsonUrl, {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      const version = extractVersion(await response.json());
+      if (!version) {
+        throw new Error("No 'version' field found in package.json");
+      }
+      return version;
+    }
+
+    fetchVersion()
+      .then((version: string): void => {
         if (!cancelled) {
           setState({ status: "success", version });
         }
-      } catch {
+      })
+      .catch((): void => {
         if (!cancelled) {
           setState({ status: "error" });
         }
-      }
-    }
-
-    void fetchVersion();
+      });
 
     return (): void => {
       cancelled = true;
