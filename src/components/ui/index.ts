@@ -290,3 +290,6 @@ export type * from "./date-range-picker";
 
 export * from "./time-picker";
 export type * from "./time-picker";
+
+export * from "./relative-time";
+export type * from "./relative-time";
