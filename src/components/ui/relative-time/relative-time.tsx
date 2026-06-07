@@ -2,12 +2,10 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import {
-  forwardRef,
   useEffect,
   useState,
   type ComponentProps,
   type ReactElement,
-  type Ref,
 } from "react";
 
 import { cn } from "@/lib/utils";
@@ -176,25 +174,23 @@ export interface RelativeTimeProps
   now?: Date | string | number;
 }
 
-function RelativeTimeImpl(
-  {
-    date,
-    variant,
-    size,
-    format = "long",
-    locale,
-    numeric = "auto",
-    thresholdMs = Infinity,
-    absoluteFormat,
-    prefix,
-    suffix,
-    showTitle = true,
-    now,
-    className,
-    ...timeProps
-  }: RelativeTimeProps,
-  ref: Ref<HTMLTimeElement>,
-): ReactElement {
+export function RelativeTime({
+  date,
+  variant,
+  size,
+  format = "long",
+  locale,
+  numeric = "auto",
+  thresholdMs = Infinity,
+  absoluteFormat,
+  prefix,
+  suffix,
+  showTitle = true,
+  now,
+  className,
+  ref,
+  ...timeProps
+}: RelativeTimeProps): ReactElement {
   const target: number = normalizeTimestamp(date);
   const initialNow: number = now !== undefined ? normalizeTimestamp(now) : target;
   const [currentMs, setCurrentMs] = useState<number>(initialNow);
@@ -274,9 +270,6 @@ function RelativeTimeImpl(
   );
 }
 
-export const RelativeTime = forwardRef<HTMLTimeElement, RelativeTimeProps>(
-  RelativeTimeImpl,
-);
 RelativeTime.displayName = "RelativeTime";
 
 export default RelativeTime;
