@@ -1,7 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react";
 // import { fn } from "storybook/test";
 
-import { useState, type ReactElement, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 
 import DashboardLayout, { type DashboardLayoutProps } from "./dashboard-layout";
 import LoremIpsumText from "@/stories/LoremImpsumText";
@@ -33,7 +40,7 @@ import type {
   ICustomizableDashboardLayoutComponentProps,
 } from "./customizable-dashboard-component-type";
 import type { LinkComponentProps, LinkComponentType } from "@/types/Link";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 function ExampleChildrenForContainer(): ReactNode {
   const REPEAT_TEXT: number = 25;
@@ -509,4 +516,169 @@ export const WithPrintHidden: Story = {
       <PrintablePageContent />
     </DashboardLayout>
   ),
+};
+
+// --- Regression: next/link-style navigation must not be swallowed ------
+//
+// DashboardSidebarItemRenderer used to call e.preventDefault() in the onClick
+// it handed to the consumer <Link>. next/link (and React Router, TanStack
+// Router, ...) read a prevented default as "the handler is navigating itself —
+// stand down," so every sidebar link became a no-op. This story wires up a
+// Link adapter that mimics next/link's contract: it runs the consumer onClick
+// first and then navigates only if the event's default was not prevented.
+// Clicking a sidebar item should record a navigation below; if the bug
+// regresses, the adapter bails and nothing is recorded.
+
+interface NavigationRecord {
+  href: string;
+  defaultPrevented: boolean;
+}
+
+// Declared at module scope so the Link component type is stable across
+// renders — a fresh component identity on every render would unmount/remount
+// the sidebar and re-fire its enter animations (see the note in
+// dashboard-sidebar-header.tsx). The on-screen navigation log is fed through
+// context instead, which re-renders the adapter without remounting it.
+const RecordNavigationContext = createContext<
+  (record: NavigationRecord) => void
+>(() => {});
+
+// Spy the play() function asserts against — records every forwarded click and
+// whether the consumer onClick prevented default.
+const navigateSpy = fn();
+
+function NextLinkStyleLink({
+  href,
+  className,
+  onClick,
+  children,
+}: LinkComponentProps): ReactElement {
+  const record = useContext(RecordNavigationContext);
+  return (
+    <a
+      href={href}
+      className={className}
+      onClick={(e): void => {
+        // Run the consumer handler first, exactly like next/link does.
+        if (typeof onClick === "function") {
+          onClick(e);
+        }
+        const defaultPrevented: boolean = e.defaultPrevented;
+        navigateSpy({ href, defaultPrevented } satisfies NavigationRecord);
+        // next/link bails out here if the consumer prevented the default.
+        if (defaultPrevented) {
+          return;
+        }
+        // We perform client-side navigation ourselves, so stop the browser
+        // from doing a real full-page nav to `href` (which would navigate the
+        // Storybook iframe away mid-test).
+        e.preventDefault();
+        record({ href, defaultPrevented });
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
+NextLinkStyleLink satisfies LinkComponentType;
+
+const regressionSidebarItems = [
+  {
+    type: "dashboard-sidebar-item-group",
+    title: "Navigation",
+    items: [
+      {
+        type: "dashboard-sidebar-item-definition",
+        title: "Reports",
+        url: "/regression/reports",
+        icon: ({ className }) => <Plane className={className} />,
+      },
+      {
+        type: "dashboard-sidebar-item-definition",
+        title: "Schedule",
+        url: "/regression/schedule",
+        icon: ({ className }) => <AlarmClock className={className} />,
+      },
+    ],
+  },
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+function NextLinkStyleNavigationRender(
+  args: Partial<DashboardLayoutProps>,
+): ReactElement {
+  const [navigations, setNavigations] = useState<string[]>([]);
+  const record = useCallback((rec: NavigationRecord): void => {
+    setNavigations((prev): string[] => [...prev, rec.href]);
+  }, []);
+  return (
+    <RecordNavigationContext.Provider value={record}>
+      <DashboardLayout
+        {...(args as DashboardLayoutProps)}
+        Link={NextLinkStyleLink}
+        sidebarItems={regressionSidebarItems}
+      >
+        <div className="flex flex-col gap-3 p-4 items-start">
+          <p className="max-w-prose">
+            Click a sidebar item. The <code>Link</code> adapter mimics{" "}
+            <code>next/link</code>: it runs the item onClick handler and then
+            navigates only when the click was not prevented. Successful
+            navigations are listed here; if a sidebar item ever calls{" "}
+            <code>preventDefault()</code> again, this list stays empty.
+          </p>
+          <ul data-testid="navigation-log" className="list-disc pl-6">
+            {navigations.map((href, index) => (
+              <li key={`${href}-${index}`}>
+                Navigated to <code>{href}</code>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </DashboardLayout>
+    </RecordNavigationContext.Provider>
+  );
+}
+
+export const NextLinkStyleNavigation: Story = {
+  args: {
+    sidebarItems: regressionSidebarItems,
+    topBarTitle: "Navigation regression",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => <NextLinkStyleNavigationRender {...args} />,
+  play: async ({ canvasElement }): Promise<void> => {
+    navigateSpy.mockClear();
+    const canvas = within(canvasElement);
+
+    // Locate the sidebar item by its href — the title label is hidden while
+    // the desktop sidebar is collapsed, so the accessible name is unreliable.
+    const reportsLink: HTMLElement = await waitFor((): HTMLElement => {
+      const link = canvas
+        .getAllByRole("link")
+        .find(
+          (el): boolean => el.getAttribute("href") === "/regression/reports",
+        );
+      if (!link) {
+        throw new Error("Sidebar 'Reports' link has not rendered yet");
+      }
+      return link;
+    });
+
+    await userEvent.click(reportsLink);
+
+    // The consumer onClick must NOT have prevented the default, so the
+    // next/link-style adapter is free to navigate.
+    await waitFor((): void => {
+      expect(navigateSpy).toHaveBeenCalledWith({
+        href: "/regression/reports",
+        defaultPrevented: false,
+      });
+    });
+
+    // ...and that navigation is reflected in the on-screen log.
+    await waitFor((): void => {
+      expect(canvas.getByTestId("navigation-log")).toHaveTextContent(
+        "/regression/reports",
+      );
+    });
+  },
 };

@@ -95,15 +95,29 @@ export function DashboardSidebarItemRenderer({
               "w-full h-full",
               "hover:bg-gray-200",
             )}
-            onClick={(e): void => {
-              e.preventDefault();
+            onClick={(): void => {
               if (debug) {
                 console.log(
                   "[DashboardSidebarItemRenderer] onClick(item), where item = ",
                   item,
                 );
               }
-              setSidebarOpen(false);
+              // Do NOT call e.preventDefault() here. The consumer-supplied
+              // <Link> navigates from its `href`, and spec-compliant routers
+              // (next/link, React Router, TanStack Router, ...) treat a click
+              // whose default was prevented as "the handler is taking over —
+              // don't navigate." Calling preventDefault therefore swallowed
+              // every sidebar navigation. Collapsing the sidebar is a side
+              // effect that must not cancel the click.
+              //
+              // Only eagerly collapse on mobile, where the sidebar is an
+              // overlay Sheet that must get out of the way after a tap. On
+              // desktop the sidebar is persistent chrome, so leave it open —
+              // matching useCloseDashboardSidebarOnRouteChange, which likewise
+              // only auto-closes on mobile.
+              if (mobile) {
+                setSidebarOpen(false);
+              }
             }}
           >
             <m.div className={cn(
