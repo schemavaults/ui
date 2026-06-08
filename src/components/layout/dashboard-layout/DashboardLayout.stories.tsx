@@ -640,6 +640,10 @@ function NextLinkStyleNavigationRender(
 }
 
 export const NextLinkStyleNavigation: Story = {
+  // This is a regression test, not a showcase, and it drives the layout
+  // responsively. Keep it out of the autodocs page — whose narrow preview
+  // renders the mobile Sheet — so it runs only in its own Canvas.
+  tags: ["!autodocs"],
   args: {
     sidebarItems: regressionSidebarItems,
     topBarTitle: "Navigation regression",
@@ -648,17 +652,32 @@ export const NextLinkStyleNavigation: Story = {
   play: async ({ canvasElement }): Promise<void> => {
     navigateSpy.mockClear();
     const canvas = within(canvasElement);
+    const targetHref: string = "/regression/reports";
 
-    // Locate the sidebar item by its href — the title label is hidden while
-    // the desktop sidebar is collapsed, so the accessible name is unreliable.
+    // Find the item link by its href, NOT by role="link": each item link is
+    // nested inside a Radix Tooltip trigger <button>, whose descendants are
+    // presentational and therefore absent from the accessibility tree. Search
+    // the whole document because on a narrow viewport the sidebar is a Sheet
+    // that portals its content to document.body.
+    const findLink = (): HTMLElement | null =>
+      document.querySelector<HTMLElement>(`a[href="${targetHref}"]`);
+
+    // On a narrow viewport the sidebar renders as a closed Sheet, so its links
+    // are not mounted yet. Open it once via the header trigger (the first
+    // button in the layout header) when the link isn't already present.
+    if (!findLink()) {
+      const sidebarTrigger = canvasElement.querySelector<HTMLElement>(
+        "#dashboard-layout-main-content-header button",
+      );
+      if (sidebarTrigger) {
+        await userEvent.click(sidebarTrigger);
+      }
+    }
+
     const reportsLink: HTMLElement = await waitFor((): HTMLElement => {
-      const link = canvas
-        .getAllByRole("link")
-        .find(
-          (el): boolean => el.getAttribute("href") === "/regression/reports",
-        );
+      const link = findLink();
       if (!link) {
-        throw new Error("Sidebar 'Reports' link has not rendered yet");
+        throw new Error(`Sidebar link ${targetHref} has not rendered yet`);
       }
       return link;
     });
@@ -669,7 +688,7 @@ export const NextLinkStyleNavigation: Story = {
     // next/link-style adapter is free to navigate.
     await waitFor((): void => {
       expect(navigateSpy).toHaveBeenCalledWith({
-        href: "/regression/reports",
+        href: targetHref,
         defaultPrevented: false,
       });
     });
@@ -677,7 +696,7 @@ export const NextLinkStyleNavigation: Story = {
     // ...and that navigation is reflected in the on-screen log.
     await waitFor((): void => {
       expect(canvas.getByTestId("navigation-log")).toHaveTextContent(
-        "/regression/reports",
+        targetHref,
       );
     });
   },
