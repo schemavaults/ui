@@ -2,12 +2,11 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import {
-  forwardRef,
   useMemo,
   type ComponentProps,
+  type Ref,
   type ReactElement,
   type ReactNode,
-  type Ref,
 } from "react";
 
 import { cn } from "@/lib/utils";
@@ -240,7 +239,7 @@ const markVariants = cva(
 );
 
 export interface MarkProps
-  extends Omit<ComponentProps<"mark">, "style">,
+  extends Omit<ComponentProps<"mark">, "style" | "ref">,
     VariantProps<typeof markVariants> {
   /**
    * Override the rendered tag. Defaults to the semantic `<mark>` element.
@@ -250,22 +249,22 @@ export interface MarkProps
   as?: "mark" | "span";
   /** Pass-through `style` prop (preserved so consumers can layer custom CSS). */
   style?: ComponentProps<"mark">["style"];
+  /** React 19 ref-as-prop. */
+  ref?: Ref<HTMLElement>;
 }
 
-function MarkImpl(
-  {
-    className,
-    variant,
-    markStyle,
-    size,
-    rounded,
-    animate,
-    as = "mark",
-    children,
-    ...props
-  }: MarkProps,
-  ref: Ref<HTMLElement>,
-): ReactElement {
+export function Mark({
+  className,
+  variant,
+  markStyle,
+  size,
+  rounded,
+  animate,
+  as = "mark",
+  children,
+  ref,
+  ...props
+}: MarkProps): ReactElement {
   const Comp = as;
   return (
     <Comp
@@ -283,8 +282,6 @@ function MarkImpl(
     </Comp>
   );
 }
-
-export const Mark = forwardRef<HTMLElement, MarkProps>(MarkImpl);
 Mark.displayName = "Mark";
 
 // =============================================================================
