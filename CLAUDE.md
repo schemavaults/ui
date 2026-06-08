@@ -31,7 +31,20 @@ bun run typecheck:storybook
 
 # Lint source files
 bun run lint
+
+# Run Storybook interaction + smoke tests against a running dev server on :6006
+# (start `bun run storybook` first, then in another shell:)
+bun run test-storybook
+
+# CI-style: build Storybook, serve the static output, then run the test runner.
+# Requires the Playwright Chromium browser: `bunx playwright install chromium`
+bun run build:storybook && bun run test-storybook:ci
 ```
+
+> **Storybook tests** are powered by `@storybook/test-runner` (Playwright). They
+> run every story's `play()` interaction tests plus a render smoke test for all
+> other stories. CI runs them via the `Storybook Tests` job in
+> `.github/workflows/pull_request_checks.yml`.
 
 ## Architecture
 
