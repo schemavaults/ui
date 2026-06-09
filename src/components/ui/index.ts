@@ -293,3 +293,6 @@ export type * from "./time-picker";
 
 export * from "./mark";
 export type * from "./mark";
+
+export * from "./relative-time";
+export type * from "./relative-time";
