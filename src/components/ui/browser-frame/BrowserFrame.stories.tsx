@@ -199,7 +199,7 @@ function AllVariantsExample(): ReactElement {
           </span>
           <BrowserFrame variant={variant} className="max-w-3xl">
             <BrowserFrameHeader variant={variant}>
-              {variant !== "minimal" ? (
+              {variant === "macos" ? (
                 <BrowserFrameControls variant={variant} />
               ) : null}
               <BrowserFrameAddressBar value="https://schemavaults.com" />
