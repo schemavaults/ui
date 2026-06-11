@@ -294,5 +294,8 @@ export type * from "./time-picker";
 export * from "./mark";
 export type * from "./mark";
 
+export * from "./http-method-badge";
+export type * from "./http-method-badge";
+
 export * from "./browser-frame";
 export type * from "./browser-frame";
