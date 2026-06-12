@@ -117,6 +117,9 @@ export type * from "./skeleton";
 export * from "./key-value-with-skeleton";
 export type * from "./key-value-with-skeleton";
 
+export * from "./description-list";
+export type * from "./description-list";
+
 export * from "./status-blinker";
 export type * from "./status-blinker";
 
