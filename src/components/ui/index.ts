@@ -302,3 +302,6 @@ export type * from "./http-method-badge";
 
 export * from "./browser-frame";
 export type * from "./browser-frame";
+
+export * from "./relative-time";
+export type * from "./relative-time";
