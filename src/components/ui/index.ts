@@ -300,5 +300,8 @@ export type * from "./mark";
 export * from "./http-method-badge";
 export type * from "./http-method-badge";
 
+export * from "./data-type-badge";
+export type * from "./data-type-badge";
+
 export * from "./browser-frame";
 export type * from "./browser-frame";
