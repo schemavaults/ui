@@ -123,6 +123,9 @@ export type * from "./description-list";
 export * from "./status-blinker";
 export type * from "./status-blinker";
 
+export * from "./presence-indicator";
+export type * from "./presence-indicator";
+
 export * from "./context-menu";
 export type * from "./context-menu";
 
