@@ -93,6 +93,9 @@ export type * from "./command";
 export * from "./combobox";
 export type * from "./combobox";
 
+export * from "./multi-select";
+export type * from "./multi-select";
+
 export * from "./table";
 export type * from "./table";
 
