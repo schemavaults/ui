@@ -1,7 +1,9 @@
 "use client";
 
-import ThemedPageBackground from "@/components/ui/themed-page-background";
-import { PropsWithChildren, ReactElement } from "react";
+import ThemedPageBackground, {
+  type ThemedPageBackgroundProps,
+} from "@/components/ui/themed-page-background";
+import type { PropsWithChildren, ReactElement } from "react";
 import PageColumnContainer from "@/components/layout/page-column-container";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +12,7 @@ export interface ThemedPageContainerProps extends PropsWithChildren {
   contentContainerClassName?: string;
   // Added to default content container class name
   additionalContentContainerClassName?: string;
+  gradientColors?: ThemedPageBackgroundProps["gradientColors"];
 }
 
 /**
@@ -58,6 +61,7 @@ export function ThemedPageContainer({
         backgroundContentClassName,
       )}
       backgroundClassName={undefined}
+      gradientColors={props.gradientColors}
     >
       <PageColumnContainer className={contentContainerClassName}>
         {children}

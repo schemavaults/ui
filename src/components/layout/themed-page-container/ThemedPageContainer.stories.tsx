@@ -3,7 +3,14 @@ import type { FC, ReactElement, ReactNode } from "react";
 
 import ThemedPageContainer from "./themed-page-container";
 import LoremIpsumText from "@/stories/LoremImpsumText";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui";
 
 function ExampleChildrenForContainer({
   n_paragraphs = 12,
@@ -34,9 +41,11 @@ function ExampleCardSection({
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>This is an example description for {title}</CardDescription>
+        <CardDescription>
+          This is an example description for {title}
+        </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <ExampleChildrenForContainer n_paragraphs={n_paragraphs} />
       </CardContent>
@@ -45,7 +54,7 @@ function ExampleCardSection({
         <p>This is the footer for {title}!</p>
       </CardFooter>
     </Card>
-  )
+  );
 }
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
@@ -69,21 +78,23 @@ const meta = {
     },
     backgroundClassName: {
       control: {
-        type: 'text'
+        type: "text",
       },
       description: "Classname to apply to the background container",
     },
     contentContainerClassName: {
       control: {
-        type: 'text'
+        type: "text",
       },
-      description: "Classname to apply to the content container within the themed page container",
+      description:
+        "Classname to apply to the content container within the themed page container",
     },
     additionalContentContainerClassName: {
       control: {
-        type: 'text'
+        type: "text",
       },
-      description: "Classname that is added to either the default or provided 'contentContainerClassName'",
+      description:
+        "Classname that is added to either the default or provided 'contentContainerClassName'",
     },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
@@ -110,6 +121,13 @@ export const MultipleCardSections: Story = {
         <ExampleCardSection title="Section 2" />
         <ExampleCardSection title="Section 3" />
       </>
-    )
+    ),
+  },
+};
+
+export const CustomBackgroundGradientColors: Story = {
+  args: {
+    additionalContentContainerClassName: "bg-background p-2 sm:p-4 lg:p-6",
+    gradientColors: ["#00FFBB", "#0022FF"],
   },
 };
