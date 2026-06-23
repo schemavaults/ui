@@ -14,6 +14,9 @@ const meta = {
   tags: ["autodocs"],
   // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {
+    wordmarkText: {
+      control: "text",
+    },
     className: {
       control: "text",
     },
@@ -33,5 +36,20 @@ export const Default: Story = {
 export const LargeText: Story = {
   args: {
     className: "text-2xl",
+  },
+};
+
+export const CustomText: Story = {
+  args: {
+    wordmarkText: "SchemaVaults UI",
+    className: "text-4xl font-bold",
+  },
+};
+
+export const CustomGradientColors: Story = {
+  args: {
+    wordmarkText: "Custom Gradient Colors",
+    className: "text-4xl",
+    wordmarkGradientColorClassnames: ["from-warning", "to-destructive"],
   },
 };
