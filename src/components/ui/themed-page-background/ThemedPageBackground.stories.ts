@@ -37,3 +37,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {},
 };
+
+export const CustomGradientColors: Story = {
+  args: {
+    gradientColors: ["#FFAA00", "#AAFF00"],
+  },
+};

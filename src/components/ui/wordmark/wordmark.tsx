@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { getSchemaVaultsBrandColor } from "@schemavaults/theme/brand_colors";
 import type { ReactElement } from "react";
 
 const DEFAULT_WORDMARK_TEXT = "SchemaVaults" as const;
@@ -14,19 +14,16 @@ export interface WordmarkProps {
   /**
    * @example ["from-schemavaults-brand-blue", "to-schemavaults-brand-red"]
    */
-  wordmarkGradientColorClassnames?: [
-    fromClassName: string,
-    toClassName: string,
-  ];
+  gradientColors?: [fromClassName: string, toClassName: string];
 
   className?: string;
 }
 
 export function Wordmark({
   wordmarkText = DEFAULT_WORDMARK_TEXT,
-  wordmarkGradientColorClassnames = [
-    cn("from-schemavaults-brand-blue"),
-    cn("to-schemavaults-brand-red"),
+  gradientColors = [
+    getSchemaVaultsBrandColor("schemavaults-brand-blue"),
+    getSchemaVaultsBrandColor("schemavaults-brand-red"),
   ] as const,
   className,
 }: WordmarkProps): ReactElement {
@@ -37,24 +34,30 @@ export function Wordmark({
   }
 
   if (
-    !Array.isArray(wordmarkGradientColorClassnames) ||
-    typeof wordmarkGradientColorClassnames[0] !== "string" ||
-    typeof wordmarkGradientColorClassnames[1] !== "string"
+    !Array.isArray(gradientColors) ||
+    typeof gradientColors[0] !== "string" ||
+    typeof gradientColors[1] !== "string"
   ) {
     throw new TypeError(
-      "Expected a [to, from] tuple containing classNames for the <Wordmark /> gradient!",
+      "Expected a [from, to] tuple containing classNames for the <Wordmark /> gradient!",
     );
   }
+  const fromColor: string = gradientColors[0];
+  const toColor: string = gradientColors[1];
 
-  const finalSpanClassname: string = cn(
-    "text-transparent bg-clip-text bg-gradient-to-br",
-    wordmarkGradientColorClassnames[0],
-    wordmarkGradientColorClassnames[1],
-    "text-nowrap",
-    className,
+  return (
+    <span
+      className={className}
+      style={{
+        textWrap: "nowrap",
+        color: "transparent",
+        backgroundClip: "text",
+        backgroundImage: `linear-gradient(to bottom right, ${fromColor}, ${toColor})`,
+      }}
+    >
+      {wordmarkText}
+    </span>
   );
-
-  return <span className={finalSpanClassname}>{wordmarkText}</span>;
 }
 
 export default Wordmark;

@@ -50,6 +50,6 @@ export const CustomGradientColors: Story = {
   args: {
     wordmarkText: "Custom Gradient Colors",
     className: "text-4xl",
-    wordmarkGradientColorClassnames: ["from-warning", "to-destructive"],
+    gradientColors: ["#00FFF0", "#DD00FF"],
   },
 };

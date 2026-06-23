@@ -28,7 +28,7 @@
         "@radix-ui/react-toast": "1.2.14",
         "@radix-ui/react-tooltip": "1.2.7",
         "@radix-ui/react-visually-hidden": "1.2.3",
-        "@schemavaults/theme": "0.25.9",
+        "@schemavaults/theme": "0.26.1",
         "@tanstack/react-table": "8.20.1",
         "class-variance-authority": "0.7.1",
         "clsx": "2.1.1",
@@ -522,7 +522,7 @@
 
     "@schemavaults/send-email": ["@schemavaults/send-email@0.0.18", "", { "dependencies": { "@schemavaults/app-definitions": "0.6.23", "commander": "^14.0.1", "zod": "3.25.8" }, "bin": { "schemavaults-send-email": "dist/cli.js" } }, "sha512-do4LCUTpKT9I0Sy3PJRCPQrHrlah/hswj7oG08PknqTgV5S1VXxeS4rGOOIwz4iUl9TJ1F8pbpMdU2mLiafZnA=="],
 
-    "@schemavaults/theme": ["@schemavaults/theme@0.25.9", "", { "dependencies": { "resolve": "1.22.11", "tailwindcss-animate": "1.0.7" } }, "sha512-obU5tZGcCgdzA/JaSmzjDchVzQu6zZcfTvPuWvqTu0RRGlDwNmXQeBtV81C3xTVjVLXG86x0CXheUOfy5hyFsQ=="],
+    "@schemavaults/theme": ["@schemavaults/theme@0.26.1", "", { "dependencies": { "resolve": "1.22.11", "tailwindcss-animate": "1.0.7" } }, "sha512-jVVa0eRMV9i+xu8wuzJaui57W/37Pd0zBFqVa7PTmtq//1xuZ91c3tm8FNA80DAgKbrmfs4gH74UW0c/QSuEtA=="],
 
     "@sideway/address": ["@sideway/address@4.1.5", "", { "dependencies": { "@hapi/hoek": "^9.0.0" } }, "sha512-IqO/DUQHUkPeixNQ8n0JA6102hT9CmaljNTPmQ1u8MEhBo/R4Q8eKLN/vGZxuebwOroDB4cbpjheD4+/sKFK4Q=="],
 
