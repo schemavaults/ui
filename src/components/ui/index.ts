@@ -311,3 +311,6 @@ export type * from "./browser-frame";
 
 export * from "./inline-edit";
 export type * from "./inline-edit";
+
+export * from "./price-tag";
+export type * from "./price-tag";
