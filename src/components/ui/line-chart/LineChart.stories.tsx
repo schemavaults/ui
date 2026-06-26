@@ -47,6 +47,9 @@ const meta = {
     showAxis: { control: { type: "boolean" } },
     showPoints: { control: { type: "boolean" } },
     showValueLabels: { control: { type: "boolean" } },
+    showYAxisLabels: { control: { type: "boolean" } },
+    yTickCount: { control: { type: "number", min: 2, max: 10, step: 1 } },
+    yTickLabelWidth: { control: { type: "number", min: 16, max: 96, step: 1 } },
     width: { control: { type: "number" } },
     height: { control: { type: "number" } },
   },
@@ -58,6 +61,8 @@ const meta = {
     showAxis: true,
     showPoints: false,
     showValueLabels: false,
+    showYAxisLabels: false,
+    yTickCount: 5,
     onPointClick: fn(),
   },
 } satisfies Meta<typeof LineChart>;
@@ -198,6 +203,65 @@ export const WithGridlines: Story = {
     gridLineCount: 4,
     showValueLabels: true,
     showPoints: true,
+  },
+};
+
+export const WithYAxisLabels: Story = {
+  args: {
+    series: SINGLE_SERIES,
+    categories: WEEK_LABELS,
+    size: "lg",
+    showPoints: true,
+    showYAxisLabels: true,
+    gridLineCount: 3,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Set `showYAxisLabels` to render raw value ticks along the y-axis. The chart reserves a left gutter automatically — adjust with `yTickLabelWidth` if your labels need more room.",
+      },
+    },
+  },
+};
+
+export const FormattedYAxisLabels: Story = {
+  args: {
+    size: "lg",
+    showPoints: true,
+    gridLineCount: 3,
+    categories: WEEK_LABELS,
+    yTickCount: 5,
+    yTickLabelWidth: 44,
+    yTickFormatter: (value): string =>
+      value >= 1000
+        ? `$${(value / 1000).toFixed(1)}k`
+        : `$${Math.round(value)}`,
+    series: [
+      {
+        id: "revenue",
+        label: "Daily revenue",
+        color: "positive",
+        area: true,
+        points: [
+          { y: 1240 },
+          { y: 1380 },
+          { y: 1620 },
+          { y: 1180 },
+          { y: 2040 },
+          { y: 2310 },
+          { y: 2580 },
+        ],
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Pass a `yTickFormatter` to render currency, percentages, or any other y-axis unit. The default tick set spans the full y domain (`yMin` -> `yMax`) and includes both endpoints.",
+      },
+    },
   },
 };
 

@@ -213,6 +213,31 @@ export interface LineChartProps
    * provided. Defaults to `5`.
    */
   xTickCount?: number;
+  /**
+   * Format a y-axis tick label from its numeric value. When provided, tick
+   * labels are rendered to the left of the y-axis and a left gutter is
+   * reserved automatically. Return `null` to skip a tick. The default
+   * formatter (when `showYAxisLabels` is `true` without a custom formatter)
+   * renders the raw value.
+   */
+  yTickFormatter?: (y: number, index: number) => string | null;
+  /**
+   * Number of evenly-spaced y-axis ticks. Ticks include both endpoints
+   * (`yMin` and `yMax`). Defaults to `5`. Has no effect unless
+   * `yTickFormatter` is provided or `showYAxisLabels` is `true`.
+   */
+  yTickCount?: number;
+  /**
+   * Render y-axis tick labels using a default raw-value formatter. Useful as
+   * a one-line opt-in when you don't need a custom formatter. Defaults to
+   * `false`. Ignored when `yTickFormatter` is provided.
+   */
+  showYAxisLabels?: boolean;
+  /**
+   * Width in pixels reserved for y-axis tick labels (the left gutter).
+   * Defaults to `36`. Only applied when y-axis labels are visible.
+   */
+  yTickLabelWidth?: number;
   /** Render a value label above every point. Defaults to `false`. */
   showValueLabels?: boolean;
   /**
@@ -241,6 +266,8 @@ export interface LineChartProps
   valueLabelClassName?: string;
   /** Extra classes applied to every x-axis tick `<text>` element. */
   categoryLabelClassName?: string;
+  /** Extra classes applied to every y-axis tick `<text>` element. */
+  yAxisLabelClassName?: string;
   /** Extra classes applied to the axis / gridline `<line>` elements. */
   axisClassName?: string;
   /** Optional ref forwarded to the wrapper element. */
@@ -389,6 +416,10 @@ function LineChart({
   categories,
   xTickFormatter,
   xTickCount = 5,
+  yTickFormatter,
+  yTickCount = 5,
+  showYAxisLabels = false,
+  yTickLabelWidth = 36,
   showValueLabels = false,
   valueLabelFormatter,
   onPointClick,
@@ -397,6 +428,7 @@ function LineChart({
   overlayClassName,
   valueLabelClassName,
   categoryLabelClassName,
+  yAxisLabelClassName,
   axisClassName,
   ref,
   ...props
@@ -413,11 +445,13 @@ function LineChart({
   const hasCategoryLabels: boolean =
     (categories !== undefined && categories.length > 0) ||
     typeof xTickFormatter === "function";
+  const hasYAxisLabels: boolean =
+    typeof yTickFormatter === "function" || showYAxisLabels;
   const categoryGutter: number = hasCategoryLabels ? 22 : 6;
   const valueGutter: number = showValueLabels ? 18 : 6;
   const padTop: number = valueGutter;
   const padBottom: number = categoryGutter;
-  const padLeft: number = 6;
+  const padLeft: number = hasYAxisLabels ? Math.max(8, yTickLabelWidth) : 6;
   const padRight: number = 6;
 
   const plotX0: number = padLeft;
@@ -548,6 +582,27 @@ function LineChart({
       return ticks;
     }
     return [];
+  })();
+
+  // Y-axis tick set. Always includes both endpoints when active.
+  const yTicks: ReadonlyArray<{ y: number; value: number; text: string }> = (() => {
+    if (!hasYAxisLabels || !hasData) return [];
+    const count: number = Math.max(2, yTickCount);
+    const ticks: { y: number; value: number; text: string }[] = [];
+    for (let i = 0; i < count; i += 1) {
+      // Iterate top-down (i = 0 -> yMax, i = count - 1 -> yMin) so the first
+      // call to a custom formatter receives the largest value -- the order
+      // most consumers expect.
+      const t: number = i / (count - 1);
+      const value: number = effectiveYMax - t * ySpan;
+      const text: string | null =
+        typeof yTickFormatter === "function"
+          ? yTickFormatter(value, i)
+          : String(value);
+      if (text === null || text === "") continue;
+      ticks.push({ y: projectY(value), value, text });
+    }
+    return ticks;
   })();
 
   return (
@@ -804,6 +859,39 @@ function LineChart({
               >
                 {tick.text}
               </text>
+            ))}
+          </g>
+        ) : null}
+
+        {yTicks.length > 0 ? (
+          <g
+            aria-hidden="true"
+            data-slot="line-chart-y-ticks"
+            className="pointer-events-none select-none"
+          >
+            {yTicks.map((tick, idx) => (
+              <g key={`ytick-${idx}-${tick.text}`}>
+                <line
+                  x1={plotX0 - 3}
+                  x2={plotX0}
+                  y1={tick.y}
+                  y2={tick.y}
+                  strokeWidth={1}
+                  className={cn("stroke-border", axisClassName)}
+                />
+                <text
+                  x={plotX0 - 6}
+                  y={tick.y}
+                  textAnchor="end"
+                  dominantBaseline="central"
+                  className={cn(
+                    "fill-muted-foreground",
+                    yAxisLabelClassName,
+                  )}
+                >
+                  {tick.text}
+                </text>
+              </g>
             ))}
           </g>
         ) : null}
