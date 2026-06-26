@@ -267,6 +267,9 @@ export type * from "./pie-chart";
 export * from "./bar-chart";
 export type * from "./bar-chart";
 
+export * from "./line-chart";
+export type * from "./line-chart";
+
 export * from "./comparison-slider";
 export type * from "./comparison-slider";
 
