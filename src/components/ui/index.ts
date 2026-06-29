@@ -198,6 +198,9 @@ export type * from "./kbd";
 export * from "./copy-button";
 export type * from "./copy-button";
 
+export * from "./hold-to-confirm-button";
+export type * from "./hold-to-confirm-button";
+
 export * from "./spinner";
 export type * from "./spinner";
 
