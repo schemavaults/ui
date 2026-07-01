@@ -51,7 +51,12 @@ export function ThemedPageBackground({
   }
 
   return (
-    <div className={backgroundClassNames.join(" ")}>
+    <div
+      className={backgroundClassNames.join(" ")}
+      style={{
+        backgroundImage: `linear-gradient(to bottom, ${fromColor}, ${toColor})`,
+      }}
+    >
       <div
         className={cn(
           "schemavaults-themed-page-background-internal-content",
@@ -59,9 +64,6 @@ export function ThemedPageBackground({
           "w-full min-h-full",
           props.className,
         )}
-        style={{
-          backgroundImage: `linear-gradient(to bottom, ${fromColor}, ${toColor})`,
-        }}
       >
         {children}
       </div>
