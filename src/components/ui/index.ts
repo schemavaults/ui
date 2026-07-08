@@ -315,6 +315,9 @@ export type * from "./http-method-badge";
 export * from "./browser-frame";
 export type * from "./browser-frame";
 
+export * from "./terminal-frame";
+export type * from "./terminal-frame";
+
 export * from "./inline-edit";
 export type * from "./inline-edit";
 
