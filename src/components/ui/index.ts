@@ -317,3 +317,6 @@ export type * from "./browser-frame";
 
 export * from "./inline-edit";
 export type * from "./inline-edit";
+
+export * from "./split-button";
+export type * from "./split-button";
