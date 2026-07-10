@@ -210,6 +210,9 @@ export type * from "./empty-state";
 export * from "./stat-card";
 export type * from "./stat-card";
 
+export * from "./bento-grid";
+export type * from "./bento-grid";
+
 export * from "./timeline";
 export type * from "./timeline";
 
