@@ -186,6 +186,9 @@ export type * from "./scroll-progress";
 export * from "./gauge";
 export type * from "./gauge";
 
+export * from "./meter";
+export type * from "./meter";
+
 export * from "./breadcrumb";
 export type * from "./breadcrumb";
 
