@@ -294,6 +294,9 @@ export type * from "./carousel";
 export * from "./countdown";
 export type * from "./countdown";
 
+export * from "./relative-time";
+export type * from "./relative-time";
+
 export * from "./floating-action-button";
 export type * from "./floating-action-button";
 
