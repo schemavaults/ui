@@ -87,6 +87,9 @@ export type * from "./alert-dialog";
 export * from "./popover";
 export type * from "./popover";
 
+export * from "./popconfirm";
+export type * from "./popconfirm";
+
 export * from "./command";
 export type * from "./command";
 
