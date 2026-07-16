@@ -329,3 +329,6 @@ export type * from "./inline-edit";
 
 export * from "./split-button";
 export type * from "./split-button";
+
+export * from "./bento-grid";
+export type * from "./bento-grid";
