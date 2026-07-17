@@ -1,12 +1,7 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  forwardRef,
-  type ComponentProps,
-  type ReactElement,
-  type Ref,
-} from "react";
+import type { ComponentProps, ReactElement } from "react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -112,17 +107,15 @@ export interface RibbonProps
   children: ComponentProps<"div">["children"];
 }
 
-function RibbonImpl(
-  {
-    className,
-    position,
-    size,
-    variant,
-    children,
-    ...props
-  }: RibbonProps,
-  ref: Ref<HTMLDivElement>,
-): ReactElement {
+function Ribbon({
+  ref,
+  className,
+  position,
+  size,
+  variant,
+  children,
+  ...props
+}: RibbonProps): ReactElement {
   return (
     <div
       ref={ref}
@@ -138,10 +131,9 @@ function RibbonImpl(
   );
 }
 
-export const Ribbon = forwardRef<HTMLDivElement, RibbonProps>(RibbonImpl);
 Ribbon.displayName = "Ribbon";
 
-export { ribbonVariants, ribbonPositionIds, ribbonSizeIds, ribbonVariantIds };
+export { Ribbon, ribbonVariants, ribbonPositionIds, ribbonSizeIds, ribbonVariantIds };
 export type { RibbonPosition, RibbonSize, RibbonVariant };
 
 export default Ribbon;
