@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Decorator, Meta, StoryObj } from "@storybook/react";
 import type { ReactElement } from "react";
 import { Rocket, Star, Zap } from "lucide-react";
 
@@ -19,6 +19,21 @@ import {
   CardTitle,
 } from "../card";
 import { Button } from "../button";
+
+/**
+ * A shared decorator that wraps atomic stories in a demo container so the
+ * ribbon has something visible to sit on the corner of. Not used on
+ * render-based stories that already build their own containers -- otherwise
+ * their inner grids would be clipped by this container's `overflow-hidden`.
+ */
+const ContainerDecorator: Decorator = (Story) => (
+  <div className="relative overflow-hidden w-80 h-56 rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+    <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
+      Container (relative overflow-hidden)
+    </div>
+    <Story />
+  </div>
+);
 
 const meta = {
   title: "Components/Ribbon",
@@ -45,22 +60,14 @@ const meta = {
     size: "default",
     variant: "default",
   },
-  decorators: [
-    (Story): ReactElement => (
-      <div className="relative overflow-hidden w-80 h-56 rounded-lg border border-border bg-card text-card-foreground shadow-sm">
-        <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
-          Container (relative overflow-hidden)
-        </div>
-        <Story />
-      </div>
-    ),
-  ],
 } satisfies Meta<typeof Ribbon>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [ContainerDecorator],
+};
 
 export const TopLeft: Story = {
   args: {
@@ -68,6 +75,7 @@ export const TopLeft: Story = {
     variant: "secondary",
     children: "Beta",
   },
+  decorators: [ContainerDecorator],
 };
 
 export const TopRight: Story = {
@@ -76,6 +84,7 @@ export const TopRight: Story = {
     variant: "default",
     children: "New",
   },
+  decorators: [ContainerDecorator],
 };
 
 export const BottomLeft: Story = {
@@ -84,6 +93,7 @@ export const BottomLeft: Story = {
     variant: "warning",
     children: "Draft",
   },
+  decorators: [ContainerDecorator],
 };
 
 export const BottomRight: Story = {
@@ -92,36 +102,43 @@ export const BottomRight: Story = {
     variant: "success",
     children: "Live",
   },
+  decorators: [ContainerDecorator],
 };
 
 export const Small: Story = {
   args: { size: "sm", children: "Pro" },
+  decorators: [ContainerDecorator],
 };
 
 export const Large: Story = {
   args: { size: "lg", children: "Sale" },
+  decorators: [ContainerDecorator],
 };
 
 export const DestructiveVariant: Story = {
   args: { variant: "destructive", children: "-50%" },
+  decorators: [ContainerDecorator],
 };
 
 export const SuccessVariant: Story = {
   args: { variant: "success", children: "Free" },
+  decorators: [ContainerDecorator],
 };
 
 export const WarningVariant: Story = {
   args: { variant: "warning", children: "Beta" },
+  decorators: [ContainerDecorator],
 };
 
 export const AccentVariant: Story = {
   args: { variant: "accent", children: "Popular" },
+  decorators: [ContainerDecorator],
 };
 
 export const AllVariants: Story = {
-  decorators: [(Story): ReactElement => <Story />],
+  parameters: { layout: "padded" },
   render: (): ReactElement => (
-    <div className="grid grid-cols-2 gap-6 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
       {ribbonVariantIds.map((variant) => (
         <div
           key={variant}
@@ -138,7 +155,7 @@ export const AllVariants: Story = {
 };
 
 export const AllPositions: Story = {
-  decorators: [(Story): ReactElement => <Story />],
+  parameters: { layout: "padded" },
   render: (): ReactElement => (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {ribbonPositionIds.map((position) => (
@@ -159,7 +176,7 @@ export const AllPositions: Story = {
 };
 
 export const AllSizes: Story = {
-  decorators: [(Story): ReactElement => <Story />],
+  parameters: { layout: "padded" },
   render: (): ReactElement => (
     <div className="flex flex-col gap-6 md:flex-row">
       {ribbonSizeIds.map((size) => (
@@ -178,7 +195,7 @@ export const AllSizes: Story = {
 };
 
 export const OnCard: Story = {
-  decorators: [(Story): ReactElement => <Story />],
+  parameters: { layout: "padded" },
   render: (): ReactElement => (
     <Card className="relative w-80 overflow-hidden">
       <Ribbon variant="success" size="default">
@@ -203,7 +220,7 @@ export const OnCard: Story = {
 };
 
 export const PricingGrid: Story = {
-  decorators: [(Story): ReactElement => <Story />],
+  parameters: { layout: "padded" },
   render: (): ReactElement => (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
       <Card className="relative overflow-hidden">
@@ -252,13 +269,28 @@ export const PricingGrid: Story = {
 };
 
 export const ProductThumbnail: Story = {
-  decorators: [(Story): ReactElement => <Story />],
+  parameters: { layout: "padded" },
   render: (): ReactElement => (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
       {[
-        { title: "Compact Kit", price: "$19", ribbon: "New", variant: "default" as const },
-        { title: "Studio Pack", price: "$49", ribbon: "-30%", variant: "destructive" as const },
-        { title: "Prime Bundle", price: "$99", ribbon: "Hot", variant: "warning" as const },
+        {
+          title: "Compact Kit",
+          price: "$19",
+          ribbon: "New",
+          variant: "default" as const,
+        },
+        {
+          title: "Studio Pack",
+          price: "$49",
+          ribbon: "-30%",
+          variant: "destructive" as const,
+        },
+        {
+          title: "Prime Bundle",
+          price: "$99",
+          ribbon: "Hot",
+          variant: "warning" as const,
+        },
       ].map((item) => (
         <div
           key={item.title}
