@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  forwardRef,
   useCallback,
   useId,
   useImperativeHandle,
@@ -54,6 +53,8 @@ export interface TagsInputProps
     InputHTMLAttributes<HTMLInputElement>,
     "value" | "defaultValue" | "size" | "onChange"
   > {
+  /** Ref exposing the imperative `TagsInputHandle` (focus/clear). */
+  ref?: Ref<TagsInputHandle>;
   /** Controlled list of tags. Provide alongside `onValueChange`. */
   value?: readonly string[];
   /** Initial tags for uncontrolled usage. */
@@ -120,38 +121,36 @@ function defaultValidator(
   return !existing.some((t) => t.toLowerCase() === lower);
 }
 
-function TagsInputImpl(
-  {
-    value,
-    defaultValue,
-    onValueChange,
-    onTagAdd,
-    onTagRemove,
-    size = "default",
-    chipVariant = "secondary",
-    chipLeading,
-    delimiters = ["Enter", ","],
-    maxTags,
-    allowDuplicates = false,
-    trim = true,
-    disabled = false,
-    invalid = false,
-    placeholder,
-    ariaLabel,
-    validate,
-    className,
-    inputClassName,
-    renderTag,
-    id,
-    name,
-    onKeyDown,
-    onPaste,
-    onFocus,
-    onBlur,
-    ...inputProps
-  }: TagsInputProps,
-  forwardedRef: Ref<TagsInputHandle>,
-): ReactElement {
+function TagsInput({
+  ref,
+  value,
+  defaultValue,
+  onValueChange,
+  onTagAdd,
+  onTagRemove,
+  size = "default",
+  chipVariant = "secondary",
+  chipLeading,
+  delimiters = ["Enter", ","],
+  maxTags,
+  allowDuplicates = false,
+  trim = true,
+  disabled = false,
+  invalid = false,
+  placeholder,
+  ariaLabel,
+  validate,
+  className,
+  inputClassName,
+  renderTag,
+  id,
+  name,
+  onKeyDown,
+  onPaste,
+  onFocus,
+  onBlur,
+  ...inputProps
+}: TagsInputProps): ReactElement {
   const isControlled = value !== undefined;
   const [internalTags, setInternalTags] = useState<string[]>(() =>
     defaultValue ? [...defaultValue] : [],
@@ -172,7 +171,7 @@ function TagsInputImpl(
   );
 
   useImperativeHandle(
-    forwardedRef,
+    ref,
     () => ({
       focus: (): void => inputRef.current?.focus(),
       clear: (): void => {
@@ -337,10 +336,9 @@ function TagsInputImpl(
   );
 }
 
-export const TagsInput = forwardRef<TagsInputHandle, TagsInputProps>(
-  TagsInputImpl,
-);
 TagsInput.displayName = "TagsInput";
+
+export { TagsInput };
 
 export { tagsInputContainerVariants, tagsInputSizeIds };
 export type { TagsInputSize };
