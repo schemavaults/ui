@@ -3,13 +3,11 @@
 import { Check } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
 import {
-  forwardRef,
+  type ComponentProps,
   type CSSProperties,
-  type HTMLAttributes,
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
-  type Ref,
 } from "react";
 
 import { cn } from "@/lib/utils";
@@ -77,7 +75,7 @@ const checkIconSizeClass: Record<ColorSwatchSize, string> = {
 };
 
 export interface ColorSwatchProps
-  extends Omit<HTMLAttributes<HTMLSpanElement>, "color">,
+  extends Omit<ComponentProps<"span">, "color">,
     Pick<VariantProps<typeof colorSwatchVariants>, "size" | "shape" | "variant"> {
   /**
    * The color to display. Accepts any CSS color value:
@@ -99,8 +97,6 @@ export interface ColorSwatchProps
   hideSelectedIcon?: boolean;
   /** Color for the check icon when selected. Defaults to a contrast-aware white/black. */
   checkIconColor?: string;
-  /** Optional ref forwarded to the outer element. */
-  ref?: Ref<HTMLSpanElement>;
 }
 
 /**
@@ -127,28 +123,26 @@ function getContrastingCheckColor(color: string): string {
   return luminance > 0.6 ? "#0a0a0a" : "#ffffff";
 }
 
-function ColorSwatchImpl(
-  {
-    className,
-    color,
-    label,
-    size,
-    shape,
-    variant,
-    selected = false,
-    disabled = false,
-    onClick,
-    onKeyDown,
-    hideSelectedIcon = false,
-    checkIconColor,
-    style,
-    role,
-    tabIndex,
-    "aria-label": ariaLabelProp,
-    ...props
-  }: ColorSwatchProps,
-  ref: Ref<HTMLSpanElement>,
-): ReactElement {
+function ColorSwatch({
+  ref,
+  className,
+  color,
+  label,
+  size,
+  shape,
+  variant,
+  selected = false,
+  disabled = false,
+  onClick,
+  onKeyDown,
+  hideSelectedIcon = false,
+  checkIconColor,
+  style,
+  role,
+  tabIndex,
+  "aria-label": ariaLabelProp,
+  ...props
+}: ColorSwatchProps): ReactElement {
   const interactive = Boolean(onClick) && !disabled;
   const ariaLabel = ariaLabelProp ?? label ?? color;
   const resolvedSize: ColorSwatchSize = size ?? "default";
@@ -209,18 +203,15 @@ function ColorSwatchImpl(
   );
 }
 
-export const ColorSwatch = forwardRef<HTMLSpanElement, ColorSwatchProps>(
-  ColorSwatchImpl,
-);
 ColorSwatch.displayName = "ColorSwatch";
 
-export interface ColorSwatchGroupProps extends HTMLAttributes<HTMLDivElement> {
+export { ColorSwatch };
+
+export interface ColorSwatchGroupProps extends ComponentProps<"div"> {
   /** Visual gap between swatches. Maps to Tailwind's gap scale. */
   gap?: "tight" | "default" | "loose";
   /** Optional accessible label for the entire group (e.g. "Theme color"). */
   label?: string;
-  /** Forwarded ref. */
-  ref?: Ref<HTMLDivElement>;
 }
 
 const groupGapClass: Record<NonNullable<ColorSwatchGroupProps["gap"]>, string> = {
@@ -229,18 +220,16 @@ const groupGapClass: Record<NonNullable<ColorSwatchGroupProps["gap"]>, string> =
   loose: "gap-3",
 };
 
-function ColorSwatchGroupImpl(
-  {
-    className,
-    children,
-    gap = "default",
-    label,
-    role,
-    "aria-label": ariaLabelProp,
-    ...props
-  }: ColorSwatchGroupProps,
-  ref: Ref<HTMLDivElement>,
-): ReactElement {
+function ColorSwatchGroup({
+  ref,
+  className,
+  children,
+  gap = "default",
+  label,
+  role,
+  "aria-label": ariaLabelProp,
+  ...props
+}: ColorSwatchGroupProps): ReactElement {
   return (
     <div
       ref={ref}
@@ -255,10 +244,9 @@ function ColorSwatchGroupImpl(
   );
 }
 
-export const ColorSwatchGroup = forwardRef<HTMLDivElement, ColorSwatchGroupProps>(
-  ColorSwatchGroupImpl,
-);
 ColorSwatchGroup.displayName = "ColorSwatchGroup";
+
+export { ColorSwatchGroup };
 
 export {
   colorSwatchVariants,

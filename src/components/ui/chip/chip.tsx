@@ -3,13 +3,11 @@
 import { X } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
 import {
-  forwardRef,
   type ComponentProps,
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
   type ReactNode,
-  type Ref,
 } from "react";
 
 import { cn } from "@/lib/utils";
@@ -93,26 +91,24 @@ export interface ChipProps
   onClick?: (event: MouseEvent<HTMLSpanElement>) => void;
 }
 
-function ChipImpl(
-  {
-    className,
-    variant,
-    size,
-    leading,
-    removable = false,
-    onRemove,
-    removeLabel = "Remove",
-    selected = false,
-    disabled = false,
-    onClick,
-    onKeyDown,
-    children,
-    role,
-    tabIndex,
-    ...props
-  }: ChipProps,
-  ref: Ref<HTMLSpanElement>,
-): ReactElement {
+function Chip({
+  ref,
+  className,
+  variant,
+  size,
+  leading,
+  removable = false,
+  onRemove,
+  removeLabel = "Remove",
+  selected = false,
+  disabled = false,
+  onClick,
+  onKeyDown,
+  children,
+  role,
+  tabIndex,
+  ...props
+}: ChipProps): ReactElement {
   const interactive = Boolean(onClick) && !disabled;
 
   const handleKeyDown = (event: KeyboardEvent<HTMLSpanElement>): void => {
@@ -179,8 +175,9 @@ function ChipImpl(
   );
 }
 
-export const Chip = forwardRef<HTMLSpanElement, ChipProps>(ChipImpl);
 Chip.displayName = "Chip";
+
+export { Chip };
 
 export { chipVariants, chipSizeIds, chipVariantIds };
 export type { ChipSize, ChipVariant };
