@@ -329,3 +329,6 @@ export type * from "./inline-edit";
 
 export * from "./split-button";
 export type * from "./split-button";
+
+export * from "./ribbon";
+export type * from "./ribbon";
