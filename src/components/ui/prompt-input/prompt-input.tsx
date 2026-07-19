@@ -444,6 +444,19 @@ function PromptInputSubmit({
   const iconSizeClass =
     ctx.size === "lg" ? "h-4 w-4" : ctx.size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
 
+  // When the caller passes custom idle or loading content (e.g. text like
+  // "Generate"), the icon-only "icon" size becomes a fixed 40x40 square that
+  // clips the label. Widen to a text-friendly size in that case; the container
+  // size (sm/default/lg) controls the exact button height.
+  const hasCustomContent = children !== undefined || loadingChildren !== undefined;
+  const defaultButtonSize = hasCustomContent
+    ? ctx.size === "sm"
+      ? "sm"
+      : ctx.size === "lg"
+        ? "lg"
+        : "default"
+    : "icon";
+
   return (
     <Button
       type="submit"
@@ -451,7 +464,7 @@ function PromptInputSubmit({
       data-state={ctx.isLoading ? "loading" : "idle"}
       aria-label={ctx.isLoading ? stopLabel : sendLabel}
       variant={variant ?? (ctx.isLoading ? "secondary" : "default")}
-      size={size ?? "icon"}
+      size={size ?? defaultButtonSize}
       disabled={resolvedDisabled}
       className={cn("shrink-0", className)}
       {...props}
