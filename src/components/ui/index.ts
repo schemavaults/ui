@@ -108,6 +108,9 @@ export type * from "./checkbox";
 export * from "./textarea";
 export type * from "./textarea";
 
+export * from "./prompt-input";
+export type * from "./prompt-input";
+
 export * from "./hover-card";
 export type * from "./hover-card";
 
