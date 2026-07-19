@@ -388,7 +388,8 @@ function ControlledDemo(props: {
     <div className="flex w-[520px] flex-col gap-3">
       <div
         data-testid="prompt-input-last-submitted"
-        className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
+        data-value={last}
+        className="whitespace-pre-line rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
       >
         Last submitted: <span className="font-mono">{last || "—"}</span>
       </div>
@@ -424,8 +425,9 @@ export const Controlled: Story = {
     await userEvent.keyboard("{Enter}");
 
     await waitFor((): void => {
-      expect(canvas.getByTestId("prompt-input-last-submitted")).toHaveTextContent(
-        "Last submitted: hello schemavaults",
+      expect(canvas.getByTestId("prompt-input-last-submitted")).toHaveAttribute(
+        "data-value",
+        "hello schemavaults",
       );
     });
 
@@ -449,16 +451,18 @@ export const MultilineNewline: Story = {
     await userEvent.keyboard("{Shift>}{Enter}{/Shift}");
     await userEvent.type(textarea, "line two");
 
-    // Nothing has been submitted yet; the placeholder value should still be —.
-    expect(canvas.getByTestId("prompt-input-last-submitted")).toHaveTextContent(
-      "Last submitted: —",
+    // Nothing has been submitted yet — the readout's data-value should still be empty.
+    expect(canvas.getByTestId("prompt-input-last-submitted")).toHaveAttribute(
+      "data-value",
+      "",
     );
     expect(textarea).toHaveValue("line one\nline two");
 
     await userEvent.keyboard("{Enter}");
     await waitFor((): void => {
-      expect(canvas.getByTestId("prompt-input-last-submitted")).toHaveTextContent(
-        "Last submitted: line one\nline two",
+      expect(canvas.getByTestId("prompt-input-last-submitted")).toHaveAttribute(
+        "data-value",
+        "line one\nline two",
       );
     });
   },
