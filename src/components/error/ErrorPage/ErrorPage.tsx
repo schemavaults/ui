@@ -3,13 +3,14 @@
 import type { ReactElement, ReactNode } from "react";
 import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Wordmark } from "@/components/ui/wordmark";
+import { Wordmark, type WordmarkProps } from "@/components/ui/wordmark";
 import { cn } from "@/lib/utils";
 
 type ErrorPageCommonProps = {
   reset?: () => void;
   resetButtonLabel?: string;
   additionalButtons?: ReactNode[];
+  wordmarkProps?: WordmarkProps;
 };
 
 export type ErrorPageProps = (
@@ -50,7 +51,7 @@ export function ErrorPage(props: ErrorPageProps): ReactElement {
       )}
     >
       <h1 className="text-xl flex flex-row gap-4">
-        <Wordmark /> Error
+        <Wordmark {...props.wordmarkProps} /> Error
       </h1>
 
       <p className={cn("text-md", "mx-2 md:mx-4 lg:mx-8")}>{errorMsg}</p>

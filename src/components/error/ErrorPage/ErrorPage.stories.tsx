@@ -127,6 +127,15 @@ const meta = {
       },
       description: "Additional buttons rendered next to the reset button.",
     },
+    wordmarkProps: {
+      table: {
+        type: {
+          summary: "WordmarkProps | undefined",
+        },
+      },
+      description:
+        "Props forwarded to the <Wordmark /> in the page heading, e.g. to customize the wordmark text and gradient theming.",
+    },
   },
   args: {} satisfies Partial<ErrorPageProps>,
 } satisfies Meta<typeof ErrorPage>;
@@ -183,6 +192,25 @@ export const WithCustomResetLabel: Story = {
     error: new Error("Failed to load resource."),
     reset: () => {},
     resetButtonLabel: "Retry",
+  },
+};
+
+export const WithCustomWordmark: Story = {
+  args: {
+    error: 503,
+    message: "Service Unavailable",
+    wordmarkProps: {
+      wordmarkText: "AcmeCorp",
+      gradientColors: ["#16a34a", "#2563eb"],
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Pass `wordmarkProps` to customize the wordmark rendered in the page heading — for example a different wordmark text and gradient colors.",
+      },
+    },
   },
 };
 
