@@ -335,3 +335,6 @@ export type * from "./split-button";
 
 export * from "./ribbon";
 export type * from "./ribbon";
+
+export * from "./toolbar";
+export type * from "./toolbar";
