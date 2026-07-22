@@ -1,6 +1,6 @@
 {
   "name": "@schemavaults/ui",
-  "version": "0.88.0",
+  "version": "0.88.1",
   "private": false,
   "license": "MIT",
   "description": "React.js UI components for SchemaVaults frontend applications",

@@ -1,5 +1,6 @@
 "use client";
 
+import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import {
   createContext,
@@ -243,6 +244,14 @@ export interface ToolbarButtonProps
    * `ToolbarToggle` when you need `aria-pressed`.
    */
   active?: boolean;
+  /**
+   * When true, render the button as the child element (via Radix `Slot`).
+   * This is what you use to graft external triggers such as
+   * `DropdownMenuTrigger asChild`, `PopoverTrigger asChild`, or
+   * `TooltipTrigger asChild` onto a `ToolbarButton` while keeping its
+   * roving-tabindex wiring (`data-toolbar-item`) and item styles.
+   */
+  asChild?: boolean;
   ref?: Ref<HTMLButtonElement>;
 }
 
@@ -252,12 +261,14 @@ function ToolbarButton({
   active,
   disabled,
   type = "button",
+  asChild = false,
   ref,
   ...props
 }: ToolbarButtonProps): ReactElement {
   const ctx = useToolbarContext("ToolbarButton");
+  const Comp = asChild ? Slot : "button";
   return (
-    <button
+    <Comp
       ref={ref}
       type={type}
       disabled={disabled}
@@ -282,6 +293,13 @@ export interface ToolbarToggleProps
     VariantProps<typeof toolbarItemVariants> {
   pressed?: boolean;
   onPressedChange?: (pressed: boolean) => void;
+  /**
+   * When true, render the toggle as the child element (via Radix `Slot`).
+   * Useful for hanging a `PopoverTrigger asChild` or similar off a
+   * pressed-state toolbar item while keeping the toolbar's roving-tabindex
+   * wiring intact.
+   */
+  asChild?: boolean;
   ref?: Ref<HTMLButtonElement>;
 }
 
@@ -293,12 +311,14 @@ function ToolbarToggle({
   onClick,
   disabled,
   type = "button",
+  asChild = false,
   ref,
   ...props
 }: ToolbarToggleProps): ReactElement {
   const ctx = useToolbarContext("ToolbarToggle");
+  const Comp = asChild ? Slot : "button";
   return (
-    <button
+    <Comp
       ref={ref}
       type={type}
       disabled={disabled}
