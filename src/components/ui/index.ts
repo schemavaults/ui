@@ -300,6 +300,9 @@ export type * from "./countdown";
 export * from "./floating-action-button";
 export type * from "./floating-action-button";
 
+export * from "./scroll-to-top";
+export type * from "./scroll-to-top";
+
 export * from "./notification-bell";
 export type * from "./notification-bell";
 
