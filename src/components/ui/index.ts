@@ -192,6 +192,9 @@ export type * from "./gauge";
 export * from "./meter";
 export type * from "./meter";
 
+export * from "./segmented-bar";
+export type * from "./segmented-bar";
+
 export * from "./breadcrumb";
 export type * from "./breadcrumb";
 
