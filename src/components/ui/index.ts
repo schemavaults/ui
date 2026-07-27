@@ -333,6 +333,9 @@ export type * from "./browser-frame";
 export * from "./terminal-frame";
 export type * from "./terminal-frame";
 
+export * from "./device-frame";
+export type * from "./device-frame";
+
 export * from "./inline-edit";
 export type * from "./inline-edit";
 
