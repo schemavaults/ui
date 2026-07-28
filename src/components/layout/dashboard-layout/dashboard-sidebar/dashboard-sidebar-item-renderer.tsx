@@ -134,7 +134,7 @@ export function DashboardSidebarItemRenderer({
           </Link>
         </TooltipTrigger>
         <TooltipContent side="right">
-          {item.title}
+          {item.tooltip ?? item.title}
           <TooltipArrow />
         </TooltipContent>
       </Tooltip>
