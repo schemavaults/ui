@@ -347,3 +347,6 @@ export type * from "./ribbon";
 
 export * from "./toolbar";
 export type * from "./toolbar";
+
+export * from "./attachment-card";
+export type * from "./attachment-card";
