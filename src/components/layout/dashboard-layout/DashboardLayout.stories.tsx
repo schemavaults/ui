@@ -518,6 +518,133 @@ export const WithPrintHidden: Story = {
   ),
 };
 
+// --- Tooltip override: short menu label, extended tooltip text ----------
+//
+// Sidebar item definitions accept an optional `tooltip` field that overrides
+// the hover tooltip, which otherwise repeats the item's `title`. This lets a
+// menu item keep a short label where sidebar space is limited (e.g. "MFA")
+// while the tooltip spells out the full description ("Multi-Factor
+// Authentication"). Items without a `tooltip` keep the title-as-tooltip
+// behavior.
+
+const tooltipOverrideSidebarItems = [
+  {
+    type: "dashboard-sidebar-item-group",
+    title: "Security",
+    items: [
+      {
+        type: "dashboard-sidebar-item-definition",
+        title: "MFA",
+        tooltip: "Multi-Factor Authentication",
+        url: "/security/mfa",
+        icon: ({ className }) => <Lock className={className} />,
+      },
+      {
+        type: "dashboard-sidebar-item-definition",
+        title: "Members",
+        url: "/security/members",
+        icon: ({ className }) => <Users className={className} />,
+      },
+    ],
+  },
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+// The tooltip content portals to document.body, so search there. Radix also
+// renders a visually-hidden duplicate of the content for screen readers, so
+// match against every element with role="tooltip" rather than expecting a
+// single node.
+function someTooltipContains(text: string): boolean {
+  return Array.from(document.querySelectorAll('[role="tooltip"]')).some(
+    (tooltip: Element): boolean => (tooltip.textContent ?? "").includes(text),
+  );
+}
+
+export const WithTooltipOverride: Story = {
+  // The play() test drives hover state; keep it out of the autodocs page so
+  // it only runs in its own Canvas.
+  tags: ["!autodocs"],
+  args: {
+    sidebarItems: tooltipOverrideSidebarItems,
+    topBarTitle: "Tooltip Override",
+  } satisfies Partial<DashboardLayoutProps>,
+  decorators: [
+    // A story-level provider sits closest to the tooltips, so its zero delay
+    // wins over the meta-level provider's default — the play() hover
+    // assertions don't have to race the open delay.
+    (Story): ReactElement => (
+      <TooltipProvider delayDuration={0}>
+        <Story />
+      </TooltipProvider>
+    ),
+  ],
+  play: async ({ canvasElement }): Promise<void> => {
+    const findLink = (href: string): HTMLElement | null =>
+      document.querySelector<HTMLElement>(`a[href="${href}"]`);
+
+    // On a narrow viewport the sidebar is a closed Sheet, so the item links
+    // are not mounted yet — open it via the header trigger first.
+    if (!findLink("/security/mfa")) {
+      const sidebarTrigger = canvasElement.querySelector<HTMLElement>(
+        "#dashboard-layout-main-content-header button",
+      );
+      if (sidebarTrigger) {
+        await userEvent.click(sidebarTrigger);
+      }
+    }
+
+    const mfaLink: HTMLElement = await waitFor((): HTMLElement => {
+      const link = findLink("/security/mfa");
+      if (!link) {
+        throw new Error("MFA sidebar link has not rendered yet");
+      }
+      return link;
+    });
+
+    // The overridden tooltip text must only ever appear inside the tooltip,
+    // never as the menu label.
+    expect(mfaLink.textContent).not.toContain("Multi-Factor Authentication");
+
+    await userEvent.hover(mfaLink);
+    await waitFor(
+      (): void => {
+        expect(someTooltipContains("Multi-Factor Authentication")).toBe(true);
+      },
+      { timeout: 3000 },
+    );
+    await userEvent.unhover(mfaLink);
+
+    // While the MFA tooltip is open, Radix treats the pointer as "in transit"
+    // toward that tooltip's content and suppresses the next trigger's
+    // pointermove until the pointer lands outside the grace area. Hover a
+    // neutral element far from the tooltip first so the transit state clears
+    // and the next sidebar item can open its own tooltip.
+    const neutralHoverTarget: HTMLElement | null =
+      canvasElement.querySelector<HTMLElement>(
+        "#dashboard-layout-main-content-header",
+      );
+    if (neutralHoverTarget) {
+      await userEvent.hover(neutralHoverTarget);
+    }
+
+    // An item without a `tooltip` override still falls back to its title.
+    const membersLink: HTMLElement = await waitFor((): HTMLElement => {
+      const link = findLink("/security/members");
+      if (!link) {
+        throw new Error("Members sidebar link has not rendered yet");
+      }
+      return link;
+    });
+    await userEvent.hover(membersLink);
+    await waitFor(
+      (): void => {
+        expect(someTooltipContains("Members")).toBe(true);
+      },
+      { timeout: 3000 },
+    );
+    await userEvent.unhover(membersLink);
+  },
+};
+
 // --- Regression: next/link-style navigation must not be swallowed ------
 //
 // DashboardSidebarItemRenderer used to call e.preventDefault() in the onClick

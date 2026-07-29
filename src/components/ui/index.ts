@@ -336,6 +336,9 @@ export type * from "./browser-frame";
 export * from "./terminal-frame";
 export type * from "./terminal-frame";
 
+export * from "./device-frame";
+export type * from "./device-frame";
+
 export * from "./inline-edit";
 export type * from "./inline-edit";
 
@@ -347,3 +350,6 @@ export type * from "./ribbon";
 
 export * from "./toolbar";
 export type * from "./toolbar";
+
+export * from "./attachment-card";
+export type * from "./attachment-card";
