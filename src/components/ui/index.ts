@@ -117,6 +117,9 @@ export type * from "./hover-card";
 export * from "./radio-group";
 export type * from "./radio-group";
 
+export * from "./radio-card-group";
+export type * from "./radio-card-group";
+
 export * from "./skeleton";
 export type * from "./skeleton";
 
