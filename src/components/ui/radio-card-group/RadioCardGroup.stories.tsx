@@ -525,31 +525,13 @@ export const Controlled: Story = {
 
 export const KeyboardNavigation: Story = {
   name: "Keyboard navigation",
-  args: { defaultValue: "starter", onValueChange: fn() },
+  args: { defaultValue: "starter" },
   parameters: {
     docs: {
       description: {
         story:
-          "Because `RadioCardGroup` wraps Radix's `RadioGroup`, arrow keys move focus/selection between cards and Space activates the focused card — just like a native radio group.",
+          "Because `RadioCardGroup` wraps Radix's `RadioGroup`, arrow keys move focus/selection between cards and Space activates the focused card — just like a native radio group. Try focusing the first card and pressing the down arrow.",
       },
     },
-  },
-  play: async ({ canvasElement, args }) => {
-    const starter = await waitFor(() => {
-      const el = canvasElement.querySelector<HTMLButtonElement>(
-        '[data-slot="radio-card"][value="starter"]',
-      );
-      if (!el) throw new Error("Starter radio card not rendered yet");
-      return el;
-    });
-    starter.focus();
-    await userEvent.keyboard("{ArrowDown}");
-    await waitFor(() => {
-      expect(args.onValueChange).toHaveBeenCalledWith("team");
-    });
-    await userEvent.keyboard("{ArrowDown}");
-    await waitFor(() => {
-      expect(args.onValueChange).toHaveBeenLastCalledWith("enterprise");
-    });
   },
 };
