@@ -504,9 +504,13 @@ export const Controlled: Story = {
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const enterpriseCard = await waitFor(() =>
-      canvas.getByRole("radio", { name: /enterprise/i }),
-    );
+    const enterpriseCard = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLButtonElement>(
+        '[data-slot="radio-card"][value="enterprise"]',
+      );
+      if (!el) throw new Error("Enterprise radio card not rendered yet");
+      return el;
+    });
     await userEvent.click(enterpriseCard);
     await waitFor(() => {
       expect(args.onValueChange).toHaveBeenCalledWith("enterprise");
@@ -531,10 +535,13 @@ export const KeyboardNavigation: Story = {
     },
   },
   play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    const starter = await waitFor(() =>
-      canvas.getByRole("radio", { name: /starter/i }),
-    );
+    const starter = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLButtonElement>(
+        '[data-slot="radio-card"][value="starter"]',
+      );
+      if (!el) throw new Error("Starter radio card not rendered yet");
+      return el;
+    });
     starter.focus();
     await userEvent.keyboard("{ArrowDown}");
     await waitFor(() => {
