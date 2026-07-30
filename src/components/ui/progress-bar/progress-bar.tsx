@@ -66,6 +66,14 @@ export interface ProgressBarProps
   max?: number;
   /** Additional classes for the filled indicator */
   indicatorClassName?: string;
+
+  /**
+   * @description Custom [from, to] CSS color values for the indicator
+   * gradient. Takes precedence over the `color` variant.
+   * @example [getSchemaVaultsBrandColor("schemavaults-brand-blue"), getSchemaVaultsBrandColor("schemavaults-brand-red")]
+   * @example ["#8b5cf6", "#ec4899"]
+   */
+  gradientColors?: [fromColor: string, toColor: string];
 }
 
 export function ProgressBar({
@@ -75,10 +83,22 @@ export function ProgressBar({
   max = 100,
   size,
   color,
+  gradientColors,
   className,
   indicatorClassName,
   ...props
 }: ProgressBarProps): ReactElement {
+  if (
+    typeof gradientColors !== "undefined" &&
+    (!Array.isArray(gradientColors) ||
+      typeof gradientColors[0] !== "string" ||
+      typeof gradientColors[1] !== "string")
+  ) {
+    throw new TypeError(
+      "Expected a [from, to] tuple containing CSS color values for the <ProgressBar /> gradient!",
+    );
+  }
+
   const clampedValue: number = Math.min(max, Math.max(min, value));
   const percentage: number = ((clampedValue - min) / (max - min)) * 100;
 
@@ -96,6 +116,13 @@ export function ProgressBar({
         initial={{ width: 0 }}
         animate={{ width: `${percentage}%` }}
         transition={{ duration: 0.4, ease: "easeOut" }}
+        style={
+          gradientColors
+            ? {
+                backgroundImage: `linear-gradient(to right, ${gradientColors[0]}, ${gradientColors[1]})`,
+              }
+            : undefined
+        }
         className={cn(
           progressBarIndicatorVariants({ color }),
           indicatorClassName,
