@@ -228,6 +228,9 @@ export type * from "./timeline";
 export * from "./rating";
 export type * from "./rating";
 
+export * from "./rating-breakdown";
+export type * from "./rating-breakdown";
+
 export * from "./number-input";
 export type * from "./number-input";
 
