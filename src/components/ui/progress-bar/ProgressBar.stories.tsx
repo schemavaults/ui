@@ -51,6 +51,11 @@ const meta = {
         type: "number",
       },
     },
+    gradientColors: {
+      control: {
+        type: "object",
+      },
+    },
   },
   args: {
     value: 50,
@@ -141,5 +146,13 @@ export const Destructive: Story = {
     value: 25,
     label: "Low progress",
     color: "destructive",
+  },
+};
+
+export const CustomGradient: Story = {
+  args: {
+    value: 70,
+    label: "Custom gradient progress",
+    gradientColors: ["#8b5cf6", "#ec4899"],
   },
 };
