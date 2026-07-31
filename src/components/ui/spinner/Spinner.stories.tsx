@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, waitFor, within } from "storybook/test";
 import type { ReactElement } from "react";
 
 import { Button } from "../button";
@@ -185,6 +186,21 @@ export const InsideButton: Story = {
       </Button>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const savingButton = await waitFor(() =>
+      canvas.getByRole("button", { name: /saving/i }),
+    );
+    const spinner = within(savingButton).getByRole("status");
+    const spinnerColor: string = getComputedStyle(spinner).color;
+    // The default variant inherits currentColor, so inside a default
+    // Button it must match the button's text color instead of blending
+    // into the button's background.
+    expect(spinnerColor).toBe(getComputedStyle(savingButton).color);
+    expect(spinnerColor).not.toBe(
+      getComputedStyle(savingButton).backgroundColor,
+    );
+  },
 };
 
 export const InlineWithText: Story = {

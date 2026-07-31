@@ -51,7 +51,7 @@ const spinnerWrapperGapSizes = {
 } as const satisfies Record<SpinnerSize, string>;
 
 const spinnerVariantColors = {
-  default: "text-foreground",
+  default: "text-current",
   primary: "text-primary",
   secondary: "text-secondary-foreground",
   brand: "text-schemavaults-brand-blue",
@@ -64,7 +64,10 @@ export interface SpinnerProps
   extends Omit<HTMLAttributes<HTMLSpanElement>, "role" | "aria-label">,
     VariantProps<typeof spinnerCircleVariants> {
   /**
-   * Color/intent variant. Defaults to "default" (foreground).
+   * Color/intent variant. Defaults to "default", which inherits the
+   * surrounding text color (currentColor) — so inside e.g. a default
+   * variant Button the spinner picks up the button's text color and
+   * stays visible against the button background.
    */
   variant?: SpinnerVariant;
   /**
