@@ -353,3 +353,6 @@ export type * from "./toolbar";
 
 export * from "./attachment-card";
 export type * from "./attachment-card";
+
+export * from "./bento-grid";
+export type * from "./bento-grid";
