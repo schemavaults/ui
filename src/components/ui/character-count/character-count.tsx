@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { cn } from "@/lib/utils";
+import { Spinner, type SpinnerSize } from "../spinner";
 import {
   type CharacterCountMode,
   type CharacterCountSize,
@@ -196,6 +197,8 @@ function CharacterCount({
     ? format({ used, max, remaining, state })
     : defaultFormat({ used, max, remaining, showRemaining, mode });
 
+  const spinnerSize = spinnerSizeForCount[size ?? "default"];
+
   return (
     <span
       ref={ref}
@@ -210,9 +213,23 @@ function CharacterCount({
       {...props}
     >
       {content}
+      {isStale ? (
+        <Spinner
+          data-slot="character-count-spinner"
+          aria-hidden="true"
+          size={spinnerSize}
+          className="ml-0.5"
+        />
+      ) : null}
     </span>
   );
 }
+
+const spinnerSizeForCount: Record<CharacterCountSize, SpinnerSize> = {
+  sm: "xs",
+  default: "xs",
+  lg: "sm",
+};
 
 CharacterCount.displayName = "CharacterCount";
 

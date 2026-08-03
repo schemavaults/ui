@@ -246,6 +246,46 @@ export const WithInput: Story = {
   },
 };
 
+function HeavyWordCounter(): ReactElement {
+  // Seed with a large body of text so re-counting words is expensive enough to
+  // let React drop the count from the urgent render pass; the spinner surfaces
+  // while `useDeferredValue` is catching up to the latest input.
+  const seed = ("The quick brown fox jumps over the lazy dog. ").repeat(400);
+  const [value, setValue] = useState<string>(seed);
+  const max = 500;
+  return (
+    <div className="flex w-[520px] flex-col gap-1.5">
+      <Label htmlFor="essay-input">Essay body</Label>
+      <Textarea
+        id="essay-input"
+        value={value}
+        onChange={(event): void => setValue(event.target.value)}
+        rows={6}
+      />
+      <div className="flex justify-end">
+        <CharacterCount
+          data-testid="essay-counter"
+          value={value}
+          max={max}
+          mode="words"
+        />
+      </div>
+    </div>
+  );
+}
+
+export const StaleWhileCounting: Story = {
+  render: () => <HeavyWordCounter />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Demonstrates the perf posture of the component. The initial value is a pre-seeded 400-sentence body being counted in `words` mode. Because the count runs via `useDeferredValue`, rapid edits to the textarea don't block the input's re-render — the counter reports the last committed count and shows a small inline spinner (matching the current state color) while React catches up.",
+      },
+    },
+  },
+};
+
 export const AllStates: Story = {
   render: () => (
     <div className="flex flex-col gap-3 text-left">
