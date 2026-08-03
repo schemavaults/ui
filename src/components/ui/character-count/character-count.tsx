@@ -1,7 +1,13 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ComponentProps, ReactElement, ReactNode } from "react";
+import {
+  useDeferredValue,
+  useMemo,
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -174,7 +180,15 @@ function CharacterCount({
   role,
   ...props
 }: CharacterCountProps): ReactElement {
-  const used = resolveUsed(value, mode);
+  // Deferring the value lets React skip the count computation when the parent
+  // is in the middle of a burst of urgent updates (e.g. rapid typing into a
+  // large Textarea in word mode, where trim + split is O(n) per keystroke).
+  const deferredValue = useDeferredValue(value);
+  const used = useMemo(
+    () => resolveUsed(deferredValue, mode),
+    [deferredValue, mode],
+  );
+  const isStale = deferredValue !== value;
   const state = resolveState(used, max, warnAtRatio, stateOverride);
   const remaining = max !== undefined ? max - used : undefined;
 
@@ -188,6 +202,7 @@ function CharacterCount({
       data-slot="character-count"
       data-state={state}
       data-mode={mode}
+      data-stale={isStale || undefined}
       role={role ?? "status"}
       aria-live="polite"
       aria-atomic="true"
