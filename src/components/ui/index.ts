@@ -108,6 +108,9 @@ export type * from "./checkbox";
 export * from "./textarea";
 export type * from "./textarea";
 
+export * from "./character-count";
+export type * from "./character-count";
+
 export * from "./prompt-input";
 export type * from "./prompt-input";
 
