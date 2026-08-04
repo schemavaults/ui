@@ -272,7 +272,7 @@ function AgentChatBubble({
       ) : null}
       <div
         className={cn(
-          "flex flex-col gap-1",
+          "flex w-full min-w-0 flex-col gap-1",
           from === "user" ? "items-end" : "items-start",
         )}
       >

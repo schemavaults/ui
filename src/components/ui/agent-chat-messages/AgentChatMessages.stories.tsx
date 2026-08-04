@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "storybook/test";
+import { expect, fn, within } from "storybook/test";
 import {
   type ReactElement,
   useCallback,
@@ -197,6 +197,91 @@ export const Everything: Story = {
     showAnnouncement: true,
     showHIL: true,
     showAvatars: true,
+  },
+};
+
+/* -------------------------------------------------------------- */
+/* Bubble width regression                                        */
+/* -------------------------------------------------------------- */
+
+const CHAT_WIDTH = 520;
+/** Marker class so the play function can grab the colored bubble element. */
+const BUBBLE_PROBE_CLASS = "story-bubble-probe";
+
+function BubbleWidthExample(): ReactElement {
+  return (
+    <div
+      className="h-[480px] rounded-lg border bg-background"
+      style={{ width: CHAT_WIDTH }}
+    >
+      <AgentChatMessages>
+        <AgentChatBubble
+          key="short"
+          from="user"
+          data-testid="short-bubble"
+          bubbleClassName={BUBBLE_PROBE_CLASS}
+        >
+          yeah
+        </AgentChatBubble>
+        <AgentChatBubble
+          key="short-avatar"
+          from="assistant"
+          avatar={<AssistantAvatar />}
+          data-testid="short-avatar-bubble"
+          bubbleClassName={BUBBLE_PROBE_CLASS}
+        >
+          ok
+        </AgentChatBubble>
+        <AgentChatBubble
+          key="long"
+          from="assistant"
+          data-testid="long-bubble"
+          bubbleClassName={BUBBLE_PROBE_CLASS}
+        >
+          This is a much longer assistant message that should wrap against the
+          width of the chat area rather than being force-broken mid-word at the
+          bubble&apos;s own intrinsic width.
+        </AgentChatBubble>
+      </AgentChatMessages>
+    </div>
+  );
+}
+
+/**
+ * Regression coverage: a bubble's `max-w-[80%]` must resolve against the chat
+ * row, not against the bubble's own intrinsic width. When the inner column
+ * wrapper shrink-to-fits, every bubble is capped at 80% of its own text width
+ * and `break-words` splits short words ("yeah" renders as "ye" / "ah").
+ */
+export const BubbleWidths: StoryObj<typeof BubbleWidthExample> = {
+  render: (): ReactElement => <BubbleWidthExample />,
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+
+    const bubbleOf = (testId: string): HTMLElement => {
+      const row = canvas.getByTestId(testId);
+      const bubble = row.querySelector<HTMLElement>(`.${BUBBLE_PROBE_CLASS}`);
+      if (!bubble) throw new Error(`No bubble element found in ${testId}`);
+      return bubble;
+    };
+
+    const lineCount = (el: HTMLElement): number => {
+      const styles = getComputedStyle(el);
+      const inner =
+        el.getBoundingClientRect().height -
+        parseFloat(styles.paddingTop) -
+        parseFloat(styles.paddingBottom);
+      return Math.round(inner / parseFloat(styles.lineHeight));
+    };
+
+    // Short messages keep their natural width and stay on a single line.
+    expect(lineCount(bubbleOf("short-bubble"))).toBe(1);
+    expect(lineCount(bubbleOf("short-avatar-bubble"))).toBe(1);
+
+    // Long messages are capped at 80% of the chat area, not 80% of themselves.
+    const longWidth = bubbleOf("long-bubble").getBoundingClientRect().width;
+    expect(longWidth).toBeGreaterThan(CHAT_WIDTH * 0.6);
+    expect(longWidth).toBeLessThanOrEqual(CHAT_WIDTH * 0.8);
   },
 };
 
