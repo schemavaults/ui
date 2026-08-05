@@ -111,6 +111,9 @@ export type * from "./textarea";
 export * from "./character-count";
 export type * from "./character-count";
 
+export * from "./price-tag";
+export type * from "./price-tag";
+
 export * from "./prompt-input";
 export type * from "./prompt-input";
 
