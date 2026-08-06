@@ -6,6 +6,7 @@ export {
   AnimatePresence,
   domAnimation,
   LazyMotion,
+  Reorder,
   useAnimate,
   useAnimationFrame,
   useTransform,

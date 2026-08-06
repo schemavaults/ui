@@ -33,5 +33,5 @@ export * from "./components/hoc";
 export type * from "./components/hoc";
 
 // Framer Motion Components
-export { m, AnimatePresence } from "./framer-motion";
+export { m, AnimatePresence, Reorder } from "./framer-motion";
 export type * from "./framer-motion";
