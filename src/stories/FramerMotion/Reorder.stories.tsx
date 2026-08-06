@@ -79,7 +79,7 @@ function VerticalReorderDemo(): ReactElement {
 }
 
 const meta = {
-  title: "Framer Motion/Reorder",
+  title: "Components/Reorder",
   component: VerticalReorderDemo,
   parameters: {
     layout: "centered",
