@@ -210,6 +210,9 @@ export type * from "./pagination";
 export * from "./kbd";
 export type * from "./kbd";
 
+export * from "./keyboard-shortcuts-dialog";
+export type * from "./keyboard-shortcuts-dialog";
+
 export * from "./copy-button";
 export type * from "./copy-button";
 
