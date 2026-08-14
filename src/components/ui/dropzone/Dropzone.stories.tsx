@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, waitFor, within } from "storybook/test";
 import { FileImage, FileText, ImagePlus } from "lucide-react";
 import { useState, type ReactElement } from "react";
 
@@ -294,10 +294,23 @@ export const ValidationBehavior: Story = {
     const tooLarge = new File([new Uint8Array(2048)], "big.txt", { type: "text/plain" });
     const wrongType = new File(["png"], "photo.png", { type: "image/png" });
 
-    // Upload one valid + one too-large + one wrong-type in a single go, with
-    // maxFiles=2: acceptedFile passes, tooLarge fails size, wrongType fails
-    // type — none are over the count cap because only 1 slot was consumed.
-    await userEvent.upload(input, [acceptedFile, tooLarge, wrongType]);
+    // Use fireEvent.change directly rather than userEvent.upload — the latter
+    // pre-filters files against the input's `accept` attribute before the
+    // change event fires, which would hide the MIME-type rejection path we
+    // want to exercise here (real drag-and-drops bypass that attribute and
+    // go straight through the component's own validation).
+    const buildFileList = (files: File[]): FileList => {
+      const dt = new DataTransfer();
+      for (const f of files) dt.items.add(f);
+      return dt.files;
+    };
+
+    // maxFiles=2, so: acceptedFile passes, tooLarge fails size, wrongType
+    // fails type — no file trips the count cap because only one slot is
+    // consumed by the single accepted file.
+    fireEvent.change(input, {
+      target: { files: buildFileList([acceptedFile, tooLarge, wrongType]) },
+    });
 
     await waitFor((): void => {
       expect(canvas.getByTestId("accepted-count")).toHaveTextContent("1");
@@ -309,7 +322,9 @@ export const ValidationBehavior: Story = {
     expect(reasons.querySelector('[data-reason="file-invalid-type"]')).not.toBeNull();
 
     // A wholly-rejected drop flips the visual state to `error`.
-    await userEvent.upload(input, [wrongType]);
+    fireEvent.change(input, {
+      target: { files: buildFileList([wrongType]) },
+    });
     await waitFor((): void => {
       expect(dropzone).toHaveAttribute("data-state", "error");
     });
