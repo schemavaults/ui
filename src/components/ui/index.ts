@@ -69,6 +69,9 @@ export type * from "./form";
 export * from "./separator";
 export type * from "./separator";
 
+export * from "./labeled-separator";
+export type * from "./labeled-separator";
+
 export * from "./dropdown-menu";
 export type * from "./dropdown-menu";
 
