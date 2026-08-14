@@ -470,14 +470,7 @@ function Dropzone({
         onChange={handleInputChange}
         tabIndex={-1}
         aria-hidden="true"
-        className={cn(
-          "sr-only",
-          // Keep pointer events off so clicks on the div drive the picker via
-          // the ref, not through native <label>/<input> event bubbling that
-          // fires twice in some browsers.
-          "pointer-events-none",
-          inputClassName,
-        )}
+        className={cn("sr-only", inputClassName)}
       />
     </div>
   );
