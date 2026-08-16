@@ -333,6 +333,9 @@ export type * from "./mark";
 export * from "./http-method-badge";
 export type * from "./http-method-badge";
 
+export * from "./environment-badge";
+export type * from "./environment-badge";
+
 export * from "./browser-frame";
 export type * from "./browser-frame";
 
