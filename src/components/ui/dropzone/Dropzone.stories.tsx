@@ -1,9 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, fireEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, waitFor, within } from "storybook/test";
 import { FileImage, FileText, ImagePlus } from "lucide-react";
 import { useState, type ReactElement } from "react";
 
-import { Dropzone, type DropzoneRejection } from "./dropzone";
+import {
+  Dropzone,
+  type DropzoneProps,
+  type DropzoneRejection,
+} from "./dropzone";
 import {
   dropzoneSizeIds,
   dropzoneVariantIds,
@@ -41,12 +45,24 @@ const meta = {
     accept: { control: { type: "text" } },
     label: { control: { type: "text" } },
     hint: { control: { type: "text" } },
+    // Every callback the Dropzone fires shows up in the Actions panel so the
+    // full drop → validation → accepted/rejected flow is inspectable without
+    // wiring your own logger. The `fn()` spies in `args` below back these,
+    // so play tests can also assert on the call args.
+    onDrop: { action: "onDrop" },
+    onFilesAccepted: { action: "onFilesAccepted" },
+    onFilesRejected: { action: "onFilesRejected" },
+    onClick: { action: "onClick" },
+    onKeyDown: { action: "onKeyDown" },
   },
   args: {
     variant: "default",
     size: "default",
     multiple: false,
     disabled: false,
+    onDrop: fn(),
+    onFilesAccepted: fn(),
+    onFilesRejected: fn(),
   },
   decorators: [
     (Story): ReactElement => (
@@ -128,7 +144,7 @@ export const Large: Story = {
 };
 
 export const AllVariants: Story = {
-  render: (): ReactElement => (
+  render: (args): ReactElement => (
     <div className="flex w-[420px] flex-col gap-4">
       {dropzoneVariantIds.map(
         (variant): ReactElement => (
@@ -137,6 +153,9 @@ export const AllVariants: Story = {
             <Dropzone
               variant={variant}
               hint={`Variant: ${variant}`}
+              onDrop={args.onDrop}
+              onFilesAccepted={args.onFilesAccepted}
+              onFilesRejected={args.onFilesRejected}
             />
           </div>
         ),
@@ -146,13 +165,19 @@ export const AllVariants: Story = {
 };
 
 export const AllSizes: Story = {
-  render: (): ReactElement => (
+  render: (args): ReactElement => (
     <div className="flex w-[420px] flex-col gap-4">
       {dropzoneSizeIds.map(
         (size): ReactElement => (
           <div key={size} className="flex flex-col gap-1">
             <span className="text-xs font-medium text-muted-foreground">{size}</span>
-            <Dropzone size={size} hint={`Size: ${size}`} />
+            <Dropzone
+              size={size}
+              hint={`Size: ${size}`}
+              onDrop={args.onDrop}
+              onFilesAccepted={args.onFilesAccepted}
+              onFilesRejected={args.onFilesRejected}
+            />
           </div>
         ),
       )}
@@ -160,7 +185,16 @@ export const AllSizes: Story = {
   ),
 };
 
-function ControlledExample(): ReactElement {
+type SpyProps = Pick<
+  DropzoneProps,
+  "onDrop" | "onFilesAccepted" | "onFilesRejected"
+>;
+
+function ControlledExample({
+  onDrop,
+  onFilesAccepted,
+  onFilesRejected,
+}: SpyProps): ReactElement {
   const [accepted, setAccepted] = useState<File[]>([]);
   const [rejected, setRejected] = useState<DropzoneRejection[]>([]);
 
@@ -174,9 +208,12 @@ function ControlledExample(): ReactElement {
         accept={["image/*", ".pdf"]}
         hint="Images or PDFs · up to 2 MB each · 5 files max"
         onDrop={(next, rejections): void => {
+          onDrop?.(next, rejections);
           setAccepted((prev): File[] => [...prev, ...next]);
           setRejected(rejections);
         }}
+        onFilesAccepted={onFilesAccepted}
+        onFilesRejected={onFilesRejected}
       />
       {accepted.length > 0 ? (
         <ul
@@ -226,7 +263,13 @@ function ControlledExample(): ReactElement {
 }
 
 export const Controlled: Story = {
-  render: (): ReactElement => <ControlledExample />,
+  render: (args): ReactElement => (
+    <ControlledExample
+      onDrop={args.onDrop}
+      onFilesAccepted={args.onFilesAccepted}
+      onFilesRejected={args.onFilesRejected}
+    />
+  ),
   parameters: {
     docs: {
       description: {
@@ -237,7 +280,11 @@ export const Controlled: Story = {
   },
 };
 
-function ValidationPlayExample(): ReactElement {
+function ValidationPlayExample({
+  onDrop,
+  onFilesAccepted,
+  onFilesRejected,
+}: SpyProps): ReactElement {
   const [accepted, setAccepted] = useState<File[]>([]);
   const [rejected, setRejected] = useState<DropzoneRejection[]>([]);
   return (
@@ -249,9 +296,12 @@ function ValidationPlayExample(): ReactElement {
         maxSize={1024}
         accept={["text/plain"]}
         onDrop={(next, rejections): void => {
+          onDrop?.(next, rejections);
           setAccepted(next);
           setRejected(rejections);
         }}
+        onFilesAccepted={onFilesAccepted}
+        onFilesRejected={onFilesRejected}
       />
       <output data-testid="accepted-count">{accepted.length}</output>
       <output data-testid="rejected-count">{rejected.length}</output>
@@ -269,7 +319,13 @@ function ValidationPlayExample(): ReactElement {
 }
 
 export const ValidationBehavior: Story = {
-  render: (): ReactElement => <ValidationPlayExample />,
+  render: (args): ReactElement => (
+    <ValidationPlayExample
+      onDrop={args.onDrop}
+      onFilesAccepted={args.onFilesAccepted}
+      onFilesRejected={args.onFilesRejected}
+    />
+  ),
   parameters: {
     docs: {
       description: {
@@ -278,7 +334,7 @@ export const ValidationBehavior: Story = {
       },
     },
   },
-  play: async ({ canvasElement }): Promise<void> => {
+  play: async ({ canvasElement, args }): Promise<void> => {
     const canvas = within(canvasElement);
     const dropzone = canvas.getByTestId("dropzone");
     const input = dropzone.querySelector<HTMLInputElement>("input[type='file']");
@@ -321,6 +377,23 @@ export const ValidationBehavior: Story = {
     expect(reasons.querySelector('[data-reason="file-too-large"]')).not.toBeNull();
     expect(reasons.querySelector('[data-reason="file-invalid-type"]')).not.toBeNull();
 
+    // The fn() spies wired in meta.args land in the Actions panel and also
+    // let us assert on what the component fired: onDrop once with the split,
+    // onFilesAccepted once with just the accepted file, and onFilesRejected
+    // once with both rejections. mockClear isn't needed — the runner
+    // reinstalls a fresh Dropzone (and fresh spies) per play test.
+    expect(args.onDrop).toHaveBeenCalledTimes(1);
+    expect(args.onDrop).toHaveBeenLastCalledWith(
+      [acceptedFile],
+      expect.arrayContaining([
+        expect.objectContaining({ file: tooLarge, reason: "file-too-large" }),
+        expect.objectContaining({ file: wrongType, reason: "file-invalid-type" }),
+      ]),
+    );
+    expect(args.onFilesAccepted).toHaveBeenCalledTimes(1);
+    expect(args.onFilesAccepted).toHaveBeenLastCalledWith([acceptedFile]);
+    expect(args.onFilesRejected).toHaveBeenCalledTimes(1);
+
     // A wholly-rejected drop flips the visual state to `error`.
     fireEvent.change(input, {
       target: { files: buildFileList([wrongType]) },
@@ -328,16 +401,25 @@ export const ValidationBehavior: Story = {
     await waitFor((): void => {
       expect(dropzone).toHaveAttribute("data-state", "error");
     });
+
+    // Second drop: another onDrop + onFilesRejected call, but no additional
+    // onFilesAccepted (nothing was accepted this round).
+    expect(args.onDrop).toHaveBeenCalledTimes(2);
+    expect(args.onFilesRejected).toHaveBeenCalledTimes(2);
+    expect(args.onFilesAccepted).toHaveBeenCalledTimes(1);
   },
 };
 
 export const CustomRender: Story = {
-  render: (): ReactElement => (
+  render: (args): ReactElement => (
     <Dropzone
       multiple
       size="lg"
       variant="outline"
       accept="image/*"
+      onDrop={args.onDrop}
+      onFilesAccepted={args.onFilesAccepted}
+      onFilesRejected={args.onFilesRejected}
       render={({ isDragActive, openPicker }): ReactElement => (
         <div className="flex w-full flex-col items-center gap-3">
           <ImagePlus
