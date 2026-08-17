@@ -198,6 +198,9 @@ export type * from "./gauge";
 export * from "./meter";
 export type * from "./meter";
 
+export * from "./message-feedback";
+export type * from "./message-feedback";
+
 export * from "./segmented-bar";
 export type * from "./segmented-bar";
 
