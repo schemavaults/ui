@@ -13,6 +13,15 @@ import {
   Table as TableIcon,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   MultiSelect,
   multiSelectBadgeVariantIds,
@@ -479,6 +488,123 @@ export const InteractionTogglesSelection: Story = {
       const onChange = args.onValueChange as ReturnType<typeof fn>;
       const lastCall = onChange.mock.calls.at(-1);
       expect(lastCall?.[0]).not.toContain("remix");
+    });
+  },
+};
+
+const DIALOG_OPTIONS: readonly MultiSelectOption[] = Array.from(
+  { length: 14 },
+  (_, index): MultiSelectOption => ({
+    value: `resource-${index + 1}`,
+    label: `Resource ${index + 1}`,
+    description: `Long-lived resource number ${index + 1}`,
+  }),
+);
+
+function InsideDialogDemo(): ReactElement {
+  const [value, setValue] = useState<readonly string[]>([]);
+  return (
+    <Dialog defaultOpen>
+      <DialogTrigger asChild>
+        <Button variant="outline">Edit resources</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit resources</DialogTitle>
+          <DialogDescription>
+            The option list must stay scrollable with a mouse wheel or
+            trackpad even though the dialog locks page scrolling.
+          </DialogDescription>
+        </DialogHeader>
+        <MultiSelect
+          options={DIALOG_OPTIONS}
+          value={value}
+          onValueChange={setValue}
+          fullWidth
+          placeholder="Pick one or more resources..."
+          searchPlaceholder="Search resources..."
+          aria-label="Resources"
+        />
+        <p className="text-sm text-muted-foreground">
+          Selected:{" "}
+          <span className="font-medium text-foreground">
+            {value.length === 0 ? "—" : value.join(", ")}
+          </span>
+        </p>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Regression coverage for the dropdown being wheel-dead inside a modal
+ * `Dialog`: the dialog's `react-remove-scroll` layer cancels wheel events
+ * over portalled content, so a non-modal popover could only be scrolled with
+ * the keyboard. A modal popover owns the innermost scroll lock and lets its
+ * own list scroll.
+ */
+export const InsideDialog: Story = {
+  render: () => <InsideDialogDemo />,
+  play: async ({ step }) => {
+    const body = within(document.body);
+    const trigger = await body.findByRole("combobox", { name: /resources/i });
+
+    await step("Open the dropdown inside the dialog", async () => {
+      await userEvent.click(trigger);
+    });
+
+    // cmdk renders the scroll container (`[cmdk-list]`) as the listbox itself.
+    const list = await waitFor(() => body.findByRole("listbox"));
+
+    await waitFor(() => {
+      expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+    });
+
+    await step("Wheel events over the list are not cancelled", async () => {
+      const wheelEvent = new WheelEvent("wheel", {
+        bubbles: true,
+        cancelable: true,
+        deltaY: 120,
+      });
+      list.dispatchEvent(wheelEvent);
+      expect(wheelEvent.defaultPrevented).toBe(false);
+    });
+
+    await step("The list still scrolls programmatically", async () => {
+      list.scrollTop = 120;
+      await waitFor(() => {
+        expect(list.scrollTop).toBeGreaterThan(0);
+      });
+    });
+
+    await step("Typing in the search input still filters", async () => {
+      const search = await body.findByPlaceholderText(/search resources/i);
+      await userEvent.type(search, "Resource 12");
+      await waitFor(() => {
+        const options = within(list).getAllByRole("option");
+        expect(options).toHaveLength(1);
+      });
+      await userEvent.clear(search);
+    });
+
+    await step("Clicking an option still toggles selection", async () => {
+      const option = await within(list).findByRole("option", {
+        name: /resource 3\b/i,
+      });
+      await userEvent.click(option);
+      await waitFor(() => {
+        expect(
+          body.getByText(/resource-3/),
+        ).toBeInTheDocument();
+      });
+    });
+
+    await step("Escape closes the popover but not the dialog", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => {
+        expect(body.queryByRole("listbox")).toBeNull();
+      });
+      expect(body.getByRole("dialog")).toBeInTheDocument();
     });
   },
 };

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useState, type ReactElement } from "react";
 import {
   Box,
@@ -12,6 +13,15 @@ import {
   Table as TableIcon,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Combobox,
   comboboxSizeIds,
@@ -326,4 +336,82 @@ function UncontrolledDemo(): ReactElement {
 
 export const Uncontrolled: Story = {
   render: () => <UncontrolledDemo />,
+};
+
+const DIALOG_OPTIONS: readonly ComboboxOption[] = Array.from(
+  { length: 14 },
+  (_, index): ComboboxOption => ({
+    value: `region-${index + 1}`,
+    label: `Region ${index + 1}`,
+    description: `Availability zone ${index + 1}`,
+  }),
+);
+
+function InsideDialogDemo(): ReactElement {
+  return (
+    <Dialog defaultOpen>
+      <DialogTrigger asChild>
+        <Button variant="outline">Choose a region</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Choose a region</DialogTitle>
+          <DialogDescription>
+            The option list must stay scrollable with a mouse wheel or
+            trackpad even though the dialog locks page scrolling.
+          </DialogDescription>
+        </DialogHeader>
+        <Combobox
+          options={DIALOG_OPTIONS}
+          fullWidth
+          placeholder="Pick a region..."
+          searchPlaceholder="Search regions..."
+          aria-label="Region"
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Regression coverage for the dropdown being wheel-dead inside a modal
+ * `Dialog`. A non-modal popover portals outside the dialog's
+ * `react-remove-scroll` shard, so wheel events over the list were cancelled;
+ * the modal popover owns the innermost scroll lock instead.
+ */
+export const InsideDialog: Story = {
+  render: () => <InsideDialogDemo />,
+  play: async ({ step }) => {
+    const body = within(document.body);
+    const trigger = await body.findByRole("combobox", { name: /region/i });
+
+    await step("Open the dropdown inside the dialog", async () => {
+      await userEvent.click(trigger);
+    });
+
+    // cmdk renders the scroll container (`[cmdk-list]`) as the listbox itself.
+    const list = await waitFor(() => body.findByRole("listbox"));
+
+    await waitFor(() => {
+      expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+    });
+
+    await step("Wheel events over the list are not cancelled", async () => {
+      const wheelEvent = new WheelEvent("wheel", {
+        bubbles: true,
+        cancelable: true,
+        deltaY: 120,
+      });
+      list.dispatchEvent(wheelEvent);
+      expect(wheelEvent.defaultPrevented).toBe(false);
+    });
+
+    await step("Escape closes the popover but not the dialog", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => {
+        expect(body.queryByRole("listbox")).toBeNull();
+      });
+      expect(body.getByRole("dialog")).toBeInTheDocument();
+    });
+  },
 };

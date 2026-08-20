@@ -90,6 +90,20 @@ export interface TimePickerProps extends VariantProps<typeof triggerVariants> {
   formatValue?: (value: TimeValue) => string;
   /** Alignment of the popover relative to the trigger. Defaults to "start". */
   align?: "start" | "center" | "end";
+  /**
+   * Render the panel as a modal popover. Defaults to `true`, matching the
+   * behaviour of Radix `Select`.
+   *
+   * A modal popover installs its own scroll lock as the innermost layer, which
+   * is what keeps the hour/minute/second columns wheel/trackpad-scrollable
+   * while the `TimePicker` sits inside a modal `Dialog`. With `modal={false}` the
+   * dialog's `react-remove-scroll` shard swallows wheel events over the
+   * portalled content, so it can only be scrolled with the keyboard.
+   *
+   * While open, a modal popover locks page scroll and the first outside click
+   * only dismisses it.
+   */
+  modal?: boolean;
   /** Controlled popover open state. */
   open?: boolean;
   /** Called when the popover open state changes. */
@@ -214,6 +228,7 @@ function TimePicker(props: TimePickerProps): ReactElement {
     secondStep = 1,
     formatValue,
     align = "start",
+    modal = true,
     open,
     onOpenChange,
     id,
@@ -327,7 +342,7 @@ function TimePicker(props: TimePickerProps): ReactElement {
       : undefined;
 
   return (
-    <Popover open={isOpen} onOpenChange={setOpen}>
+    <Popover modal={modal} open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           id={id}

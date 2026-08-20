@@ -97,6 +97,20 @@ export interface ComboboxProps
   clearable?: boolean;
   disabled?: boolean;
   align?: "start" | "center" | "end";
+  /**
+   * Render the dropdown as a modal popover. Defaults to `true`, matching the
+   * behaviour of Radix `Select`.
+   *
+   * A modal popover installs its own scroll lock as the innermost layer, which
+   * is what makes the option list wheel/trackpad-scrollable while the
+   * `Combobox` sits inside a modal `Dialog`. With `modal={false}` the
+   * dialog's `react-remove-scroll` shard swallows wheel events over the
+   * portalled content, so it can only be scrolled with the keyboard.
+   *
+   * While open, a modal popover locks page scroll and the first outside click
+   * only dismisses it.
+   */
+  modal?: boolean;
   ref?: Ref<HTMLButtonElement>;
 }
 
@@ -117,6 +131,7 @@ export function Combobox({
   clearable = false,
   disabled = false,
   align = "start",
+  modal = true,
   ref,
   ...buttonProps
 }: ComboboxProps): ReactElement {
@@ -164,7 +179,7 @@ export function Combobox({
     clearable && !disabled && selectedOption !== undefined;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover modal={modal} open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           ref={ref}
