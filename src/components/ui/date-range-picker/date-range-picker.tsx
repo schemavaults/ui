@@ -43,6 +43,15 @@ export interface DateRangePickerProps
   formatDate?: (date: Date) => string;
   /** Alignment of the popover relative to the trigger. Defaults to "start". */
   align?: "start" | "center" | "end";
+  /**
+   * Render the calendar as a modal popover. Defaults to `false`.
+   *
+   * The calendar grid has no scrollable region, so unlike `MultiSelect`,
+   * `Combobox`, and `TimePicker` it is unaffected by the wheel-scroll lock a
+   * modal `Dialog` applies to portalled content. Pass `modal` if you still
+   * want the popover to lock page scroll and trap focus while open.
+   */
+  modal?: boolean;
   /** Controlled popover open state. */
   open?: boolean;
   /** Called when the popover open state changes. */
@@ -77,6 +86,7 @@ function DateRangePicker(props: DateRangePickerProps): ReactElement {
     disabledDates,
     formatDate,
     align = "start",
+    modal = false,
     open,
     onOpenChange,
     id,
@@ -119,7 +129,7 @@ function DateRangePicker(props: DateRangePickerProps): ReactElement {
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={setOpen}>
+    <Popover modal={modal} open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           id={id}
