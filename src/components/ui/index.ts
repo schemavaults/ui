@@ -31,6 +31,9 @@ export type * from "./themed-page-background";
 export * from "./button";
 export type * from "./button";
 
+export * from "./button-group";
+export type * from "./button-group";
+
 export * from "./input";
 export type * from "./input";
 
