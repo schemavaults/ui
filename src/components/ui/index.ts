@@ -34,6 +34,9 @@ export type * from "./button";
 export * from "./input";
 export type * from "./input";
 
+export * from "./input-group";
+export type * from "./input-group";
+
 export * from "./password-input";
 export type * from "./password-input";
 
