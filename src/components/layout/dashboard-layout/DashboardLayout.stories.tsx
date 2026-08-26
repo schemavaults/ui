@@ -251,6 +251,211 @@ export const WithAdminOnlyLinks: Story = {
   } satisfies Partial<DashboardLayoutProps>,
 };
 
+// --- Menu rhythm: ungrouped and grouped links must match ----------------
+//
+// The sidebar menu <nav> is a flex column with its own scrollbar. Flex
+// children shrink by default, so before this story existed, a menu long
+// enough to overflow squashed its ungrouped rows (they are direct children of
+// the <nav>) while leaving grouped rows alone (they sit one level deeper,
+// inside their group's <ul>). Plain links rendered ~18px tall next to 40px
+// grouped links. This story mixes both kinds and supplies enough items to
+// overflow any reasonable viewport, and its play() test measures the result.
+
+const rhythmSidebarItems = [
+  ...Array.from({ length: 9 }).map((_, index) => ({
+    type: "dashboard-sidebar-item-definition" as const,
+    title: `Plain Link ${index + 1}`,
+    url: `/rhythm/plain-${index + 1}`,
+    icon: ({ className }: { className?: string }): ReactElement => (
+      <Tornado className={className} />
+    ),
+  })),
+  {
+    type: "dashboard-sidebar-item-group",
+    title: "First Group",
+    items: Array.from({ length: 6 }).map((_, index) => ({
+      type: "dashboard-sidebar-item-definition" as const,
+      title: `Grouped Link ${index + 1}`,
+      url: `/rhythm/grouped-${index + 1}`,
+      icon: ({ className }: { className?: string }): ReactElement => (
+        <AlarmClock className={className} />
+      ),
+    })),
+  },
+  ...Array.from({ length: 6 }).map((_, index) => ({
+    type: "dashboard-sidebar-item-definition" as const,
+    title: `Trailing Link ${index + 1}`,
+    url: `/rhythm/trailing-${index + 1}`,
+    icon: ({ className }: { className?: string }): ReactElement => (
+      <Plane className={className} />
+    ),
+  })),
+  {
+    type: "dashboard-sidebar-item-group",
+    title: "Second Group",
+    items: Array.from({ length: 6 }).map((_, index) => ({
+      type: "dashboard-sidebar-item-definition" as const,
+      title: `Second Grouped Link ${index + 1}`,
+      url: `/rhythm/second-grouped-${index + 1}`,
+      icon: ({ className }: { className?: string }): ReactElement => (
+        <Users className={className} />
+      ),
+    })),
+  },
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+export const MixedGroupedAndUngroupedLinks: Story = {
+  // A regression test for menu spacing rather than a showcase, and it needs a
+  // real viewport height to overflow. Keep it out of the autodocs page.
+  tags: ["!autodocs"],
+  args: {
+    sidebarItems: rhythmSidebarItems,
+    topBarTitle: "Menu rhythm",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement }): Promise<void> => {
+    const findRow = (href: string): HTMLLIElement | null => {
+      const link = document.querySelector<HTMLElement>(`a[href="${href}"]`);
+      return link ? link.closest("li") : null;
+    };
+
+    const findGroupHeading = (title: string): HTMLElement | null =>
+      Array.from(document.querySelectorAll<HTMLElement>("label")).find(
+        (el): boolean => el.textContent === title,
+      ) ?? null;
+
+    const sidebarTrigger = (): HTMLElement | null =>
+      canvasElement.querySelector<HTMLElement>(
+        "#dashboard-layout-main-content-header button",
+      );
+
+    // On a narrow viewport the sidebar is a closed Sheet, so no item links are
+    // mounted yet -- open it via the header trigger first.
+    if (!findRow("/rhythm/plain-1")) {
+      const trigger = sidebarTrigger();
+      if (trigger) {
+        await userEvent.click(trigger);
+      }
+    }
+
+    await waitFor((): void => {
+      expect(findRow("/rhythm/plain-1")).not.toBeNull();
+      expect(findRow("/rhythm/grouped-1")).not.toBeNull();
+    });
+
+    const allRowHrefs: string[] = rhythmSidebarItems.flatMap(
+      (entry): string[] =>
+        entry.type === "dashboard-sidebar-item-group"
+          ? entry.items.map((item): string => item.url)
+          : [entry.url],
+    );
+
+    // Every menu row -- ungrouped or grouped -- must be exactly one row tall.
+    // This is the assertion that fails if the flex-shrink guard regresses:
+    // the menu is deliberately long enough to overflow, and before the fix
+    // the ungrouped rows collapsed to ~18px while grouped rows held at 40px.
+    const assertUniformRowHeights = (): void => {
+      const heights: number[] = allRowHrefs.map((href): number => {
+        const row: HTMLLIElement | null = findRow(href);
+        expect(row).not.toBeNull();
+        return Math.round((row as HTMLLIElement).getBoundingClientRect().height);
+      });
+      const uniqueHeights: number[] = Array.from(new Set(heights));
+      expect(uniqueHeights).toHaveLength(1);
+      // 2.5rem === sidebar_menu_item_height.
+      expect(uniqueHeights[0]).toBe(40);
+    };
+
+    // Rows inside a single list are spaced by the shared rhythm token
+    // (gap-2 === 8px), whether that list is the ungrouped run or a group.
+    const gapBetween = (firstHref: string, secondHref: string): number => {
+      const first = findRow(firstHref) as HTMLLIElement;
+      const second = findRow(secondHref) as HTMLLIElement;
+      return Math.round(
+        second.getBoundingClientRect().top -
+          first.getBoundingClientRect().bottom,
+      );
+    };
+
+    const assertUniformGaps = (): void => {
+      const ungroupedGap: number = gapBetween(
+        "/rhythm/plain-1",
+        "/rhythm/plain-2",
+      );
+      const groupedGap: number = gapBetween(
+        "/rhythm/grouped-1",
+        "/rhythm/grouped-2",
+      );
+      expect(ungroupedGap).toBe(8);
+      expect(groupedGap).toBe(ungroupedGap);
+    };
+
+    // The collapsed sidebar (the desktop default) hides labels but still
+    // renders every row, so the rhythm has to hold here too.
+    assertUniformRowHeights();
+    assertUniformGaps();
+
+    // Ungrouped rows belong to a real <ul>, exactly like grouped rows -- a
+    // bare <li> child of the <nav> is invalid markup and was the reason the
+    // two paths drew their spacing from two different gap declarations.
+    const plainRow = findRow("/rhythm/plain-1") as HTMLLIElement;
+    expect(plainRow.parentElement?.tagName).toBe("UL");
+
+    // Expand the sidebar so the group headings and item titles mount. On
+    // desktop the sidebar starts collapsed (open === false), so the labels are
+    // not in the DOM until the trigger is clicked.
+    if (!findGroupHeading("First Group")) {
+      const trigger = sidebarTrigger();
+      if (trigger) {
+        await userEvent.click(trigger);
+      }
+    }
+
+    const groupHeading: HTMLElement = await waitFor((): HTMLElement => {
+      const heading = findGroupHeading("First Group");
+      if (!heading) {
+        throw new Error("Group heading has not rendered yet");
+      }
+      return heading;
+    });
+
+    // Expanding must not disturb the rhythm either.
+    assertUniformRowHeights();
+    assertUniformGaps();
+
+    // A group heading sits on the same left edge as the item titles beneath
+    // it, so the expanded menu reads as one column. Previously the heading was
+    // inset by `mx-2` (8px) while titles started at the icon-column width
+    // (4rem), lining the heading up with neither the icons nor the titles.
+    const groupedRowLink = document.querySelector<HTMLElement>(
+      'a[href="/rhythm/grouped-1"]',
+    ) as HTMLElement;
+
+    // Measure where the heading's *text* is painted, not the <label> box: the
+    // heading is a full-width block and its inset is padding, which does not
+    // move the element's border box.
+    const renderedTextLeft = (el: HTMLElement): number => {
+      const range: Range = document.createRange();
+      range.selectNodeContents(el);
+      return range.getBoundingClientRect().left;
+    };
+
+    await waitFor((): void => {
+      const titleSpan: HTMLElement | null =
+        groupedRowLink.querySelector<HTMLElement>("span");
+      if (!titleSpan) {
+        throw new Error("Item title has not rendered yet");
+      }
+      expect(
+        Math.abs(
+          Math.round(
+            renderedTextLeft(titleSpan) - renderedTextLeft(groupHeading),
+          ),
+        ),
+      ).toBeLessThanOrEqual(1);
+    });
+  },
+};
+
 // --- Full-screen Stepper page content ----------------------------------
 
 interface FullScreenStepperState extends BaseStepperState {
