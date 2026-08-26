@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useState,
+  type ComponentType,
   type ReactElement,
   type ReactNode,
 } from "react";
@@ -14,6 +15,50 @@ import DashboardLayout, { type DashboardLayoutProps } from "./dashboard-layout";
 import LoremIpsumText from "@/stories/LoremImpsumText";
 import { PageColumnContainer } from "@/components/layout/page-column-container";
 import { AlarmClock, Lock, Plane, Share2, Tornado, Users } from "lucide-react";
+import {
+  Activity,
+  Archive,
+  BarChart3,
+  Bell,
+  Bookmark,
+  BookOpen,
+  Calendar,
+  Cloud,
+  Clock,
+  CreditCard,
+  Database,
+  FileCode,
+  FileText,
+  Flag,
+  Folder,
+  GitBranch,
+  Globe,
+  Inbox,
+  Key,
+  LayoutDashboard,
+  LifeBuoy,
+  LineChart,
+  Mail,
+  Package,
+  Palette,
+  PieChart,
+  Plug,
+  Puzzle,
+  Receipt,
+  Search,
+  Server,
+  Shield,
+  ShoppingCart,
+  SlidersHorizontal,
+  Tag,
+  Terminal,
+  Trash2,
+  TrendingUp,
+  Truck,
+  UserPlus,
+  Video,
+  Webhook,
+} from "lucide-react";
 import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
 import {
   Button,
@@ -34,7 +79,11 @@ import { useToast } from "@/components/hooks/use-toast";
 import { AnimatePresence, m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
-import type { DashboardSidebarItemsAndGroupsDefinitions } from "./dashboard-sidebar";
+import type {
+  DashboardSidebarItemDefinition,
+  DashboardSidebarItemGroupDefinition,
+  DashboardSidebarItemsAndGroupsDefinitions,
+} from "./dashboard-sidebar";
 import type {
   CustomizableDashboardLayoutComponent,
   ICustomizableDashboardLayoutComponentProps,
@@ -248,6 +297,143 @@ export const WithAdminOnlyLinks: Story = {
         ],
       },
     ],
+  } satisfies Partial<DashboardLayoutProps>,
+};
+
+// --- Many links: the case where flex-shrink used to bite ---------------
+//
+// A realistic, product-sized menu: 46 links spread across ungrouped runs and
+// eight groups, comfortably taller than any viewport. This is the shape that
+// exposed the original bug -- ungrouped rows were direct children of the
+// scrolling menu <nav>, so once the menu overflowed they were squashed to
+// their text height (~18px) while grouped rows, nested one level deeper in
+// their group's <ul>, held their full 2.5rem. Scroll the sidebar and toggle it
+// collapsed/expanded: every row is the same height and every gap is the same
+// 8px, whichever kind of link it is.
+//
+// The assertions that lock this in live in MixedGroupedAndUngroupedLinks
+// below; this story is here to be looked at.
+
+type SidebarIconSource = ComponentType<{ className?: string }>;
+
+function manyLinksItem(
+  title: string,
+  IconComponent: SidebarIconSource,
+): DashboardSidebarItemDefinition {
+  const slug: string = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  return {
+    type: "dashboard-sidebar-item-definition",
+    title,
+    url: `/many-links/${slug}`,
+    icon: ({ className }): ReactElement => (
+      <IconComponent className={className} />
+    ),
+  };
+}
+
+function manyLinksGroup(
+  title: string,
+  items: readonly DashboardSidebarItemDefinition[],
+  adminOnly: boolean = false,
+): DashboardSidebarItemGroupDefinition {
+  return {
+    type: "dashboard-sidebar-item-group",
+    title,
+    items,
+    adminOnly,
+  };
+}
+
+const manyLinksSidebarItems = [
+  // A run of ungrouped links, straight off the top of the menu.
+  manyLinksItem("Overview", LayoutDashboard),
+  manyLinksItem("Search", Search),
+  manyLinksItem("Inbox", Inbox),
+  manyLinksItem("Notifications", Bell),
+
+  manyLinksGroup("Analytics", [
+    manyLinksItem("Reports", BarChart3),
+    manyLinksItem("Trends", LineChart),
+    manyLinksItem("Segments", PieChart),
+    manyLinksItem("Funnels", TrendingUp),
+    manyLinksItem("Realtime", Activity),
+  ]),
+
+  manyLinksGroup("Content", [
+    manyLinksItem("Pages", FileText),
+    manyLinksItem("Media", Video),
+    manyLinksItem("Snippets", FileCode),
+    manyLinksItem("Collections", Folder),
+    manyLinksItem("Saved", Bookmark),
+  ]),
+
+  // A second ungrouped run, this time sandwiched between two groups -- the
+  // arrangement that made the old spacing mismatch most obvious.
+  manyLinksItem("Calendar", Calendar),
+  manyLinksItem("Schedule", Clock),
+  manyLinksItem("Tasks", Flag),
+
+  manyLinksGroup("Commerce", [
+    manyLinksItem("Orders", ShoppingCart),
+    manyLinksItem("Payments", CreditCard),
+    manyLinksItem("Products", Package),
+    manyLinksItem("Invoices", Receipt),
+    manyLinksItem("Discounts", Tag),
+    manyLinksItem("Shipping", Truck),
+  ]),
+
+  manyLinksGroup("Team", [
+    manyLinksItem("Members", Users),
+    manyLinksItem("Invitations", UserPlus),
+    manyLinksItem("Roles", Shield),
+    manyLinksItem("API Keys", Key),
+  ]),
+
+  manyLinksGroup("Integrations", [
+    manyLinksItem("Email", Mail),
+    manyLinksItem("Webhooks", Webhook),
+    manyLinksItem("Plugins", Plug),
+    manyLinksItem("Extensions", Puzzle),
+    manyLinksItem("Domains", Globe),
+  ]),
+
+  manyLinksGroup("Developer", [
+    manyLinksItem("Database", Database),
+    manyLinksItem("Servers", Server),
+    manyLinksItem("Storage", Cloud),
+    manyLinksItem("Console", Terminal),
+    manyLinksItem("Deployments", GitBranch),
+  ]),
+
+  // A third ungrouped run, near the bottom of a menu that is already
+  // scrolling.
+  manyLinksItem("Preferences", SlidersHorizontal),
+  manyLinksItem("Appearance", Palette),
+  manyLinksItem("Documentation", BookOpen),
+
+  manyLinksGroup("Support", [
+    manyLinksItem("Help Center", LifeBuoy),
+    manyLinksItem("Archive", Archive),
+  ]),
+
+  // Admin groups render in red, so this also shows that the shared rhythm
+  // holds for a group with its own item styling.
+  manyLinksGroup(
+    "Admin",
+    [
+      manyLinksItem("Audit Log", Lock),
+      manyLinksItem("Feature Flags", Flag),
+      manyLinksItem("Purge Data", Trash2),
+      manyLinksItem("Archived Orgs", Archive),
+    ],
+    true,
+  ),
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+export const ManySidebarLinks: Story = {
+  args: {
+    sidebarItems: manyLinksSidebarItems,
+    topBarTitle: "Many links",
   } satisfies Partial<DashboardLayoutProps>,
 };
 
