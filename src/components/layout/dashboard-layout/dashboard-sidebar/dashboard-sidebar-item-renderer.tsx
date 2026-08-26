@@ -80,9 +80,23 @@ export function DashboardSidebarItemRenderer({
   return (
     <m.li
       key={item.title}
+      // `layout` keeps a row's position/size animated while the sidebar
+      // expands and collapses, matching the group wrapper and group <ul>,
+      // which have always had it. Without it, ungrouped rows snapped into
+      // place while grouped rows glided.
+      layout
       className={cn(
         "w-full",
         sizes.sidebar_menu_item_height_classname,
+        // The menu <nav> is a flex column with a definite height (it grows
+        // inside an h-screen sidebar) and its own scrollbar. Flex children
+        // shrink by default, so once the menu overflowed, rows squashed
+        // below their configured height instead of scrolling — and because
+        // grouped rows sit one level deeper, inside their group's <ul>, only
+        // the ungrouped rows collapsed. That is the "different spacing"
+        // between plain and grouped links. Opt out of shrinking, like the
+        // sidebar header and footer already do.
+        "flex-shrink-0",
       )}
     >
       <Tooltip>
@@ -93,7 +107,9 @@ export function DashboardSidebarItemRenderer({
               "flex flex-row flex-nowrap",
               "justify-start items-center",
               "w-full h-full",
-              "hover:bg-gray-200",
+              // Theme token rather than a hardcoded gray: bg-gray-200 was
+              // near-invisible against a dark background.
+              "hover:bg-accent transition-colors",
             )}
             onClick={(): void => {
               if (debug) {

@@ -37,6 +37,10 @@ export function DashboardSidebarItemGroupRenderer({
         "w-full",
         "flex flex-col flex-nowrap",
         "items-start justify-start",
+        // The menu <nav> is a scrolling flex column, so its children shrink
+        // by default once the menu overflows. Keep the group at its natural
+        // height and let the <nav> scroll instead.
+        "flex-shrink-0",
       )}
       layout
     >
@@ -87,7 +91,17 @@ export function DashboardSidebarItemGroupRenderer({
           >
             <Label
               htmlFor={groupItemsContainerId}
-              className={cn("font-bold text-nowrap", sizes.sidebar_menu_item_x_margin_classname)}
+              className={cn("font-bold text-nowrap", "block")}
+              // Align the group heading with the item titles underneath it:
+              // each item renders its icon inside a box exactly
+              // `desktop_collapsed_width` wide, so its title starts at that
+              // offset. Deriving the inset from the same value keeps heading
+              // and titles on one left edge instead of the old `mx-2`, which
+              // lined up with neither the icons nor the titles.
+              style={{
+                paddingLeft: sizes.desktop_collapsed_width,
+                paddingRight: "0.5rem",
+              }}
             >
               {groupTitle}
             </Label>
@@ -104,7 +118,7 @@ export function DashboardSidebarItemGroupRenderer({
           className={cn(
             "w-full flex flex-col",
             "items-start justify-start",
-            sizes.sidebar_menu_item_gap_classname
+            sizes.sidebar_menu_item_gap_classname,
           )}
         >
           {group.items.map(

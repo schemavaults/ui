@@ -15,9 +15,32 @@ export interface DashboardLayoutSidebarSizing {
   content_container_desktop_sidebar_closed_left_classname: string;
   sidebar_menu_item_height: string;
   sidebar_menu_item_height_classname: string;
+  /**
+   * Space, in pixels, between a group's label and the first item beneath it.
+   *
+   * This is a raw number rather than a Tailwind class because it is animated
+   * by Framer Motion as the sidebar expands and collapses (the label's height
+   * and padding animate to 0 on collapse), and Framer needs a numeric target.
+   *
+   * Keep it equal to `sidebar_menu_item_gap_classname` expressed in pixels —
+   * the default `gap-2` is 0.5rem, i.e. 8px. A mismatch is exactly what made
+   * grouped items sit on a different vertical rhythm than ungrouped ones.
+   */
   sidebar_expanded_menu_group_label_bottom_padding: number;
   sidebar_and_header_z_index_classname: string;
+  /**
+   * The single vertical rhythm for the sidebar menu. Applied to every list of
+   * menu items — the ungrouped run at the top level and each group's own list
+   * — so both paths space their rows identically.
+   */
   sidebar_menu_item_gap_classname: string;
+  /**
+   * @deprecated No longer read by any sidebar component. Group labels are now
+   * aligned to the icon column (`desktop_collapsed_width`) so that a group
+   * heading and the item titles below it share a left edge; menu item rows
+   * themselves are full-bleed so their hover state spans the sidebar. Retained
+   * so that consumers passing a complete `sizing` object keep type-checking.
+   */
   sidebar_menu_item_x_margin_classname: string;
 }
 
@@ -38,7 +61,9 @@ export const DEFAULT_DASHBOARD_SIDEBAR_SIZE = {
   content_container_desktop_sidebar_closed_left_classname: "md:left-[4rem]",
   sidebar_menu_item_height: "2.5rem",
   sidebar_menu_item_height_classname: "h-[2.5rem]",
-  sidebar_expanded_menu_group_label_bottom_padding: 4,
+  // 8px === gap-2 === sidebar_menu_item_gap_classname. See the doc comment on
+  // the interface field before changing this.
+  sidebar_expanded_menu_group_label_bottom_padding: 8,
   sidebar_and_header_z_index_classname: "z-40",
   sidebar_menu_item_gap_classname: "gap-2",
   sidebar_menu_item_x_margin_classname: "mx-2",
