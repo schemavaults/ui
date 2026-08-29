@@ -1,39 +1,31 @@
 "use client";
 
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 import type { ComponentProps, ReactElement } from "react";
 
-export const avatarSizeIds = ["xs", "sm", "default", "lg", "xl"] as const satisfies string[];
-export type AvatarSizeId = (typeof avatarSizeIds)[number];
+import { useAvatarGroupContext } from "./avatar-group-context";
+import { avatarVariants } from "./avatar-variants";
 
-export const avatarShapeIds = ["circle", "square"] as const satisfies string[];
-export type AvatarShapeId = (typeof avatarShapeIds)[number];
+export {
+  avatarVariants,
+  avatarSizeIds,
+  avatarShapeIds,
+  avatarGroupVariants,
+  avatarGroupSpacingIds,
+} from "./avatar-variants";
+export type {
+  AvatarSizeId,
+  AvatarShapeId,
+  AvatarGroupSpacingId,
+} from "./avatar-variants";
 
-export const avatarVariants = cva(
-  "relative flex shrink-0 overflow-hidden",
-  {
-    variants: {
-      size: {
-        xs: "h-6 w-6 text-xs",
-        sm: "h-8 w-8 text-xs",
-        default: "h-10 w-10 text-sm",
-        lg: "h-12 w-12 text-base",
-        xl: "h-16 w-16 text-lg",
-      } satisfies Record<AvatarSizeId, string>,
-      shape: {
-        circle: "rounded-full",
-        square: "rounded-md",
-      } satisfies Record<AvatarShapeId, string>,
-    },
-    defaultVariants: {
-      size: "default",
-      shape: "circle",
-    },
-  },
-);
+// Re-exported so that `AvatarGroup` keeps resolving from `./avatar` for any
+// consumer that deep-imports this module directly.
+export { AvatarGroup } from "./avatar-group";
+export type { AvatarGroupProps } from "./avatar-group";
 
 export interface AvatarProps
   extends ComponentProps<typeof AvatarPrimitive.Root>,
@@ -45,9 +37,19 @@ function Avatar({
   shape,
   ...props
 }: AvatarProps): ReactElement {
+  // Inherit sizing from a surrounding <AvatarGroup> unless this avatar was
+  // given an explicit size/shape of its own.
+  const group = useAvatarGroupContext();
+
   return (
     <AvatarPrimitive.Root
-      className={cn(avatarVariants({ size, shape, className }))}
+      className={cn(
+        avatarVariants({
+          size: size ?? group?.size,
+          shape: shape ?? group?.shape,
+          className,
+        }),
+      )}
       {...props}
     />
   );
@@ -86,41 +88,4 @@ function AvatarFallback({
 }
 AvatarFallback.displayName = "AvatarFallback";
 
-export interface AvatarGroupProps extends ComponentProps<"div"> {
-  /** Maximum number of avatars to show before the +N overflow */
-  max?: number;
-}
-
-function AvatarGroup({
-  className,
-  max,
-  children,
-  ...props
-}: AvatarGroupProps): ReactElement {
-  const childArray = Array.isArray(children) ? children : [children];
-  const visibleChildren = max ? childArray.slice(0, max) : childArray;
-  const overflowCount = max ? childArray.length - max : 0;
-
-  return (
-    <div
-      className={cn("flex -space-x-3", className)}
-      {...props}
-    >
-      {visibleChildren.map((child, index) => (
-        <div key={index} className="ring-2 ring-background rounded-full">
-          {child}
-        </div>
-      ))}
-      {overflowCount > 0 && (
-        <div className="ring-2 ring-background rounded-full">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
-            +{overflowCount}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-AvatarGroup.displayName = "AvatarGroup";
-
-export { Avatar, AvatarImage, AvatarFallback, AvatarGroup };
+export { Avatar, AvatarImage, AvatarFallback };

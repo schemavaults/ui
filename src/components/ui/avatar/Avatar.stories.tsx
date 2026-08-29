@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactElement } from "react";
 
-import { Avatar, AvatarImage, AvatarFallback, AvatarGroup, avatarSizeIds, avatarShapeIds } from "./avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "./avatar";
+import { avatarSizeIds, avatarShapeIds } from "./avatar-variants";
 
 // Sample image within storybook-assets/ folder for demo purposes
 const avatarImage: string = "/media/example_images/avatar-placeholder.svg";
@@ -129,54 +130,4 @@ export const DestructiveFallback: Story = {
   ),
 };
 
-// Avatar group showing multiple users
-function AvatarGroupExample(): ReactElement {
-  const users = [
-    { initials: "AB", color: "bg-primary text-primary-foreground" },
-    { initials: "CD", color: "bg-destructive text-white" },
-    { initials: "EF", color: "bg-secondary text-secondary-foreground" },
-    { initials: "GH", color: "bg-accent text-accent-foreground" },
-    { initials: "IJ", color: "bg-muted text-muted-foreground" },
-  ];
-
-  return (
-    <AvatarGroup>
-      {users.map((user) => (
-        <Avatar key={user.initials}>
-          <AvatarFallback className={user.color}>{user.initials}</AvatarFallback>
-        </Avatar>
-      ))}
-    </AvatarGroup>
-  );
-}
-
-export const Group: Story = {
-  render: (): ReactElement => <AvatarGroupExample />,
-};
-
-// Avatar group with max limit and overflow indicator
-function AvatarGroupMaxExample(): ReactElement {
-  const users = [
-    { initials: "AB", color: "bg-primary text-primary-foreground" },
-    { initials: "CD", color: "bg-destructive text-white" },
-    { initials: "EF", color: "bg-secondary text-secondary-foreground" },
-    { initials: "GH", color: "bg-accent text-accent-foreground" },
-    { initials: "IJ", color: "bg-muted text-muted-foreground" },
-    { initials: "KL", color: "bg-primary text-primary-foreground" },
-    { initials: "MN", color: "bg-destructive text-white" },
-  ];
-
-  return (
-    <AvatarGroup max={3}>
-      {users.map((user) => (
-        <Avatar key={user.initials}>
-          <AvatarFallback className={user.color}>{user.initials}</AvatarFallback>
-        </Avatar>
-      ))}
-    </AvatarGroup>
-  );
-}
-
-export const GroupWithMax: Story = {
-  render: (): ReactElement => <AvatarGroupMaxExample />,
-};
+// NOTE: `AvatarGroup` now has its own story file — see `AvatarGroup.stories.tsx`.
