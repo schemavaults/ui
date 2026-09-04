@@ -411,7 +411,13 @@ export function MultiSelect({
                     </span>
                   </CommandItem>
                 </CommandGroup>
-                <CommandSeparator />
+                {/*
+                  `CommandSeparator` bleeds 4px into the horizontal padding of
+                  a `CommandDialog` list. This list has no such padding, so the
+                  negative margin overflows the (x-clipped) scroll container
+                  instead. Neutralise it: full-bleed is already the width here.
+                */}
+                <CommandSeparator className="mx-0" />
               </>
             ) : null}
             <CommandGroup>
