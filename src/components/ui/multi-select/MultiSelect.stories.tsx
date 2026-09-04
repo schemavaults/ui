@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -606,5 +607,446 @@ export const InsideDialog: Story = {
       });
       expect(body.getByRole("dialog")).toBeInTheDocument();
     });
+  },
+};
+
+/* -------------------------------------------------------------------------- */
+/*                       Long label / overflow test fixtures                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Deliberately unreasonable labels. `urn` is a single unbroken token (nothing
+ * for the browser to wrap on) and `absurd` is longer than any realistic
+ * viewport, so neither the trigger nor the dropdown can stay inside its layout
+ * budget by accident — they have to truncate.
+ */
+const LONG_LABEL_OPTIONS: readonly MultiSelectOption[] = [
+  {
+    value: "short",
+    label: "Short label",
+    description: "A normal length label for comparison",
+  },
+  {
+    value: "reconciliation",
+    label:
+      "Accounts receivable reconciliation and month-end close automation workflow",
+    description:
+      "Runs nightly against the production ledger and posts a summary to the finance channel",
+    icon: <Layers className="h-4 w-4 text-muted-foreground" />,
+  },
+  {
+    value: "identity",
+    label:
+      "Customer identity and access management with SCIM provisioning enabled",
+    icon: <Shield className="h-4 w-4 text-muted-foreground" />,
+  },
+  {
+    value: "urn",
+    label:
+      "urn:schemavaults:vault:production:us-east-1:0f3a9c7d-4b21-4d8e-9c6f-2a1b3c4d5e6f/rotation-policy",
+    icon: <Lock className="h-4 w-4 text-muted-foreground" />,
+  },
+  {
+    value: "absurd",
+    label:
+      "This option label is intentionally absurd so that the component is forced to make a decision about horizontal overflow rather than quietly growing past the right hand edge of the container where nobody will ever be able to read the rest of the text anyway",
+  },
+] as const;
+
+const LONG_LABEL_VALUES: readonly string[] = LONG_LABEL_OPTIONS.map(
+  (option): string => option.value,
+);
+
+/** Every badge rendered inside the trigger. */
+function getTriggerBadges(trigger: HTMLElement): HTMLElement[] {
+  return Array.from(
+    trigger.querySelectorAll<HTMLElement>('[data-slot="badge"]'),
+  );
+}
+
+/** `child` may not stick out of `parent` on either horizontal edge. */
+function expectHorizontallyContained(
+  child: HTMLElement,
+  parent: HTMLElement,
+): void {
+  const childRect: DOMRect = child.getBoundingClientRect();
+  const parentRect: DOMRect = parent.getBoundingClientRect();
+  expect(childRect.width).toBeGreaterThan(0);
+  expect(childRect.left).toBeGreaterThanOrEqual(parentRect.left - 1);
+  expect(childRect.right).toBeLessThanOrEqual(parentRect.right + 1);
+}
+
+/** Nothing may widen the document past the viewport. */
+function expectNoDocumentOverflow(): void {
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    window.innerWidth + 1,
+  );
+}
+
+/**
+ * The trigger itself must never scroll horizontally: a long label is expected
+ * to be ellipsised inside its badge, not clipped by (or spilled out of) the
+ * trigger box.
+ */
+function expectTriggerFitsContainer(
+  trigger: HTMLElement,
+  container: HTMLElement,
+): void {
+  expectHorizontallyContained(trigger, container);
+  expect(trigger.scrollWidth).toBeLessThanOrEqual(trigger.clientWidth + 1);
+  for (const badge of getTriggerBadges(trigger)) {
+    expectHorizontallyContained(badge, trigger);
+  }
+}
+
+/**
+ * `animate-in zoom-in-95` scales the popover while it opens, and a scaled box
+ * reports scaled rects. Geometry is only meaningful once it has settled.
+ */
+async function waitForOpenAnimation(content: HTMLElement): Promise<void> {
+  await waitFor((): void => {
+    const transform: string = getComputedStyle(content).transform;
+    expect(
+      transform === "none" || transform === "matrix(1, 0, 0, 1, 0, 0)",
+    ).toBe(true);
+  });
+}
+
+async function openLongLabelPopover(accessibleName: RegExp): Promise<{
+  trigger: HTMLElement;
+  listbox: HTMLElement;
+  content: HTMLElement;
+}> {
+  const body = within(document.body);
+  const trigger: HTMLElement = await body.findByRole("combobox", {
+    name: accessibleName,
+  });
+  await userEvent.click(trigger);
+  const listbox: HTMLElement = await waitFor(
+    (): Promise<HTMLElement> => body.findByRole("listbox"),
+  );
+  const content: HTMLElement = listbox.closest<HTMLElement>(
+    "[data-radix-popper-content-wrapper]",
+  )?.firstElementChild as HTMLElement;
+  expect(content).toBeTruthy();
+  await waitForOpenAnimation(content);
+  return { trigger, listbox, content };
+}
+
+function LongLabelsDemo({
+  containerClassName = "w-[320px]",
+  ...props
+}: {
+  containerClassName?: string;
+} & Pick<
+  DemoArgs,
+  "size" | "maxDisplay" | "clearable" | "variant" | "badgeVariant"
+> & {
+    defaultSelected?: readonly string[];
+    label?: string;
+  }): ReactElement {
+  const {
+    size,
+    maxDisplay,
+    clearable = true,
+    variant,
+    badgeVariant,
+    defaultSelected = ["absurd"],
+    label = "Workflows",
+  } = props;
+  const [value, setValue] = useState<readonly string[]>(defaultSelected);
+  return (
+    <div
+      className={cn(
+        "rounded-md border border-dashed border-muted-foreground/40 p-4",
+        containerClassName,
+      )}
+    >
+      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </span>
+      <MultiSelect
+        options={LONG_LABEL_OPTIONS}
+        value={value}
+        onValueChange={setValue}
+        variant={variant}
+        size={size}
+        badgeVariant={badgeVariant}
+        maxDisplay={maxDisplay}
+        clearable={clearable}
+        fullWidth
+        placeholder="Select one or more workflows..."
+        searchPlaceholder="Search workflows..."
+        aria-label="Workflows"
+      />
+      <p className="mt-3 truncate text-xs text-muted-foreground">
+        Selected: {value.length === 0 ? "—" : value.join(", ")}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * The dashed box is the layout budget the `MultiSelect` is allowed to use.
+ * Neither the trigger, its badges, nor the dropdown may grow past it
+ * horizontally, no matter how long an option label gets.
+ */
+export const LongOptionLabels: Story = {
+  render: (): ReactElement => <LongLabelsDemo />,
+  parameters: {
+    layout: "centered",
+    docs: {
+      description: {
+        story:
+          "Long, unbroken and absurdly long option labels. Badges in the trigger ellipsise instead of stretching it, and the dropdown is pinned to the trigger width.",
+      },
+    },
+  },
+  play: async ({ step }): Promise<void> => {
+    const body = within(document.body);
+    const trigger: HTMLElement = await body.findByRole("combobox", {
+      name: /workflows/i,
+    });
+    const container: HTMLElement = trigger.parentElement as HTMLElement;
+
+    await step("Trigger stays inside its container", async (): Promise<void> => {
+      await waitFor((): void => {
+        expectTriggerFitsContainer(trigger, container);
+      });
+      expectNoDocumentOverflow();
+    });
+
+    await step("The long badge label is ellipsised", async (): Promise<void> => {
+      const [badge] = getTriggerBadges(trigger);
+      expect(badge).toBeDefined();
+      const labelSpan: HTMLElement = badge.querySelector<HTMLElement>(
+        "span.truncate",
+      ) as HTMLElement;
+      expect(labelSpan).not.toBeNull();
+      // Truncated, i.e. more text than fits — but not spilling out of the badge.
+      expect(labelSpan.scrollWidth).toBeGreaterThan(labelSpan.clientWidth);
+      expect(getComputedStyle(labelSpan).textOverflow).toBe("ellipsis");
+      expectHorizontallyContained(labelSpan, badge);
+    });
+
+    await step(
+      "The remove control survives next to a long label",
+      async (): Promise<void> => {
+        const remove: HTMLElement = within(trigger).getByRole("button", {
+          name: /^remove this option label is intentionally absurd/i,
+        });
+        expectHorizontallyContained(remove, trigger);
+        expect(remove.getBoundingClientRect().width).toBeGreaterThanOrEqual(10);
+      },
+    );
+
+    const { listbox, content } = await openLongLabelPopover(/workflows/i);
+
+    await step("The dropdown stays on screen", async (): Promise<void> => {
+      const contentRect: DOMRect = content.getBoundingClientRect();
+      const triggerRect: DOMRect = trigger.getBoundingClientRect();
+      // `w-[var(--radix-popover-trigger-width)]` keeps the two in lockstep.
+      expect(
+        Math.abs(contentRect.width - triggerRect.width),
+      ).toBeLessThanOrEqual(1);
+      expect(contentRect.left).toBeGreaterThanOrEqual(-1);
+      expect(contentRect.right).toBeLessThanOrEqual(window.innerWidth + 1);
+      expectNoDocumentOverflow();
+    });
+
+    await step(
+      "Option rows truncate rather than widening the list",
+      async (): Promise<void> => {
+        const options: HTMLElement[] = within(listbox).getAllByRole("option");
+        expect(options.length).toBeGreaterThanOrEqual(
+          LONG_LABEL_OPTIONS.length,
+        );
+        expect(listbox.scrollWidth).toBeLessThanOrEqual(
+          listbox.clientWidth + 1,
+        );
+        for (const option of options) {
+          expectHorizontallyContained(option, listbox);
+          expect(option.scrollWidth).toBeLessThanOrEqual(
+            option.clientWidth + 1,
+          );
+        }
+      },
+    );
+
+    await step(
+      "Filtered rows do not overflow either",
+      async (): Promise<void> => {
+        const search: HTMLElement = await body.findByPlaceholderText(
+          /search workflows/i,
+        );
+        await userEvent.type(search, "identity");
+        await waitFor((): void => {
+          // cmdk scores fuzzily, so assert on narrowing rather than an exact
+          // count: the SCIM row survives and something is filtered out.
+          const filtered: HTMLElement[] = within(listbox).getAllByRole(
+            "option",
+          );
+          expect(filtered.length).toBeLessThan(LONG_LABEL_OPTIONS.length);
+          expect(
+            within(listbox).getByText(/SCIM provisioning enabled/),
+          ).toBeInTheDocument();
+        });
+        for (const option of within(listbox).getAllByRole("option")) {
+          expectHorizontallyContained(option, listbox);
+        }
+        expect(listbox.scrollWidth).toBeLessThanOrEqual(
+          listbox.clientWidth + 1,
+        );
+        await userEvent.clear(search);
+      },
+    );
+
+    await userEvent.keyboard("{Escape}");
+    await waitFor((): void => {
+      expect(body.queryByRole("listbox")).toBeNull();
+    });
+  },
+};
+
+/**
+ * Every long option selected at once. The badges wrap onto new rows and grow
+ * the trigger vertically; the trigger must not grow horizontally.
+ */
+export const LongLabelsAllSelected: Story = {
+  render: (): ReactElement => (
+    <LongLabelsDemo defaultSelected={LONG_LABEL_VALUES} />
+  ),
+  parameters: {
+    layout: "centered",
+    docs: {
+      description: {
+        story:
+          "Every long label selected at once: badges wrap onto additional rows instead of pushing the trigger sideways.",
+      },
+    },
+  },
+  play: async (): Promise<void> => {
+    const body = within(document.body);
+    const trigger: HTMLElement = await body.findByRole("combobox", {
+      name: /workflows/i,
+    });
+    const container: HTMLElement = trigger.parentElement as HTMLElement;
+
+    await waitFor((): void => {
+      expectTriggerFitsContainer(trigger, container);
+    });
+    expectNoDocumentOverflow();
+
+    const badges: HTMLElement[] = getTriggerBadges(trigger);
+    expect(badges).toHaveLength(LONG_LABEL_OPTIONS.length);
+    // Wrapped, not laid out on a single overflowing row.
+    const distinctRows: Set<number> = new Set(
+      badges.map((badge: HTMLElement): number =>
+        Math.round(badge.getBoundingClientRect().top),
+      ),
+    );
+    expect(distinctRows.size).toBeGreaterThan(1);
+  },
+};
+
+/**
+ * A long badge next to the `+N more` overflow chip: the chip must stay visible
+ * and readable even though the first badge alone would fill the trigger.
+ */
+export const LongLabelsWithMaxDisplay: Story = {
+  render: (): ReactElement => (
+    <LongLabelsDemo defaultSelected={LONG_LABEL_VALUES} maxDisplay={1} />
+  ),
+  parameters: {
+    layout: "centered",
+    docs: {
+      description: {
+        story:
+          "`maxDisplay` collapses the rest into a `+N more` chip, which must not be pushed out of the trigger by the long badge in front of it.",
+      },
+    },
+  },
+  play: async (): Promise<void> => {
+    const body = within(document.body);
+    const trigger: HTMLElement = await body.findByRole("combobox", {
+      name: /workflows/i,
+    });
+    const container: HTMLElement = trigger.parentElement as HTMLElement;
+
+    await waitFor((): void => {
+      expectTriggerFitsContainer(trigger, container);
+    });
+    expectNoDocumentOverflow();
+
+    const overflowChip: HTMLElement = within(trigger).getByText(
+      `+${LONG_LABEL_OPTIONS.length - 1} more`,
+    );
+    expectHorizontallyContained(overflowChip, trigger);
+    // The chip is never itself ellipsised away.
+    expect(overflowChip.scrollWidth).toBeLessThanOrEqual(
+      overflowChip.clientWidth + 1,
+    );
+  },
+};
+
+/**
+ * The hostile case: the smallest size in a container barely wider than the
+ * chevron. Everything still has to stay inside the dashed box.
+ */
+export const LongLabelsInNarrowContainer: Story = {
+  render: (): ReactElement => (
+    <LongLabelsDemo
+      containerClassName="w-[180px]"
+      size="sm"
+      defaultSelected={["urn", "reconciliation"]}
+    />
+  ),
+  parameters: {
+    layout: "centered",
+    docs: {
+      description: {
+        story:
+          "A 180px column with `size=\"sm\"`. Unbroken identifiers still truncate instead of blowing out the layout.",
+      },
+    },
+  },
+  play: async ({ step }): Promise<void> => {
+    const body = within(document.body);
+    const trigger: HTMLElement = await body.findByRole("combobox", {
+      name: /workflows/i,
+    });
+    const container: HTMLElement = trigger.parentElement as HTMLElement;
+
+    await step("Trigger stays inside a 180px column", async (): Promise<void> => {
+      await waitFor((): void => {
+        expectTriggerFitsContainer(trigger, container);
+      });
+      expectNoDocumentOverflow();
+    });
+
+    const { listbox, content } = await openLongLabelPopover(/workflows/i);
+
+    await step(
+      "The dropdown widens to its minimum but stays on screen",
+      async (): Promise<void> => {
+        // `min-w-[12rem]` wins over the (narrower) trigger width here, which is
+        // fine — what matters is that it does not run off the viewport.
+        const contentRect: DOMRect = content.getBoundingClientRect();
+        expect(contentRect.width).toBeGreaterThanOrEqual(
+          trigger.getBoundingClientRect().width,
+        );
+        expect(contentRect.left).toBeGreaterThanOrEqual(-1);
+        expect(contentRect.right).toBeLessThanOrEqual(window.innerWidth + 1);
+        expect(listbox.scrollWidth).toBeLessThanOrEqual(
+          listbox.clientWidth + 1,
+        );
+        for (const option of within(listbox).getAllByRole("option")) {
+          expectHorizontallyContained(option, listbox);
+        }
+        expectNoDocumentOverflow();
+      },
+    );
+
+    await userEvent.keyboard("{Escape}");
   },
 };
