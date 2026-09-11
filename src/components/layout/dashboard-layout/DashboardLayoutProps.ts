@@ -16,6 +16,19 @@ export interface DashboardLayoutProps extends PropsWithChildren {
   sidebarFooterContent?: CustomizableDashboardLayoutComponent;
   sidebarItems: DashboardSidebarItemsAndGroupsDefinitions;
   sizing?: DashboardLayoutSidebarSizing;
+  /**
+   * Width of the sidebar while it is open (expanded) on desktop viewports, as
+   * any CSS length (e.g. `"18rem"`, `"260px"`, `"20vw"`). Defaults to
+   * `14rem`. Use a wider value to fit long link titles on one line, or a
+   * narrower one for compact menus.
+   *
+   * The value is applied through the `--dashboard-sidebar-open-width` CSS
+   * custom property, so any length works without a matching Tailwind class
+   * having to exist. The main content area shifts to match. The collapsed
+   * (icon-only) desktop width and the mobile Sheet width are unaffected; use
+   * `sizing` to change those.
+   */
+  sidebarOpenWidth?: string;
   onOpenSidebar?: () => void;
   onCloseSidebar?: () => void;
   /**

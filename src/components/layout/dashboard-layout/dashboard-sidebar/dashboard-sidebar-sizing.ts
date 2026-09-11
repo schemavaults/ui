@@ -1,5 +1,21 @@
 import { createContext } from "react";
 
+/**
+ * CSS custom property that carries the desktop *open* (expanded) sidebar
+ * width. `DashboardLayout` sets it on its root container from the
+ * `sidebarOpenWidth` prop, and the default sizing classnames below read it
+ * with a `14rem` fallback — so a consumer can pick any width without needing
+ * Tailwind to have generated a matching arbitrary-value class for it.
+ */
+export const DASHBOARD_SIDEBAR_OPEN_WIDTH_CSS_VARIABLE =
+  "--dashboard-sidebar-open-width";
+
+/**
+ * The desktop open (expanded) sidebar width used when `sidebarOpenWidth` is
+ * not supplied to `DashboardLayout`.
+ */
+export const DEFAULT_DASHBOARD_SIDEBAR_OPEN_WIDTH = "14rem";
+
 export interface DashboardLayoutSidebarSizing {
   desktop_collapsed_width: string;
   desktop_collapsed_width_classname: string;
@@ -47,15 +63,21 @@ export interface DashboardLayoutSidebarSizing {
 export const DEFAULT_DASHBOARD_SIDEBAR_SIZE = {
   desktop_collapsed_width: `4rem`,
   desktop_collapsed_width_classname: `w-[4rem]`,
-  desktop_expanded_width: `14rem`,
-  desktop_expanded_width_classname: `w-[14rem]`,
+  desktop_expanded_width: DEFAULT_DASHBOARD_SIDEBAR_OPEN_WIDTH,
+  // Reads the `--dashboard-sidebar-open-width` custom property (falling back
+  // to 14rem) so `DashboardLayout`'s `sidebarOpenWidth` prop can override the
+  // expanded width with an inline CSS variable. Keep this, the two
+  // `content_container_desktop_sidebar_open_*` classnames below, and
+  // `DEFAULT_DASHBOARD_SIDEBAR_OPEN_WIDTH` in sync.
+  desktop_expanded_width_classname: `w-[var(--dashboard-sidebar-open-width,14rem)]`,
   mobile_expanded_width: `16rem`,
   mobile_expanded_width_classname: `w-[16rem]`,
   header_height: `4rem`,
   header_height_classname: `h-[4rem]`,
   content_container_desktop_sidebar_open_width_classname:
-    "md:w-[calc(100%-14rem)]",
-  content_container_desktop_sidebar_open_left_classname: "md:left-[14rem]",
+    "md:w-[calc(100%-var(--dashboard-sidebar-open-width,14rem))]",
+  content_container_desktop_sidebar_open_left_classname:
+    "md:left-[var(--dashboard-sidebar-open-width,14rem)]",
   content_container_desktop_sidebar_closed_width_classname:
     "md:w-[calc(100%-4rem)]",
   content_container_desktop_sidebar_closed_left_classname: "md:left-[4rem]",

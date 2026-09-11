@@ -221,6 +221,14 @@ const meta = {
       description:
         "Hide the left sidebar and top header from printed output (`@media print`) so the system print dialog renders only the main page content. The on-screen layout is unaffected.",
     },
+    sidebarOpenWidth: {
+      control: "text",
+      description:
+        "Width of the sidebar while open (expanded) on desktop, as any CSS length (e.g. `18rem`, `260px`). Defaults to `14rem`. The main content area shifts to match. The collapsed icon-only width and the mobile Sheet width are unaffected.",
+      table: {
+        defaultValue: { summary: "14rem" },
+      },
+    },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
@@ -1217,5 +1225,198 @@ export const NextLinkStyleNavigation: Story = {
         targetHref,
       );
     });
+  },
+};
+
+// --- sidebarOpenWidth: custom open (expanded) sidebar width ------------
+//
+// The desktop sidebar expands to 14rem by default. Some sites want it wider,
+// so long link titles fit on one line, or narrower, for a compact menu. The
+// `sidebarOpenWidth` prop takes any CSS length and is applied through the
+// `--dashboard-sidebar-open-width` custom property, so no Tailwind class has
+// to exist for the chosen value. The main content area shifts to match; the
+// collapsed icon-only width and the mobile Sheet width are unchanged.
+//
+// These stories start with the sidebar collapsed (the desktop default). Click
+// the trigger in the header to expand it and see the configured width.
+
+const longTitleSidebarItems = [
+  manyLinksItem("Overview", LayoutDashboard),
+  manyLinksItem("Notifications & Alerts", Bell),
+  manyLinksGroup("Reporting & Analytics", [
+    manyLinksItem("Quarterly Revenue Reports", BarChart3),
+    manyLinksItem("Customer Acquisition Trends", LineChart),
+    manyLinksItem("Conversion Funnel Analysis", TrendingUp),
+    manyLinksItem("Realtime Activity Monitor", Activity),
+  ]),
+  manyLinksGroup("Organization Settings", [
+    manyLinksItem("Members & Permissions", Users),
+    manyLinksItem("Pending Team Invitations", UserPlus),
+    manyLinksItem("Billing & Payment Methods", CreditCard),
+    manyLinksItem("API Keys & Access Tokens", Key),
+  ]),
+  manyLinksGroup("Developer Tools", [
+    manyLinksItem("Database Administration", Database),
+    manyLinksItem("Deployment History", GitBranch),
+    manyLinksItem("Webhook Delivery Logs", Webhook),
+  ]),
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+function SidebarOpenWidthPageContent({
+  sidebarOpenWidth,
+}: {
+  sidebarOpenWidth: string | undefined;
+}): ReactElement {
+  return (
+    <PageColumnContainer>
+      <div className="flex flex-col gap-4 p-4 items-start">
+        <p className="text-sm text-muted-foreground max-w-prose">
+          This story sets <code>sidebarOpenWidth</code> to{" "}
+          <code>{sidebarOpenWidth ?? "(default: 14rem)"}</code>. On a desktop
+          viewport, click the sidebar trigger in the header to expand the
+          sidebar and see it open to that width, with the page content
+          shifting to match. Collapse it again and the icon-only width is
+          unchanged.
+        </p>
+        <ExampleChildrenForContainer />
+      </div>
+    </PageColumnContainer>
+  );
+}
+
+export const WideSidebarOpenWidth: Story = {
+  args: {
+    sidebarItems: longTitleSidebarItems,
+    topBarTitle: "Wide sidebar (22rem)",
+    sidebarOpenWidth: "22rem",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <DashboardLayout {...args}>
+      <SidebarOpenWidthPageContent sidebarOpenWidth={args.sidebarOpenWidth} />
+    </DashboardLayout>
+  ),
+};
+
+export const NarrowSidebarOpenWidth: Story = {
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Narrow sidebar (10rem)",
+    sidebarOpenWidth: "10rem",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <DashboardLayout {...args}>
+      <SidebarOpenWidthPageContent sidebarOpenWidth={args.sidebarOpenWidth} />
+    </DashboardLayout>
+  ),
+};
+
+export const PixelSidebarOpenWidth: Story = {
+  args: {
+    sidebarItems: longTitleSidebarItems,
+    topBarTitle: "Pixel sidebar width (300px)",
+    sidebarOpenWidth: "300px",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <DashboardLayout {...args}>
+      <SidebarOpenWidthPageContent sidebarOpenWidth={args.sidebarOpenWidth} />
+    </DashboardLayout>
+  ),
+};
+
+// Regression test: the configured open width must be what the desktop
+// sidebar actually renders at once expanded, and the main content container
+// must sit flush against it. The default width (14rem) is asserted first so a
+// broken fallback in the CSS variable is caught as well.
+export const SidebarOpenWidthMeasured: Story = {
+  tags: ["!autodocs"],
+  args: {
+    sidebarItems: longTitleSidebarItems,
+    topBarTitle: "Sidebar open width (measured)",
+    sidebarOpenWidth: "20rem",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement, args }): Promise<void> => {
+    // The width override only applies to the persistent desktop sidebar; on a
+    // narrow viewport the sidebar is a mobile Sheet whose width is governed
+    // separately, so there is nothing to measure.
+    if (!window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+
+    const container: HTMLElement | null = canvasElement.querySelector(
+      "#dashboard-layout-container",
+    );
+    expect(container).not.toBeNull();
+    expect(
+      (container as HTMLElement).style.getPropertyValue(
+        "--dashboard-sidebar-open-width",
+      ),
+    ).toBe(args.sidebarOpenWidth);
+
+    const sidebar: HTMLElement | null =
+      canvasElement.querySelector<HTMLElement>("menu");
+    const content: HTMLElement | null = canvasElement.querySelector(
+      "#dashboard-layout-main-content-container",
+    );
+    expect(sidebar).not.toBeNull();
+    expect(content).not.toBeNull();
+
+    const remInPx: number = parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
+    const expectedOpenWidthPx: number = 20 * remInPx;
+    const collapsedWidthPx: number = 4 * remInPx;
+
+    // Collapsed by default on desktop: the icon-only width is not affected by
+    // the override.
+    await waitFor((): void => {
+      expect(
+        Math.round((sidebar as HTMLElement).getBoundingClientRect().width),
+      ).toBe(Math.round(collapsedWidthPx));
+    });
+
+    const trigger: HTMLElement | null = canvasElement.querySelector(
+      "#dashboard-layout-main-content-header button",
+    );
+    expect(trigger).not.toBeNull();
+    await userEvent.click(trigger as HTMLElement);
+
+    // The sidebar animates its width, so wait for the transition to settle at
+    // the configured width, and for the content container to start exactly
+    // where the sidebar ends.
+    await waitFor(
+      (): void => {
+        const sidebarRect: DOMRect = (
+          sidebar as HTMLElement
+        ).getBoundingClientRect();
+        const contentRect: DOMRect = (
+          content as HTMLElement
+        ).getBoundingClientRect();
+        expect(Math.round(sidebarRect.width)).toBe(
+          Math.round(expectedOpenWidthPx),
+        );
+        expect(Math.round(contentRect.left)).toBe(Math.round(sidebarRect.right));
+        // The content container fills whatever the root container leaves
+        // beside the sidebar (measured from the container rather than the
+        // window so a scrollbar cannot skew the expectation).
+        const containerWidth: number = (
+          container as HTMLElement
+        ).getBoundingClientRect().width;
+        expect(Math.round(contentRect.width)).toBe(
+          Math.round(containerWidth - expectedOpenWidthPx),
+        );
+      },
+      { timeout: 3000 },
+    );
+
+    // Collapsing again returns to the untouched icon-only width.
+    await userEvent.click(trigger as HTMLElement);
+    await waitFor(
+      (): void => {
+        expect(
+          Math.round((sidebar as HTMLElement).getBoundingClientRect().width),
+        ).toBe(Math.round(collapsedWidthPx));
+      },
+      { timeout: 3000 },
+    );
   },
 };

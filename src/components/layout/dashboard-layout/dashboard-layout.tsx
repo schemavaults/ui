@@ -1,12 +1,13 @@
 "use client";
 
-import type { ReactNode, ReactElement, FC } from "react";
+import type { CSSProperties, ReactNode, ReactElement, FC } from "react";
 import DashboardSidebar, {
   DashboardLayoutSidebarTrigger,
   DashboardSidebarContextProvider,
   useCloseDashboardSidebarOnRouteChange,
   useDashboardSidebarOpenState,
   useDashboardSidebarSizing,
+  DASHBOARD_SIDEBAR_OPEN_WIDTH_CSS_VARIABLE,
 } from "./dashboard-sidebar";
 import type { DashboardLayoutProps } from "./DashboardLayoutProps";
 import { Separator } from "@/components/ui/separator";
@@ -44,9 +45,21 @@ export function DashboardLayout({
   topBarTitle,
   usePathname,
   printHidden = false,
+  sidebarOpenWidth,
   ...props
 }: DashboardLayoutProps): ReactElement {
   const size = useDashboardSidebarSizing();
+
+  // The open-width override travels as a CSS custom property on the root
+  // container. The default sizing classnames for the expanded sidebar and the
+  // content container's open-state width/offset read it with a 14rem
+  // fallback, so an unset prop leaves the layout exactly as before.
+  const containerStyle: CSSProperties | undefined =
+    typeof sidebarOpenWidth === "string" && sidebarOpenWidth.length > 0
+      ? ({
+          [DASHBOARD_SIDEBAR_OPEN_WIDTH_CSS_VARIABLE]: sidebarOpenWidth,
+        } as CSSProperties)
+      : undefined;
 
   function HeaderBarPageIdentifierComponent(): ReactNode {
     if (typeof topBarTitle === "string") {
@@ -71,6 +84,7 @@ export function DashboardLayout({
     <DashboardSidebarContextProvider
       sidebarItems={props.sidebarItems}
       sizing={props.sizing}
+      sidebarOpenWidth={sidebarOpenWidth}
       onOpenSidebar={props.onOpenSidebar}
       onCloseSidebar={props.onCloseSidebar}
     >
@@ -86,6 +100,7 @@ export function DashboardLayout({
           // on-screen viewport height.
           printHidden && "print:h-auto print:min-h-0",
         )}
+        style={containerStyle}
       >
         <DashboardSidebar
           wordmark={wordmark}
