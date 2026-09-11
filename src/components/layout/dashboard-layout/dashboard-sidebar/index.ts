@@ -16,4 +16,8 @@ export type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-de
 export type { DashboardSidebarItemGroupDefinition } from "./dashboard-sidebar-item-group";
 export type { DashboardSidebarItemsAndGroupsDefinitions } from "./dashboard-sidebar-items-and-groups-context";
 export type { DashboardLayoutSidebarSizing } from "./dashboard-sidebar-sizing";
+export {
+  DASHBOARD_SIDEBAR_OPEN_WIDTH_CSS_VARIABLE,
+  DEFAULT_DASHBOARD_SIDEBAR_OPEN_WIDTH,
+} from "./dashboard-sidebar-sizing";
 export type { IDashboardSidebarOpenStateContextType } from "./dashboard-sidebar-open-state";
