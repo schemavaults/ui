@@ -11,6 +11,11 @@ import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import Separator from "@/components/ui/separator";
 import type { CustomizableDashboardLayoutComponent } from "../customizable-dashboard-component-type";
 import type { LinkComponentType } from "@/types/Link";
+import {
+  reducedMotionClassName,
+  type DashboardLayoutReducedMotionSetting,
+} from "../dashboard-layout-reduced-motion";
+import { useDashboardLayoutReducedMotionSetting } from "../useDashboardLayoutReducedMotion";
 
 export interface DashboardLayoutSidebarLayoutProps {
   wordmark: ReactNode;
@@ -30,6 +35,8 @@ export function DashboardLayoutSidebarLayout({
 }: DashboardLayoutSidebarLayoutProps): ReactElement {
   const size = useDashboardSidebarSizing();
   const openState = useDashboardSidebarOpenState();
+  const reducedMotion: DashboardLayoutReducedMotionSetting =
+    useDashboardLayoutReducedMotionSetting();
   const desktop: boolean = !openState.mobile;
 
   let widthClassName: string;
@@ -54,6 +61,8 @@ export function DashboardLayoutSidebarLayout({
         "h-screen max-h-screen",
         desktop ? "absolute" : undefined,
         "transition-[width] ease-linear will-change-[width]",
+        // Reduced motion: snap between the collapsed and expanded widths.
+        reducedMotionClassName(reducedMotion),
         "flex flex-col justify-between items-stretch",
         "border-r",
         "p-0",

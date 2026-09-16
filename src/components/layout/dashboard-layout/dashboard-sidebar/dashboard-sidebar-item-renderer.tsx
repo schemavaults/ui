@@ -4,7 +4,8 @@ import { useContext, type ReactElement } from "react";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
 
 import { AnimatePresence, m } from "@/framer-motion";
-import toggleDashboardLayoutCollapsedTransitionTime from "../toggle-dashboard-layout-collapsed-transition-time";
+import useToggleDashboardLayoutCollapsedTransitionTime from "../useToggleDashboardLayoutCollapsedTransitionTime";
+import useDashboardLayoutReducedMotion from "../useDashboardLayoutReducedMotion";
 import { cn } from "@/lib/utils";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
@@ -34,6 +35,12 @@ export function DashboardSidebarItemRenderer({
   const isAdminItemGroup: boolean = useContext(
     DashboardSidebarAdminOnlyItemsContext,
   );
+  const reducedMotion: boolean = useDashboardLayoutReducedMotion();
+  // Read here rather than inside SidebarMenuItemTitle: that component is
+  // re-created on every render of this one, so it must stay a plain closure
+  // over values this component already has.
+  const transitionTime: number =
+    useToggleDashboardLayoutCollapsedTransitionTime();
   const showItemLabel: boolean = mobile || open;
 
   const IconComponent: SidebarItemIconComponent = item.icon;
@@ -69,7 +76,7 @@ export function DashboardSidebarItemRenderer({
           },
         }}
         transition={{
-          duration: toggleDashboardLayoutCollapsedTransitionTime,
+          duration: transitionTime,
         }}
       >
         {item.title}
@@ -83,8 +90,9 @@ export function DashboardSidebarItemRenderer({
       // `layout` keeps a row's position/size animated while the sidebar
       // expands and collapses, matching the group wrapper and group <ul>,
       // which have always had it. Without it, ungrouped rows snapped into
-      // place while grouped rows glided.
-      layout
+      // place while grouped rows glided. Under reduced motion every row
+      // snaps instead, which is the point.
+      layout={!reducedMotion}
       className={cn(
         "w-full",
         sizes.sidebar_menu_item_height_classname,

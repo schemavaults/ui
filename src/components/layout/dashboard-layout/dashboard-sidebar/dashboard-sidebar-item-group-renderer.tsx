@@ -9,10 +9,9 @@ import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, m } from "@/framer-motion";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
-import {
-  toggleDashboardLayoutCollapsedTransitionTime,
-  toggleDashboardLayoutCollapsedTransitionEasing,
-} from "../toggle-dashboard-layout-collapsed-transition-time";
+import { toggleDashboardLayoutCollapsedTransitionEasing } from "../toggle-dashboard-layout-collapsed-transition-time";
+import useToggleDashboardLayoutCollapsedTransitionTime from "../useToggleDashboardLayoutCollapsedTransitionTime";
+import useDashboardLayoutReducedMotion from "../useDashboardLayoutReducedMotion";
 import { DashboardSidebarAdminOnlyItemsContext } from "./dashboard-sidebar-admin-only-items-context";
 import type { LinkComponentType } from "@/types/Link";
 
@@ -26,6 +25,9 @@ export function DashboardSidebarItemGroupRenderer({
   const groupTitle: string = group.title;
   const openState = useDashboardSidebarOpenState();
   const sizes = useDashboardSidebarSizing();
+  const reducedMotion: boolean = useDashboardLayoutReducedMotion();
+  const transitionTime: number =
+    useToggleDashboardLayoutCollapsedTransitionTime();
 
   const groupItemsContainerId: string = `sidebar-group-items-[${group.title}]`;
   const showGroupLabel = openState.mobile || openState.open;
@@ -42,7 +44,7 @@ export function DashboardSidebarItemGroupRenderer({
         // height and let the <nav> scroll instead.
         "flex-shrink-0",
       )}
-      layout
+      layout={!reducedMotion}
     >
       <AnimatePresence>
         {showGroupLabel && (
@@ -68,9 +70,12 @@ export function DashboardSidebarItemGroupRenderer({
               paddingBottom:
                 sizes.sidebar_expanded_menu_group_label_bottom_padding,
               transition: {
-                duration: toggleDashboardLayoutCollapsedTransitionTime,
+                duration: transitionTime,
                 ease: toggleDashboardLayoutCollapsedTransitionEasing,
-                delay: toggleDashboardLayoutCollapsedTransitionTime / 1.5,
+                // Both zero when motion is reduced, so the heading is present
+                // as soon as the sidebar is open instead of easing in behind
+                // it.
+                delay: transitionTime / 1.5,
               },
             }}
             exit={{
@@ -83,7 +88,7 @@ export function DashboardSidebarItemGroupRenderer({
               },
               paddingBottom: 0,
               transition: {
-                duration: toggleDashboardLayoutCollapsedTransitionTime,
+                duration: transitionTime,
                 ease: toggleDashboardLayoutCollapsedTransitionEasing,
                 delay: 0,
               },
@@ -114,7 +119,7 @@ export function DashboardSidebarItemGroupRenderer({
       >
         <m.ul
           id={groupItemsContainerId}
-          layout
+          layout={!reducedMotion}
           className={cn(
             "w-full flex flex-col",
             "items-start justify-start",

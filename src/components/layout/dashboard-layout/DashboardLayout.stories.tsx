@@ -229,6 +229,15 @@ const meta = {
         defaultValue: { summary: "14rem" },
       },
     },
+    reducedMotion: {
+      control: "inline-radio",
+      options: ["user", "always", "never"],
+      description:
+        "Whether the layout animates. `user` (default) follows the `prefers-reduced-motion` media query, `always` never animates (drive this from an in-app preference), `never` always animates. Applied through Framer Motion's `MotionConfig`, so it also reaches motion components rendered inside the layout.",
+      table: {
+        defaultValue: { summary: "user" },
+      },
+    },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
@@ -1415,6 +1424,208 @@ export const SidebarOpenWidthMeasured: Story = {
         expect(
           Math.round((sidebar as HTMLElement).getBoundingClientRect().width),
         ).toBe(Math.round(collapsedWidthPx));
+      },
+      { timeout: 3000 },
+    );
+  },
+};
+
+// --- Reduced motion ------------------------------------------------------
+//
+// Everything the layout moves has to stop moving for a viewer who has asked
+// for reduced motion: the sidebar's width, the content area's width/offset
+// and the header (CSS transitions), the wordmark and the group labels (Framer
+// Motion), and the mobile sidebar's slide-in (a Radix Sheet). Three stories,
+// one per route to that state — the `prefers-reduced-motion` media query, the
+// `reducedMotion` prop, and the prop opting back out of the media query.
+
+interface DashboardLayoutMovingParts {
+  sidebar: HTMLElement;
+  content: HTMLElement;
+  header: HTMLElement;
+}
+
+/** The three pieces of layout chrome that animate in CSS. */
+function getDashboardLayoutMovingParts(
+  canvasElement: HTMLElement,
+): DashboardLayoutMovingParts {
+  const sidebar: HTMLElement | null =
+    canvasElement.querySelector<HTMLElement>("menu");
+  const content: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
+    "#dashboard-layout-main-content-container",
+  );
+  const header: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
+    "#dashboard-layout-main-content-header",
+  );
+
+  expect(sidebar).not.toBeNull();
+  expect(content).not.toBeNull();
+  expect(header).not.toBeNull();
+
+  return {
+    sidebar: sidebar as HTMLElement,
+    content: content as HTMLElement,
+    header: header as HTMLElement,
+  };
+}
+
+/**
+ * `transition-none` resets `transition-property` and leaves the duration of
+ * the utility it overrides in place, so it is the property — not the duration
+ * — that says whether an element will animate.
+ */
+function transitionPropertiesOf(parts: DashboardLayoutMovingParts): string[] {
+  return [parts.sidebar, parts.content, parts.header].map(
+    (element: HTMLElement): string =>
+      getComputedStyle(element).transitionProperty,
+  );
+}
+
+/**
+ * Open the sidebar and assert that it arrived without animating: the width is
+ * reached, and the wordmark — which is a Framer Motion element, not CSS — is
+ * fully opaque well inside the 0.2s delay plus 0.3s fade it would otherwise
+ * take.
+ */
+async function expectSidebarOpensWithoutAnimating(
+  canvasElement: HTMLElement,
+  parts: DashboardLayoutMovingParts,
+): Promise<void> {
+  const trigger: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
+    "#dashboard-layout-main-content-header button",
+  );
+  expect(trigger).not.toBeNull();
+  await userEvent.click(trigger as HTMLElement);
+
+  const remInPx: number = parseFloat(
+    getComputedStyle(document.documentElement).fontSize,
+  );
+  await waitFor(
+    (): void => {
+      expect(Math.round(parts.sidebar.getBoundingClientRect().width)).toBe(
+        Math.round(14 * remInPx),
+      );
+    },
+    { timeout: 3000 },
+  );
+
+  await waitFor(
+    (): void => {
+      const wordmark: HTMLElement | null =
+        parts.sidebar.querySelector<HTMLElement>(
+          "header .will-change-transform",
+        );
+      expect(wordmark).not.toBeNull();
+      expect(getComputedStyle(wordmark as HTMLElement).opacity).toBe("1");
+    },
+    { timeout: 300 },
+  );
+}
+
+// `reducedMotion="always"` is the hook for an app that offers its own "reduce
+// motion" preference rather than deferring to the operating system.
+export const WithReducedMotion: Story = {
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Reduced motion",
+    reducedMotion: "always",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement }): Promise<void> => {
+    // The desktop sidebar is the animated one; on a narrow viewport it is a
+    // Sheet whose motion is asserted by its own component's stories.
+    if (!window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+
+    const parts: DashboardLayoutMovingParts =
+      getDashboardLayoutMovingParts(canvasElement);
+    for (const transitionProperty of transitionPropertiesOf(parts)) {
+      expect(transitionProperty).toBe("none");
+    }
+
+    await expectSidebarOpensWithoutAnimating(canvasElement, parts);
+  },
+};
+
+// The default (`reducedMotion="user"`) under an emulated OS preference. The
+// test runner turns the media query on for this story only — see
+// `.storybook/test-runner.ts`.
+export const RespectsPrefersReducedMotion: Story = {
+  tags: ["!autodocs"],
+  parameters: {
+    emulateReducedMotion: true,
+  },
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "prefers-reduced-motion",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement }): Promise<void> => {
+    if (!window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+    // Only the test runner (or a viewer whose OS actually asks for reduced
+    // motion) can put the media query under test into effect. Opened from a
+    // Storybook that is not emulating it, this story is just the default
+    // layout, and there is nothing to assert.
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const parts: DashboardLayoutMovingParts =
+      getDashboardLayoutMovingParts(canvasElement);
+    for (const transitionProperty of transitionPropertiesOf(parts)) {
+      expect(transitionProperty).toBe("none");
+    }
+
+    await expectSidebarOpensWithoutAnimating(canvasElement, parts);
+  },
+};
+
+// `reducedMotion="never"` has to win against the media query, not merely
+// against the prop's default — the CSS half of this feature is a
+// `motion-reduce:` variant, which would otherwise keep firing behind the
+// consumer's back.
+export const WithMotionForcedOn: Story = {
+  tags: ["!autodocs"],
+  parameters: {
+    emulateReducedMotion: true,
+  },
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Motion forced on",
+    reducedMotion: "never",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement }): Promise<void> => {
+    if (!window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+
+    const parts: DashboardLayoutMovingParts =
+      getDashboardLayoutMovingParts(canvasElement);
+    expect(getComputedStyle(parts.sidebar).transitionProperty).toBe("width");
+    expect(getComputedStyle(parts.content).transitionProperty).toBe(
+      "width, left",
+    );
+    expect(getComputedStyle(parts.header).transitionProperty).toBe(
+      "width, height",
+    );
+
+    // Still opens, it just takes the scenic route to get there.
+    const trigger: HTMLElement | null =
+      canvasElement.querySelector<HTMLElement>(
+        "#dashboard-layout-main-content-header button",
+      );
+    expect(trigger).not.toBeNull();
+    await userEvent.click(trigger as HTMLElement);
+
+    const remInPx: number = parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
+    await waitFor(
+      (): void => {
+        expect(Math.round(parts.sidebar.getBoundingClientRect().width)).toBe(
+          Math.round(14 * remInPx),
+        );
       },
       { timeout: 3000 },
     );

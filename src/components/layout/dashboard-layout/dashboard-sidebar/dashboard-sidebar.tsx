@@ -16,12 +16,19 @@ import DashboardLayoutSidebarLayout, {
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
 import { cn } from "@/lib/utils";
 import VisuallyHidden from "@/components/ui/visually-hidden";
+import {
+  reducedMotionClassName,
+  type DashboardLayoutReducedMotionSetting,
+} from "../dashboard-layout-reduced-motion";
+import { useDashboardLayoutReducedMotionSetting } from "../useDashboardLayoutReducedMotion";
 
 export function DashboardSidebar(
   props: DashboardLayoutSidebarLayoutProps,
 ): ReactElement {
   const size = useDashboardSidebarSizing();
   const openState = useDashboardSidebarOpenState();
+  const reducedMotion: DashboardLayoutReducedMotionSetting =
+    useDashboardLayoutReducedMotionSetting();
   const setOpen = useContext(DashboardSidebarOpenStateDispatchContext);
   if (openState.mobile) {
     return (
@@ -33,7 +40,15 @@ export function DashboardSidebar(
       >
         <SheetContent
           side="left"
-          className={cn(size.mobile_expanded_width_classname, props.className)}
+          className={cn(
+            size.mobile_expanded_width_classname,
+            // Reduced motion: the mobile sidebar appears and disappears in
+            // place rather than sliding in from the edge of the screen.
+            // Radix unmounts the panel as soon as it sees no running
+            // animation, so cancelling the keyframes is enough to close it.
+            reducedMotionClassName(reducedMotion),
+            props.className,
+          )}
           style={{
             zIndex: 1000,
           }}
