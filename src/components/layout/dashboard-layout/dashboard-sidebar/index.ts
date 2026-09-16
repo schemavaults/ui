@@ -19,5 +19,6 @@ export type { DashboardLayoutSidebarSizing } from "./dashboard-sidebar-sizing";
 export {
   DASHBOARD_SIDEBAR_OPEN_WIDTH_CSS_VARIABLE,
   DEFAULT_DASHBOARD_SIDEBAR_OPEN_WIDTH,
+  DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING,
 } from "./dashboard-sidebar-sizing";
 export type { IDashboardSidebarOpenStateContextType } from "./dashboard-sidebar-open-state";

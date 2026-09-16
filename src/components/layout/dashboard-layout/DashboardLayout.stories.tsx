@@ -84,6 +84,7 @@ import type {
   DashboardSidebarItemGroupDefinition,
   DashboardSidebarItemsAndGroupsDefinitions,
 } from "./dashboard-sidebar";
+import { DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING } from "./dashboard-sidebar";
 import type {
   CustomizableDashboardLayoutComponent,
   ICustomizableDashboardLayoutComponentProps,
@@ -656,6 +657,165 @@ export const MixedGroupedAndUngroupedLinks: Story = {
         ),
       ).toBeLessThanOrEqual(1);
     });
+  },
+};
+
+// --- A group as the menu's first entry ----------------------------------
+//
+// The menu <nav> spaces its blocks with a gap, and a gap only ever falls
+// *between* two blocks. That covers every group but the leading one: with
+// nothing above it to space against, a group that opened the menu painted its
+// heading flush against the bottom border of the sidebar header (a group
+// further down looked right, which is what made the bug look like it was
+// about groups rather than about position). A leading *item* never showed it
+// -- a row is 2.5rem tall with its icon and title centred inside, so the row
+// supplies breathing room that a bare text label does not.
+//
+// This story leads with a group and follows it with a second one, so the
+// leading heading's inset can be measured against the inset the <nav> gap
+// already gives the trailing heading: they must be the same 8px.
+
+const leadingGroupSidebarItems = [
+  {
+    type: "dashboard-sidebar-item-group",
+    title: "Leading Group",
+    items: Array.from({ length: 3 }).map((_, index) => ({
+      type: "dashboard-sidebar-item-definition" as const,
+      title: `Leading Link ${index + 1}`,
+      url: `/leading-group/link-${index + 1}`,
+      icon: ({ className }: { className?: string }): ReactElement => (
+        <Tornado className={className} />
+      ),
+    })),
+  },
+  {
+    type: "dashboard-sidebar-item-group",
+    title: "Trailing Group",
+    items: Array.from({ length: 3 }).map((_, index) => ({
+      type: "dashboard-sidebar-item-definition" as const,
+      title: `Trailing Link ${index + 1}`,
+      url: `/trailing-group/link-${index + 1}`,
+      icon: ({ className }: { className?: string }): ReactElement => (
+        <Plane className={className} />
+      ),
+    })),
+  },
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+export const SidebarItemGroupFirst: Story = {
+  // A spacing regression test rather than a showcase, and its assertions need
+  // a real viewport rather than the autodocs iframe.
+  tags: ["!autodocs"],
+  args: {
+    sidebarItems: leadingGroupSidebarItems,
+    topBarTitle: "Leading sidebar group",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement }): Promise<void> => {
+    const findGroupHeading = (title: string): HTMLElement | null =>
+      Array.from(document.querySelectorAll<HTMLElement>("label")).find(
+        (el): boolean => el.textContent === title,
+      ) ?? null;
+
+    const findRow = (href: string): HTMLLIElement | null => {
+      const link = document.querySelector<HTMLElement>(`a[href="${href}"]`);
+      return link ? link.closest("li") : null;
+    };
+
+    const sidebarTrigger = (): HTMLElement => {
+      const trigger: HTMLElement | null =
+        canvasElement.querySelector<HTMLElement>(
+          "#dashboard-layout-main-content-header button",
+        );
+      expect(trigger).not.toBeNull();
+      return trigger as HTMLElement;
+    };
+
+    const sidebarHeader = (): HTMLElement => {
+      const header: HTMLElement | null =
+        document.querySelector<HTMLElement>("menu header");
+      expect(header).not.toBeNull();
+      return header as HTMLElement;
+    };
+
+    const desktop: boolean = window.matchMedia("(min-width: 768px)").matches;
+
+    // Desktop starts collapsed, which is the state that shows the inset
+    // belongs to the *heading* and not to the group: with no heading rendered
+    // there is nothing to hold off the header, so a leading group's first row
+    // starts exactly where a leading ungrouped row would.
+    if (desktop) {
+      expect(findGroupHeading("Leading Group")).toBeNull();
+      const firstRow: HTMLLIElement | null = findRow("/leading-group/link-1");
+      expect(firstRow).not.toBeNull();
+      expect(
+        Math.round(
+          (firstRow as HTMLLIElement).getBoundingClientRect().top -
+            sidebarHeader().getBoundingClientRect().bottom,
+        ),
+      ).toBe(0);
+    }
+
+    // Open it: on mobile the sidebar is an unmounted Sheet, on desktop it is
+    // collapsed to the icon column. Either way the headings mount only now.
+    await userEvent.click(sidebarTrigger());
+
+    await waitFor(
+      (): void => {
+        expect(findGroupHeading("Leading Group")).not.toBeNull();
+        expect(findGroupHeading("Trailing Group")).not.toBeNull();
+      },
+      { timeout: 3000 },
+    );
+
+    // Measure the painted glyphs, not the boxes. Box spacing alone is what
+    // made this bug easy to miss: matching the <nav> gap puts a leading
+    // heading 8px under the header's border while a heading further down
+    // clears the row above it by that same gap *plus* the row's bottom
+    // half-leading. The complaint was visual, so the assertion is too.
+    const textRect = (element: HTMLElement): DOMRect => {
+      const range: Range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getBoundingClientRect();
+    };
+
+    await waitFor(
+      (): void => {
+        const leadingHeading = findGroupHeading("Leading Group") as HTMLElement;
+        const trailingHeading = findGroupHeading(
+          "Trailing Group",
+        ) as HTMLElement;
+        const lastLeadingTitle =
+          findRow("/leading-group/link-3")?.querySelector<HTMLElement>("span");
+        expect(lastLeadingTitle).not.toBeNull();
+
+        // The box inset is the sizing token, exactly.
+        expect(
+          Math.round(
+            leadingHeading.getBoundingClientRect().top -
+              sidebarHeader().getBoundingClientRect().bottom,
+          ),
+        ).toBe(DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING);
+
+        // Whitespace a reader actually sees above each heading. Before the fix
+        // the leading one was 0 -- the heading sat on the header's border.
+        const leadingWhitespace: number = Math.round(
+          textRect(leadingHeading).top -
+            sidebarHeader().getBoundingClientRect().bottom,
+        );
+        const trailingWhitespace: number = Math.round(
+          textRect(trailingHeading).top -
+            textRect(lastLeadingTitle as HTMLElement).bottom,
+        );
+
+        expect(leadingWhitespace).toBeGreaterThan(8);
+        // Optically level with a heading that is not first, give or take the
+        // rounding in a row's half-leading.
+        expect(
+          Math.abs(leadingWhitespace - trailingWhitespace),
+        ).toBeLessThanOrEqual(4);
+      },
+      { timeout: 3000 },
+    );
   },
 };
 

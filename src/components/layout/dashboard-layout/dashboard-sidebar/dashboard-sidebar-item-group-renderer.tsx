@@ -13,15 +13,28 @@ import { toggleDashboardLayoutCollapsedTransitionEasing } from "../toggle-dashbo
 import useToggleDashboardLayoutCollapsedTransitionTime from "../useToggleDashboardLayoutCollapsedTransitionTime";
 import useDashboardLayoutReducedMotion from "../useDashboardLayoutReducedMotion";
 import { DashboardSidebarAdminOnlyItemsContext } from "./dashboard-sidebar-admin-only-items-context";
+import { DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING } from "./dashboard-sidebar-sizing";
 import type { LinkComponentType } from "@/types/Link";
+
+export interface DashboardSidebarItemGroupRendererProps {
+  group: DashboardSidebarItemGroupDefinition;
+  Link: LinkComponentType;
+  /**
+   * Whether this group is the first block in the menu.
+   *
+   * The menu <nav> spaces its blocks with a gap, which only ever puts space
+   * *between* two blocks — the first one has nothing above it, so a leading
+   * group's heading rendered flush against the sidebar header's bottom border.
+   * A leading group therefore supplies that inset itself.
+   */
+  first?: boolean;
+}
 
 export function DashboardSidebarItemGroupRenderer({
   group,
   Link,
-}: {
-  group: DashboardSidebarItemGroupDefinition;
-  Link: LinkComponentType;
-}): ReactElement {
+  first = false,
+}: DashboardSidebarItemGroupRendererProps): ReactElement {
   const groupTitle: string = group.title;
   const openState = useDashboardSidebarOpenState();
   const sizes = useDashboardSidebarSizing();
@@ -31,6 +44,18 @@ export function DashboardSidebarItemGroupRenderer({
 
   const groupItemsContainerId: string = `sidebar-group-items-[${group.title}]`;
   const showGroupLabel = openState.mobile || openState.open;
+
+  // Zero for every group but the leading one, so the animation targets below
+  // stay a single set of values rather than two conditional variants: a
+  // non-leading group animates a padding of 0 to 0 and is unaffected. It rides
+  // on the label rather than on the group container because it exists to keep
+  // the *heading* off the header border — collapse the sidebar and the heading
+  // goes away, along with the reason to reserve space for it, leaving the
+  // leading group's icon rows sitting exactly where leading ungrouped rows do.
+  const labelTopPadding: number = first
+    ? (sizes.sidebar_leading_menu_group_label_top_padding ??
+      DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING)
+    : 0;
 
   return (
     <m.div
@@ -59,6 +84,7 @@ export function DashboardSidebarItemGroupRenderer({
               transitionEnd: {
                 display: "none",
               },
+              paddingTop: 0,
               paddingBottom: 0,
             }}
             animate={{
@@ -67,6 +93,7 @@ export function DashboardSidebarItemGroupRenderer({
               width: "100%",
               height: "auto",
               display: "block",
+              paddingTop: labelTopPadding,
               paddingBottom:
                 sizes.sidebar_expanded_menu_group_label_bottom_padding,
               transition: {
@@ -86,6 +113,7 @@ export function DashboardSidebarItemGroupRenderer({
               transitionEnd: {
                 display: "none",
               },
+              paddingTop: 0,
               paddingBottom: 0,
               transition: {
                 duration: transitionTime,
