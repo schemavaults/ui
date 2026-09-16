@@ -6,6 +6,11 @@ import {
   useDashboardSidebarOpenState,
 } from "./dashboard-sidebar";
 import { cn } from "@/lib/utils";
+import {
+  reducedMotionClassName,
+  type DashboardLayoutReducedMotionSetting,
+} from "./dashboard-layout-reduced-motion";
+import { useDashboardLayoutReducedMotionSetting } from "./useDashboardLayoutReducedMotion";
 
 export interface DashboardLayoutMainContentContainerProps
   extends PropsWithChildren {
@@ -24,6 +29,8 @@ export function DashboardLayoutMainContentContainer({
 }: DashboardLayoutMainContentContainerProps): ReactElement {
   const openState = useDashboardSidebarOpenState();
   const size = useDashboardSidebarSizing();
+  const reducedMotion: DashboardLayoutReducedMotionSetting =
+    useDashboardLayoutReducedMotionSetting();
 
   return (
     <div
@@ -37,6 +44,9 @@ export function DashboardLayoutMainContentContainer({
         "no-scrollbar",
         "max-md:w-full",
         "transition-[width,left] ease-linear will-change-[width]",
+        // Reduced motion: jump to the new width/offset instead of sliding the
+        // whole page across as the sidebar opens.
+        reducedMotionClassName(reducedMotion),
         openState.open
           ? size.content_container_desktop_sidebar_open_width_classname
           : size.content_container_desktop_sidebar_closed_width_classname,

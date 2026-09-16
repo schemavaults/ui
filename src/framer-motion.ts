@@ -6,6 +6,8 @@ export {
   AnimatePresence,
   domAnimation,
   LazyMotion,
+  MotionConfig,
+  MotionConfigContext,
   Reorder,
   useAnimate,
   useAnimationFrame,
@@ -16,6 +18,11 @@ export {
   useSpring,
   useMotionValueEvent,
   useReducedMotion,
+  useReducedMotionConfig,
 } from "framer-motion";
 
-export type { MotionValue, AnimationScope } from "framer-motion";
+export type {
+  MotionValue,
+  AnimationScope,
+  MotionConfigProps,
+} from "framer-motion";

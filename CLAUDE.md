@@ -45,6 +45,11 @@ bun run build:storybook && bun run test-storybook:ci
 > run every story's `play()` interaction tests plus a render smoke test for all
 > other stories. CI runs them via the `Storybook Tests` job in
 > `.github/workflows/pull_request_checks.yml`.
+>
+> `.storybook/test-runner.ts` configures the runner. A story that needs the
+> `prefers-reduced-motion` media query to be on sets
+> `parameters: { emulateReducedMotion: true }`; nothing inside the browser can
+> set that media feature, so Playwright emulates it per story.
 
 ## Architecture
 

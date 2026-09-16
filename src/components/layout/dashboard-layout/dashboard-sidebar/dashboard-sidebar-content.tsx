@@ -11,6 +11,7 @@ import { m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 import type { LinkComponentType } from "@/types/Link";
 import useDashboardSidebarSizing from "./useDashboardSidebarSizing";
+import useDashboardLayoutReducedMotion from "../useDashboardLayoutReducedMotion";
 
 export interface DashboardLayoutSidebarContentProps {
   Link: LinkComponentType;
@@ -80,6 +81,7 @@ export function DashboardSidebarContent({
   const sidebarItems: readonly DashboardSidebarEntry[] =
     useDashboardSidebarItemsAndGroups();
   const sizes = useDashboardSidebarSizing();
+  const reducedMotion: boolean = useDashboardLayoutReducedMotion();
   const blocks: DashboardSidebarRenderBlock[] =
     toDashboardSidebarRenderBlocks(sidebarItems);
 
@@ -109,7 +111,7 @@ export function DashboardSidebarContent({
         return (
           <m.ul
             key={`sidebar-ungrouped-items-[${firstItemTitle}]`}
-            layout
+            layout={!reducedMotion}
             className={cn(
               "w-full flex flex-col",
               "items-start justify-start",

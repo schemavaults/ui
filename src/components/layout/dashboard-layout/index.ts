@@ -4,6 +4,12 @@ export { DashboardLayout as default } from "./dashboard-layout";
 
 export type * from "./customizable-dashboard-component-type";
 
+export type { DashboardLayoutReducedMotionSetting } from "./dashboard-layout-reduced-motion";
+export { DEFAULT_DASHBOARD_LAYOUT_REDUCED_MOTION_SETTING } from "./dashboard-layout-reduced-motion";
+// Exported so consumer-supplied top bar / sidebar footer components can match
+// the motion of the layout chrome they are rendered into.
+export { useDashboardLayoutReducedMotion } from "./useDashboardLayoutReducedMotion";
+
 export {
   useDashboardSidebarOpenState,
   useDashboardSidebarOpenStateDispatch,

@@ -5,6 +5,7 @@ import type {
   DashboardLayoutSidebarSizing,
 } from "./dashboard-sidebar";
 import type { LinkComponentType } from "@/types/Link";
+import type { DashboardLayoutReducedMotionSetting } from "./dashboard-layout-reduced-motion";
 
 export interface DashboardLayoutProps extends PropsWithChildren {
   wordmark: ReactNode;
@@ -46,4 +47,22 @@ export interface DashboardLayoutProps extends PropsWithChildren {
    * `false`, preserving the previous print behaviour.
    */
   printHidden?: boolean;
+  /**
+   * How the layout decides whether to animate — the sidebar expanding and
+   * collapsing, the content area sliding across, the wordmark and group
+   * labels fading in, and the mobile sidebar's slide-in.
+   *
+   * - `"user"` (default) — honour the `prefers-reduced-motion` media query:
+   *   every one of those movements becomes an instant state change when the
+   *   viewer has asked their OS for reduced motion.
+   * - `"always"` — never animate. Use this to drive the layout from an
+   *   in-app "reduce motion" preference.
+   * - `"never"` — always animate, even when the OS asks otherwise.
+   *
+   * The setting is applied through Framer Motion's `MotionConfig`, so it also
+   * reaches motion components rendered in `children`, `topBarButtons` and
+   * `sidebarFooterContent`. Wrap a subtree in your own `MotionConfig` to opt
+   * part of the page back out.
+   */
+  reducedMotion?: DashboardLayoutReducedMotionSetting;
 }

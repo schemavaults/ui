@@ -2,9 +2,9 @@
 
 import { AnimatePresence, m } from "@/framer-motion";
 import type { ReactElement, ReactNode } from "react";
-import toggleDashboardLayoutCollapsedTransitionTime, {
-  toggleDashboardLayoutCollapsedTransitionEasing,
-} from "../toggle-dashboard-layout-collapsed-transition-time";
+import { toggleDashboardLayoutCollapsedTransitionEasing } from "../toggle-dashboard-layout-collapsed-transition-time";
+import useToggleDashboardLayoutCollapsedTransitionTime from "../useToggleDashboardLayoutCollapsedTransitionTime";
+import useDashboardLayoutReducedMotion from "../useDashboardLayoutReducedMotion";
 import useDashboardSidebarOpenState from "./useDashboardSidebarOpenState";
 import { cn } from "@/lib/utils";
 import { useDashboardSidebarSizing } from "./useDashboardSidebarSizing";
@@ -34,6 +34,10 @@ function AnimatedBrandWordmark({
   Link,
   brandHref,
 }: AnimatedBrandWordmarkProps): ReactElement {
+  const transitionTime: number =
+    useToggleDashboardLayoutCollapsedTransitionTime();
+  const reducedMotion: boolean = useDashboardLayoutReducedMotion();
+
   return (
     <m.div
       className="will-change-transform"
@@ -46,7 +50,7 @@ function AnimatedBrandWordmark({
           },
           width: 0,
           transition: {
-            duration: toggleDashboardLayoutCollapsedTransitionTime,
+            duration: transitionTime,
             ease: toggleDashboardLayoutCollapsedTransitionEasing,
             delay: 0,
           },
@@ -57,16 +61,19 @@ function AnimatedBrandWordmark({
           display: "block",
           width: "auto",
           transition: {
-            duration: toggleDashboardLayoutCollapsedTransitionTime,
+            duration: transitionTime,
             ease: toggleDashboardLayoutCollapsedTransitionEasing,
-            delay: toggleDashboardLayoutCollapsedTransitionTime / 1.5,
+            // Waits for the sidebar to be most of the way open before the
+            // wordmark appears. Zero along with the duration when motion is
+            // reduced, so the wordmark is simply there.
+            delay: transitionTime / 1.5,
           },
         },
       }}
       initial="exit"
       animate="enter"
       exit="exit"
-      layout
+      layout={!reducedMotion}
     >
       <Link href={brandHref}>{wordmark}</Link>
     </m.div>
@@ -81,11 +88,12 @@ export function DashboardSidebarHeader({
 }: DashboardLayoutSidebarHeaderProps): ReactElement {
   const size = useDashboardSidebarSizing();
   const { open, mobile } = useDashboardSidebarOpenState();
+  const reducedMotion: boolean = useDashboardLayoutReducedMotion();
   const showWordmark: boolean = mobile || open;
 
   return (
     <m.header
-      layout
+      layout={!reducedMotion}
       style={{
         height: size.header_height,
       }}
