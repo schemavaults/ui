@@ -84,6 +84,7 @@ import type {
   DashboardSidebarItemGroupDefinition,
   DashboardSidebarItemsAndGroupsDefinitions,
 } from "./dashboard-sidebar";
+import { DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING } from "./dashboard-sidebar";
 import type {
   CustomizableDashboardLayoutComponent,
   ICustomizableDashboardLayoutComponentProps,
@@ -656,6 +657,285 @@ export const MixedGroupedAndUngroupedLinks: Story = {
         ),
       ).toBeLessThanOrEqual(1);
     });
+  },
+};
+
+// --- A group as the menu's first entry ----------------------------------
+//
+// The menu <nav> spaces its blocks with a gap, and a gap only ever falls
+// *between* two blocks. That covers every group but the leading one: with
+// nothing above it to space against, a group that opened the menu painted its
+// heading flush against the bottom border of the sidebar header (a group
+// further down looked right, which is what made the bug look like it was
+// about groups rather than about position). A leading *item* never showed it
+// -- a row is 2.5rem tall with its icon and title centred inside, so the row
+// supplies breathing room that a bare text label does not.
+//
+// This story leads with a group and follows it with a second one, so the
+// leading heading's inset can be measured against the inset the <nav> gap
+// already gives the trailing heading: they must be the same 8px.
+
+const leadingGroupSidebarItems = [
+  {
+    type: "dashboard-sidebar-item-group",
+    title: "Leading Group",
+    items: Array.from({ length: 3 }).map((_, index) => ({
+      type: "dashboard-sidebar-item-definition" as const,
+      title: `Leading Link ${index + 1}`,
+      url: `/leading-group/link-${index + 1}`,
+      icon: ({ className }: { className?: string }): ReactElement => (
+        <Tornado className={className} />
+      ),
+    })),
+  },
+  {
+    type: "dashboard-sidebar-item-group",
+    title: "Trailing Group",
+    items: Array.from({ length: 3 }).map((_, index) => ({
+      type: "dashboard-sidebar-item-definition" as const,
+      title: `Trailing Link ${index + 1}`,
+      url: `/trailing-group/link-${index + 1}`,
+      icon: ({ className }: { className?: string }): ReactElement => (
+        <Plane className={className} />
+      ),
+    })),
+  },
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+export const SidebarItemGroupFirst: Story = {
+  // A spacing regression test rather than a showcase, and its assertions need
+  // a real viewport rather than the autodocs iframe.
+  tags: ["!autodocs"],
+  args: {
+    sidebarItems: leadingGroupSidebarItems,
+    topBarTitle: "Leading sidebar group",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement }): Promise<void> => {
+    const findGroupHeading = (title: string): HTMLElement | null =>
+      Array.from(document.querySelectorAll<HTMLElement>("label")).find(
+        (el): boolean => el.textContent === title,
+      ) ?? null;
+
+    const findRow = (href: string): HTMLLIElement | null => {
+      const link = document.querySelector<HTMLElement>(`a[href="${href}"]`);
+      return link ? link.closest("li") : null;
+    };
+
+    const sidebarTrigger = (): HTMLElement => {
+      const trigger: HTMLElement | null =
+        canvasElement.querySelector<HTMLElement>(
+          "#dashboard-layout-main-content-header button",
+        );
+      expect(trigger).not.toBeNull();
+      return trigger as HTMLElement;
+    };
+
+    const sidebarHeader = (): HTMLElement => {
+      const header: HTMLElement | null =
+        document.querySelector<HTMLElement>("menu header");
+      expect(header).not.toBeNull();
+      return header as HTMLElement;
+    };
+
+    // The element the inset has to live on. It wraps a group's heading *and*
+    // its list, so unlike the heading it stays mounted when the sidebar
+    // collapses -- which is what lets the inset animate out instead of
+    // vanishing with the element that carried it.
+    const groupContainer = (title: string): HTMLElement => {
+      const list: HTMLElement | null = document.getElementById(
+        `sidebar-group-items-[${title}]`,
+      );
+      expect(list).not.toBeNull();
+      const container: HTMLElement | null = (list as HTMLElement).parentElement;
+      expect(container).not.toBeNull();
+      return container as HTMLElement;
+    };
+
+    const paddingTopOf = (element: HTMLElement): number =>
+      Math.round(parseFloat(getComputedStyle(element).paddingTop));
+
+    const verticalPaddingOf = (element: HTMLElement): number => {
+      const style: CSSStyleDeclaration = getComputedStyle(element);
+      return Math.round(
+        parseFloat(style.paddingTop) + parseFloat(style.paddingBottom),
+      );
+    };
+
+    const rowOffsetFromHeader = (): number | null => {
+      const row: HTMLLIElement | null = findRow("/leading-group/link-1");
+      return row
+        ? Math.round(
+            row.getBoundingClientRect().top -
+              sidebarHeader().getBoundingClientRect().bottom,
+          )
+        : null;
+    };
+
+    const desktop: boolean = window.matchMedia("(min-width: 768px)").matches;
+
+    // Desktop starts collapsed, which is the state that shows the inset is
+    // *for* the heading: with no heading rendered there is nothing to hold off
+    // the header, so a leading group's first row starts exactly where a
+    // leading ungrouped row would. The group container is still here, at zero
+    // inset -- it is the thing that will animate the inset in.
+    if (desktop) {
+      expect(findGroupHeading("Leading Group")).toBeNull();
+      expect(paddingTopOf(groupContainer("Leading Group"))).toBe(0);
+      const firstRow: HTMLLIElement | null = findRow("/leading-group/link-1");
+      expect(firstRow).not.toBeNull();
+      expect(
+        Math.round(
+          (firstRow as HTMLLIElement).getBoundingClientRect().top -
+            sidebarHeader().getBoundingClientRect().bottom,
+        ),
+      ).toBe(0);
+    }
+
+    // Open it: on mobile the sidebar is an unmounted Sheet, on desktop it is
+    // collapsed to the icon column. Either way the headings mount only now.
+    await userEvent.click(sidebarTrigger());
+
+    await waitFor(
+      (): void => {
+        expect(findGroupHeading("Leading Group")).not.toBeNull();
+        expect(findGroupHeading("Trailing Group")).not.toBeNull();
+      },
+      { timeout: 3000 },
+    );
+
+    // Measure the painted glyphs, not the boxes. Box spacing alone is what
+    // made this bug easy to miss: matching the <nav> gap puts a leading
+    // heading 8px under the header's border while a heading further down
+    // clears the row above it by that same gap *plus* the row's bottom
+    // half-leading. The complaint was visual, so the assertion is too.
+    const textRect = (element: HTMLElement): DOMRect => {
+      const range: Range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getBoundingClientRect();
+    };
+
+    await waitFor(
+      (): void => {
+        const leadingHeading = findGroupHeading("Leading Group") as HTMLElement;
+        const trailingHeading = findGroupHeading(
+          "Trailing Group",
+        ) as HTMLElement;
+        const lastLeadingTitle =
+          findRow("/leading-group/link-3")?.querySelector<HTMLElement>("span");
+        expect(lastLeadingTitle).not.toBeNull();
+
+        // The box inset is the sizing token, exactly.
+        expect(
+          Math.round(
+            leadingHeading.getBoundingClientRect().top -
+              sidebarHeader().getBoundingClientRect().bottom,
+          ),
+        ).toBe(DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING);
+
+        // ...and it is carried by the group container, not by the heading.
+        // This is the difference between the inset animating away on collapse
+        // and disappearing in one frame: AnimatePresence unmounts the heading,
+        // so padding parked on it takes its space with it the moment it goes,
+        // and Framer cannot drive a border-box element's height below its own
+        // padding either. Measure where the inset lives, not just that the
+        // heading ends up in the right place -- both arrangements pass the
+        // assertion above, only one of them animates.
+        expect(paddingTopOf(groupContainer("Leading Group"))).toBe(
+          DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING,
+        );
+        expect(paddingTopOf(groupContainer("Trailing Group"))).toBe(0);
+
+        // Nothing between the animating wrapper and the heading may carry
+        // vertical padding. Padding is part of the box and does not shrink
+        // with it, so an element that has any cannot be driven to zero
+        // height: it floors at its padding and the unmount drops whatever is
+        // left in a single frame. Both elements in that chain must therefore
+        // be bare, with the heading's own bottom gap living further in, as
+        // content they clip.
+        const paddedContent = leadingHeading.parentElement as HTMLElement;
+        const clippingItem = paddedContent.parentElement as HTMLElement;
+        const animatingWrapper = clippingItem.parentElement as HTMLElement;
+        expect(verticalPaddingOf(clippingItem)).toBe(0);
+        expect(verticalPaddingOf(animatingWrapper)).toBe(0);
+        expect(verticalPaddingOf(paddedContent)).toBeGreaterThan(0);
+
+        // Whitespace a reader actually sees above each heading. Before the fix
+        // the leading one was 0 -- the heading sat on the header's border.
+        const leadingWhitespace: number = Math.round(
+          textRect(leadingHeading).top -
+            sidebarHeader().getBoundingClientRect().bottom,
+        );
+        const trailingWhitespace: number = Math.round(
+          textRect(trailingHeading).top -
+            textRect(lastLeadingTitle as HTMLElement).bottom,
+        );
+
+        expect(leadingWhitespace).toBeGreaterThan(8);
+        // Optically level with a heading that is not first, give or take the
+        // rounding in a row's half-leading.
+        expect(
+          Math.abs(leadingWhitespace - trailingWhitespace),
+        ).toBeLessThanOrEqual(4);
+      },
+      { timeout: 3000 },
+    );
+
+    // Collapsing must not drop the menu. The heading opens and closes between
+    // a mount and an unmount, so whatever height it still occupies on its last
+    // frame vanishes in one step on its next -- the rows below jumped by that
+    // much. Watching the frame either side of the unmount measures that step
+    // directly, and does so however fast or slow the frames happen to be
+    // arriving, unlike a cap on per-frame movement. Desktop only: collapsing
+    // on mobile unmounts the whole Sheet, rows included, so there is no
+    // "after" position to compare against.
+    if (!desktop) {
+      return;
+    }
+
+    const watchUnmount: Promise<{ step: number; timedOut: boolean }> =
+      new Promise((resolve): void => {
+        const deadline: number = performance.now() + 3000;
+        let lastWithHeading: number | null = null;
+        const tick = (): void => {
+          const offset: number | null = rowOffsetFromHeader();
+          if (findGroupHeading("Leading Group") !== null) {
+            if (offset !== null) {
+              lastWithHeading = offset;
+            }
+            if (performance.now() > deadline) {
+              resolve({ step: 0, timedOut: true });
+              return;
+            }
+            requestAnimationFrame(tick);
+            return;
+          }
+          resolve({
+            step:
+              offset !== null && lastWithHeading !== null
+                ? Math.abs(offset - lastWithHeading)
+                : 0,
+            timedOut: false,
+          });
+        };
+        requestAnimationFrame(tick);
+      });
+
+    await userEvent.click(sidebarTrigger());
+    const unmount: { step: number; timedOut: boolean } = await watchUnmount;
+    expect(unmount.timedOut).toBe(false);
+    // Was 8px on its own, and 24px while the leading inset rode on the
+    // heading too.
+    expect(unmount.step).toBeLessThanOrEqual(1);
+
+    // Leave the sidebar open: this story is the one someone opens to look at
+    // a leading group, and collapsed it shows nothing of the kind.
+    await userEvent.click(sidebarTrigger());
+    await waitFor(
+      (): void => {
+        expect(findGroupHeading("Leading Group")).not.toBeNull();
+      },
+      { timeout: 3000 },
+    );
   },
 };
 

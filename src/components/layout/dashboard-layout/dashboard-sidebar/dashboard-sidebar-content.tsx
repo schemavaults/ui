@@ -95,44 +95,51 @@ export function DashboardSidebarContent({
         "no-scrollbar",
       )}
     >
-      {blocks.map((block: DashboardSidebarRenderBlock): ReactNode => {
-        if (block.kind === "group") {
-          const group: DashboardSidebarItemGroupDefinition = block.group;
-          return (
-            <DashboardSidebarItemGroupRenderer
-              group={group}
-              Link={Link}
-              key={`sidebar-group-[${group.title}]`}
-            />
-          );
-        }
+      {blocks.map(
+        (block: DashboardSidebarRenderBlock, index: number): ReactNode => {
+          if (block.kind === "group") {
+            const group: DashboardSidebarItemGroupDefinition = block.group;
+            return (
+              <DashboardSidebarItemGroupRenderer
+                group={group}
+                Link={Link}
+                // The gap below only separates one block from the next, so the
+                // leading block has nothing holding it off the sidebar header.
+                // A group opens with a bare text label, which then reads as
+                // stuck to the header's border; it insets itself when it leads.
+                first={index === 0}
+                key={`sidebar-group-[${group.title}]`}
+              />
+            );
+          }
 
-        const firstItemTitle: string = block.items[0]!.title;
-        return (
-          <m.ul
-            key={`sidebar-ungrouped-items-[${firstItemTitle}]`}
-            layout={!reducedMotion}
-            className={cn(
-              "w-full flex flex-col",
-              "items-start justify-start",
-              sizes.sidebar_menu_item_gap_classname,
-              // The <nav> is a scrolling flex column; without this the run
-              // would be squashed once the menu overflows.
-              "flex-shrink-0",
-            )}
-          >
-            {block.items.map(
-              (item: DashboardSidebarItemDefinition): ReactElement => (
-                <DashboardSidebarItemRenderer
-                  item={item}
-                  Link={Link}
-                  key={`sidebar-item-[${item.title}]`}
-                />
-              ),
-            )}
-          </m.ul>
-        );
-      })}
+          const firstItemTitle: string = block.items[0]!.title;
+          return (
+            <m.ul
+              key={`sidebar-ungrouped-items-[${firstItemTitle}]`}
+              layout={!reducedMotion}
+              className={cn(
+                "w-full flex flex-col",
+                "items-start justify-start",
+                sizes.sidebar_menu_item_gap_classname,
+                // The <nav> is a scrolling flex column; without this the run
+                // would be squashed once the menu overflows.
+                "flex-shrink-0",
+              )}
+            >
+              {block.items.map(
+                (item: DashboardSidebarItemDefinition): ReactElement => (
+                  <DashboardSidebarItemRenderer
+                    item={item}
+                    Link={Link}
+                    key={`sidebar-item-[${item.title}]`}
+                  />
+                ),
+              )}
+            </m.ul>
+          );
+        },
+      )}
     </m.nav>
   );
 }
