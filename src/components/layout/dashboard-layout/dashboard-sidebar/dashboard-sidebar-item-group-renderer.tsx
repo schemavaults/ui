@@ -97,26 +97,30 @@ export function DashboardSidebarItemGroupRenderer({
       <AnimatePresence>
         {showGroupLabel && (
           <m.div
-            className="w-full text-nowrap"
+            // A one-row grid whose track animates between `0fr` and `1fr`,
+            // which is how the heading opens and closes without anyone having
+            // to measure it. The obvious spelling — `height` between 0 and
+            // `auto` — does not survive the mount and unmount that
+            // AnimatePresence puts either side of it. Framer resolves `auto`
+            // by measuring, and the frame it does so paints at the heading's
+            // intrinsic height, so opening jumped the rows below down 14px
+            // before animating them the rest of the way; closing, it could not
+            // drive a border-box height below the element's own padding, so it
+            // stopped short and the unmount dropped the remainder in one
+            // frame. An `fr` track has neither problem: `0fr` is a true zero,
+            // reached before the unmount, and `1fr` resolves against content
+            // in an auto-height container with nothing measured up front.
+            className="w-full grid"
             key="sidebar-item-group-label"
             initial={{
               scale: 0,
               opacity: 0,
-              width: 0,
-              height: 0,
-              transitionEnd: {
-                display: "none",
-              },
-              paddingBottom: 0,
+              gridTemplateRows: "0fr",
             }}
             animate={{
               scale: 1,
               opacity: 1,
-              width: "100%",
-              height: "auto",
-              display: "block",
-              paddingBottom:
-                sizes.sidebar_expanded_menu_group_label_bottom_padding,
+              gridTemplateRows: "1fr",
               transition: {
                 duration: transitionTime,
                 ease: toggleDashboardLayoutCollapsedTransitionEasing,
@@ -129,12 +133,7 @@ export function DashboardSidebarItemGroupRenderer({
             exit={{
               scale: 0,
               opacity: 0,
-              width: 0,
-              height: 0,
-              transitionEnd: {
-                display: "none",
-              },
-              paddingBottom: 0,
+              gridTemplateRows: "0fr",
               transition: {
                 duration: transitionTime,
                 ease: toggleDashboardLayoutCollapsedTransitionEasing,
@@ -142,22 +141,44 @@ export function DashboardSidebarItemGroupRenderer({
               },
             }}
           >
-            <Label
-              htmlFor={groupItemsContainerId}
-              className={cn("font-bold text-nowrap", "block")}
-              // Align the group heading with the item titles underneath it:
-              // each item renders its icon inside a box exactly
-              // `desktop_collapsed_width` wide, so its title starts at that
-              // offset. Deriving the inset from the same value keeps heading
-              // and titles on one left edge instead of the old `mx-2`, which
-              // lined up with neither the icons nor the titles.
-              style={{
-                paddingLeft: sizes.desktop_collapsed_width,
-                paddingRight: "0.5rem",
-              }}
-            >
-              {groupTitle}
-            </Label>
+            {/*
+              The grid item. `min-h-0` lets it shrink past its content — a grid
+              item floors at `min-content` otherwise, and the track would never
+              reach zero — and `overflow-hidden` clips the heading on the way.
+
+              It carries no padding of its own, and that is the point. Padding
+              is part of the box and does not shrink with it, so an element
+              that has any cannot be driven below it: while the gap below the
+              heading sat out here, the row floored at 8px and the unmount
+              dropped those 8px in a single frame. Everything that takes up
+              space lives one level further in, as content this element clips.
+            */}
+            <div className={cn("min-h-0 overflow-hidden", "text-nowrap")}>
+              <div
+                style={{
+                  paddingBottom:
+                    sizes.sidebar_expanded_menu_group_label_bottom_padding,
+                }}
+              >
+                <Label
+                  htmlFor={groupItemsContainerId}
+                  className={cn("font-bold text-nowrap", "block")}
+                  // Align the group heading with the item titles underneath
+                  // it: each item renders its icon inside a box exactly
+                  // `desktop_collapsed_width` wide, so its title starts at
+                  // that offset. Deriving the inset from the same value keeps
+                  // heading and titles on one left edge instead of the old
+                  // `mx-2`, which lined up with neither the icons nor the
+                  // titles.
+                  style={{
+                    paddingLeft: sizes.desktop_collapsed_width,
+                    paddingRight: "0.5rem",
+                  }}
+                >
+                  {groupTitle}
+                </Label>
+              </div>
+            </div>
           </m.div>
         )}
       </AnimatePresence>

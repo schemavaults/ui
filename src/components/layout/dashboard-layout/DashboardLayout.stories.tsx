@@ -754,6 +754,23 @@ export const SidebarItemGroupFirst: Story = {
     const paddingTopOf = (element: HTMLElement): number =>
       Math.round(parseFloat(getComputedStyle(element).paddingTop));
 
+    const verticalPaddingOf = (element: HTMLElement): number => {
+      const style: CSSStyleDeclaration = getComputedStyle(element);
+      return Math.round(
+        parseFloat(style.paddingTop) + parseFloat(style.paddingBottom),
+      );
+    };
+
+    const rowOffsetFromHeader = (): number | null => {
+      const row: HTMLLIElement | null = findRow("/leading-group/link-1");
+      return row
+        ? Math.round(
+            row.getBoundingClientRect().top -
+              sidebarHeader().getBoundingClientRect().bottom,
+          )
+        : null;
+    };
+
     const desktop: boolean = window.matchMedia("(min-width: 768px)").matches;
 
     // Desktop starts collapsed, which is the state that shows the inset is
@@ -828,6 +845,20 @@ export const SidebarItemGroupFirst: Story = {
         );
         expect(paddingTopOf(groupContainer("Trailing Group"))).toBe(0);
 
+        // Nothing between the animating wrapper and the heading may carry
+        // vertical padding. Padding is part of the box and does not shrink
+        // with it, so an element that has any cannot be driven to zero
+        // height: it floors at its padding and the unmount drops whatever is
+        // left in a single frame. Both elements in that chain must therefore
+        // be bare, with the heading's own bottom gap living further in, as
+        // content they clip.
+        const paddedContent = leadingHeading.parentElement as HTMLElement;
+        const clippingItem = paddedContent.parentElement as HTMLElement;
+        const animatingWrapper = clippingItem.parentElement as HTMLElement;
+        expect(verticalPaddingOf(clippingItem)).toBe(0);
+        expect(verticalPaddingOf(animatingWrapper)).toBe(0);
+        expect(verticalPaddingOf(paddedContent)).toBeGreaterThan(0);
+
         // Whitespace a reader actually sees above each heading. Before the fix
         // the leading one was 0 -- the heading sat on the header's border.
         const leadingWhitespace: number = Math.round(
@@ -845,6 +876,63 @@ export const SidebarItemGroupFirst: Story = {
         expect(
           Math.abs(leadingWhitespace - trailingWhitespace),
         ).toBeLessThanOrEqual(4);
+      },
+      { timeout: 3000 },
+    );
+
+    // Collapsing must not drop the menu. The heading opens and closes between
+    // a mount and an unmount, so whatever height it still occupies on its last
+    // frame vanishes in one step on its next -- the rows below jumped by that
+    // much. Watching the frame either side of the unmount measures that step
+    // directly, and does so however fast or slow the frames happen to be
+    // arriving, unlike a cap on per-frame movement. Desktop only: collapsing
+    // on mobile unmounts the whole Sheet, rows included, so there is no
+    // "after" position to compare against.
+    if (!desktop) {
+      return;
+    }
+
+    const watchUnmount: Promise<{ step: number; timedOut: boolean }> =
+      new Promise((resolve): void => {
+        const deadline: number = performance.now() + 3000;
+        let lastWithHeading: number | null = null;
+        const tick = (): void => {
+          const offset: number | null = rowOffsetFromHeader();
+          if (findGroupHeading("Leading Group") !== null) {
+            if (offset !== null) {
+              lastWithHeading = offset;
+            }
+            if (performance.now() > deadline) {
+              resolve({ step: 0, timedOut: true });
+              return;
+            }
+            requestAnimationFrame(tick);
+            return;
+          }
+          resolve({
+            step:
+              offset !== null && lastWithHeading !== null
+                ? Math.abs(offset - lastWithHeading)
+                : 0,
+            timedOut: false,
+          });
+        };
+        requestAnimationFrame(tick);
+      });
+
+    await userEvent.click(sidebarTrigger());
+    const unmount: { step: number; timedOut: boolean } = await watchUnmount;
+    expect(unmount.timedOut).toBe(false);
+    // Was 8px on its own, and 24px while the leading inset rode on the
+    // heading too.
+    expect(unmount.step).toBeLessThanOrEqual(1);
+
+    // Leave the sidebar open: this story is the one someone opens to look at
+    // a leading group, and collapsed it shows nothing of the kind.
+    await userEvent.click(sidebarTrigger());
+    await waitFor(
+      (): void => {
+        expect(findGroupHeading("Leading Group")).not.toBeNull();
       },
       { timeout: 3000 },
     );

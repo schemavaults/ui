@@ -50,9 +50,12 @@ export interface DashboardLayoutSidebarSizing {
   /**
    * Space, in pixels, between a group's label and the first item beneath it.
    *
-   * This is a raw number rather than a Tailwind class because it is animated
-   * by Framer Motion as the sidebar expands and collapses (the label's height
-   * and padding animate to 0 on collapse), and Framer needs a numeric target.
+   * A raw number rather than a Tailwind class so it can be applied inline
+   * next to the label, inside the element the collapsing heading clips. It is
+   * no longer animated: the heading collapses by way of an `fr` grid track,
+   * and this padding rides along as clipped content. Keep it off the wrapper
+   * and off the grid item — padding on either floors that box and stops the
+   * track reaching zero.
    *
    * Keep it equal to `sidebar_menu_item_gap_classname` expressed in pixels —
    * the default `gap-2` is 0.5rem, i.e. 8px. A mismatch is exactly what made
@@ -72,11 +75,10 @@ export interface DashboardLayoutSidebarSizing {
    * so the row itself supplies the breathing room that a bare text label
    * does not.
    *
-   * Like the bottom padding this is a raw number because Framer Motion
-   * animates it to 0 as the sidebar collapses, and Framer needs a numeric
-   * target. It is applied to the group's container rather than to the label
-   * itself: the label is unmounted on collapse, and a padding on an
-   * unmounting element cannot animate out.
+   * A raw number because Framer Motion animates it to 0 as the sidebar
+   * collapses, and Framer needs a numeric target. It is applied to the
+   * group's container rather than to the label: the label is unmounted on
+   * collapse, and padding on an unmounting element cannot animate out.
    *
    * Optional so that consumers already passing a complete `sizing` object
    * keep type-checking;
