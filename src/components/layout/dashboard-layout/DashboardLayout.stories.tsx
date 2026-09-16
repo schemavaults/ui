@@ -737,14 +737,33 @@ export const SidebarItemGroupFirst: Story = {
       return header as HTMLElement;
     };
 
+    // The element the inset has to live on. It wraps a group's heading *and*
+    // its list, so unlike the heading it stays mounted when the sidebar
+    // collapses -- which is what lets the inset animate out instead of
+    // vanishing with the element that carried it.
+    const groupContainer = (title: string): HTMLElement => {
+      const list: HTMLElement | null = document.getElementById(
+        `sidebar-group-items-[${title}]`,
+      );
+      expect(list).not.toBeNull();
+      const container: HTMLElement | null = (list as HTMLElement).parentElement;
+      expect(container).not.toBeNull();
+      return container as HTMLElement;
+    };
+
+    const paddingTopOf = (element: HTMLElement): number =>
+      Math.round(parseFloat(getComputedStyle(element).paddingTop));
+
     const desktop: boolean = window.matchMedia("(min-width: 768px)").matches;
 
-    // Desktop starts collapsed, which is the state that shows the inset
-    // belongs to the *heading* and not to the group: with no heading rendered
-    // there is nothing to hold off the header, so a leading group's first row
-    // starts exactly where a leading ungrouped row would.
+    // Desktop starts collapsed, which is the state that shows the inset is
+    // *for* the heading: with no heading rendered there is nothing to hold off
+    // the header, so a leading group's first row starts exactly where a
+    // leading ungrouped row would. The group container is still here, at zero
+    // inset -- it is the thing that will animate the inset in.
     if (desktop) {
       expect(findGroupHeading("Leading Group")).toBeNull();
+      expect(paddingTopOf(groupContainer("Leading Group"))).toBe(0);
       const firstRow: HTMLLIElement | null = findRow("/leading-group/link-1");
       expect(firstRow).not.toBeNull();
       expect(
@@ -795,6 +814,19 @@ export const SidebarItemGroupFirst: Story = {
               sidebarHeader().getBoundingClientRect().bottom,
           ),
         ).toBe(DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING);
+
+        // ...and it is carried by the group container, not by the heading.
+        // This is the difference between the inset animating away on collapse
+        // and disappearing in one frame: AnimatePresence unmounts the heading,
+        // so padding parked on it takes its space with it the moment it goes,
+        // and Framer cannot drive a border-box element's height below its own
+        // padding either. Measure where the inset lives, not just that the
+        // heading ends up in the right place -- both arrangements pass the
+        // assertion above, only one of them animates.
+        expect(paddingTopOf(groupContainer("Leading Group"))).toBe(
+          DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING,
+        );
+        expect(paddingTopOf(groupContainer("Trailing Group"))).toBe(0);
 
         // Whitespace a reader actually sees above each heading. Before the fix
         // the leading one was 0 -- the heading sat on the header's border.

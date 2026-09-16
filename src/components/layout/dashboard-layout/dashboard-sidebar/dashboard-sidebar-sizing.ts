@@ -73,7 +73,10 @@ export interface DashboardLayoutSidebarSizing {
    * does not.
    *
    * Like the bottom padding this is a raw number because Framer Motion
-   * animates it to 0 as the sidebar collapses and the label is removed.
+   * animates it to 0 as the sidebar collapses, and Framer needs a numeric
+   * target. It is applied to the group's container rather than to the label
+   * itself: the label is unmounted on collapse, and a padding on an
+   * unmounting element cannot animate out.
    *
    * Optional so that consumers already passing a complete `sizing` object
    * keep type-checking;

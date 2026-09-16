@@ -45,14 +45,22 @@ export function DashboardSidebarItemGroupRenderer({
   const groupItemsContainerId: string = `sidebar-group-items-[${group.title}]`;
   const showGroupLabel = openState.mobile || openState.open;
 
-  // Zero for every group but the leading one, so the animation targets below
-  // stay a single set of values rather than two conditional variants: a
-  // non-leading group animates a padding of 0 to 0 and is unaffected. It rides
-  // on the label rather than on the group container because it exists to keep
-  // the *heading* off the header border — collapse the sidebar and the heading
-  // goes away, along with the reason to reserve space for it, leaving the
-  // leading group's icon rows sitting exactly where leading ungrouped rows do.
-  const labelTopPadding: number = first
+  // Zero for every group but the leading one, so the target below stays a
+  // single value rather than two conditional variants: a non-leading group
+  // animates 0 to 0 and is unaffected.
+  //
+  // It sits on the group container rather than on the heading, even though it
+  // exists for the heading's sake. AnimatePresence mounts and unmounts the
+  // heading, and a padding that belongs to an unmounting element cannot
+  // animate out — it is simply gone the frame the element leaves, taking its
+  // space with it. Framer also cannot drive a border-box element's height
+  // below its own padding, so while the inset lived on the heading the
+  // collapse bottomed out 24px short and snapped the rest. The container is
+  // mounted for as long as the group is, so the same 0 <-> 16 change is an
+  // animation rather than a jump, and the end states are unchanged: collapsed
+  // means 0, leaving a leading group's icon rows where leading ungrouped rows
+  // sit.
+  const groupTopPadding: number = first
     ? (sizes.sidebar_leading_menu_group_label_top_padding ??
       DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING)
     : 0;
@@ -70,6 +78,21 @@ export function DashboardSidebarItemGroupRenderer({
         "flex-shrink-0",
       )}
       layout={!reducedMotion}
+      // No entrance animation: a group that mounts already open starts at its
+      // resting inset rather than easing into it.
+      initial={false}
+      animate={{
+        paddingTop: showGroupLabel ? groupTopPadding : 0,
+        transition: {
+          duration: transitionTime,
+          ease: toggleDashboardLayoutCollapsedTransitionEasing,
+          // Matches the heading's own timing on both legs, so the inset and
+          // the heading it is reserving space for move as one: held back on
+          // the way in until the sidebar is most of the way open, and leaving
+          // immediately on the way out. Both are 0 under reduced motion.
+          delay: showGroupLabel ? transitionTime / 1.5 : 0,
+        },
+      }}
     >
       <AnimatePresence>
         {showGroupLabel && (
@@ -84,7 +107,6 @@ export function DashboardSidebarItemGroupRenderer({
               transitionEnd: {
                 display: "none",
               },
-              paddingTop: 0,
               paddingBottom: 0,
             }}
             animate={{
@@ -93,7 +115,6 @@ export function DashboardSidebarItemGroupRenderer({
               width: "100%",
               height: "auto",
               display: "block",
-              paddingTop: labelTopPadding,
               paddingBottom:
                 sizes.sidebar_expanded_menu_group_label_bottom_padding,
               transition: {
@@ -113,7 +134,6 @@ export function DashboardSidebarItemGroupRenderer({
               transitionEnd: {
                 display: "none",
               },
-              paddingTop: 0,
               paddingBottom: 0,
               transition: {
                 duration: transitionTime,
