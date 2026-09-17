@@ -34,7 +34,7 @@ const chipVariants = cva(
         success:
           "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 data-[interactive=true]:hover:bg-emerald-500/25 data-[selected=true]:bg-emerald-600 data-[selected=true]:text-white data-[selected=true]:border-emerald-600",
         warning:
-          "bg-warning/20 text-warning-foreground border-warning/40 data-[interactive=true]:hover:bg-warning/30 data-[selected=true]:bg-warning data-[selected=true]:text-warning-foreground data-[selected=true]:border-warning",
+          "bg-warning/20 text-warning-foreground dark:text-warning border-warning/40 data-[interactive=true]:hover:bg-warning/30 data-[selected=true]:bg-warning data-[selected=true]:text-warning-foreground dark:data-[selected=true]:text-warning-foreground data-[selected=true]:border-warning",
         outline:
           "bg-transparent text-foreground border-input data-[interactive=true]:hover:bg-accent data-[interactive=true]:hover:text-accent-foreground data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground data-[selected=true]:border-foreground/40",
       } satisfies Record<ChipVariant, string>,

@@ -170,7 +170,7 @@ const alertDialogIconVariants = cva(
       tone: {
         default: "bg-muted text-foreground",
         destructive: "bg-destructive/15 text-destructive",
-        warning: "bg-warning/20 text-warning-foreground",
+        warning: "bg-warning/20 text-warning-foreground dark:text-warning",
         success: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
         info: "bg-schemavaults-brand-blue/15 text-schemavaults-brand-blue",
       } satisfies Record<AlertDialogToneId, string>,

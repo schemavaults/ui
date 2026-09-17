@@ -40,9 +40,9 @@ const httpMethodColors: Record<
   },
   PUT: {
     solid: "bg-warning text-warning-foreground border-warning",
-    soft: "bg-warning/15 text-warning-foreground border-warning/40 dark:bg-warning/20",
+    soft: "bg-warning/15 text-warning-foreground border-warning/40 dark:bg-warning/20 dark:text-warning",
     outline:
-      "bg-transparent text-warning-foreground border-warning/50 dark:border-warning/70",
+      "bg-transparent text-warning-foreground border-warning/50 dark:border-warning/70 dark:text-warning",
   },
   PATCH: {
     solid:

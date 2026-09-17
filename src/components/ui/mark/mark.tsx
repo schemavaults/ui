@@ -214,7 +214,7 @@ const markVariants = cva(
       {
         markStyle: "outline",
         variant: "warning",
-        class: "border-warning text-warning-foreground",
+        class: "border-warning text-warning-foreground dark:text-warning",
       },
       {
         markStyle: "outline",
