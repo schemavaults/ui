@@ -31,7 +31,7 @@ const bannerVariants = cva(
         success:
           "border-green-500/30 bg-green-500/10 text-green-900 dark:bg-green-500/15 dark:text-green-100 [&>svg]:text-green-600 dark:[&>svg]:text-green-400",
         warning:
-          "border-warning/30 bg-warning/10 text-warning-foreground [&>svg]:text-warning",
+          "border-warning/30 bg-warning/10 text-warning-foreground dark:text-warning [&>svg]:text-warning",
         destructive:
           "border-destructive/30 bg-destructive/10 text-destructive dark:bg-destructive/15 dark:text-destructive-foreground [&>svg]:text-destructive",
       } satisfies Record<BannerVariantId, string>,
