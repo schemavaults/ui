@@ -32,7 +32,7 @@ const chipVariants = cva(
         destructive:
           "bg-destructive/15 text-destructive border-destructive/30 data-[interactive=true]:hover:bg-destructive/25 data-[selected=true]:bg-destructive data-[selected=true]:text-destructive-foreground data-[selected=true]:border-destructive",
         success:
-          "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 data-[interactive=true]:hover:bg-emerald-500/25 data-[selected=true]:bg-emerald-600 data-[selected=true]:text-white data-[selected=true]:border-emerald-600",
+          "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 data-[interactive=true]:hover:bg-emerald-500/25 data-[selected=true]:bg-emerald-600 data-[selected=true]:text-white dark:data-[selected=true]:text-white data-[selected=true]:border-emerald-600",
         warning:
           "bg-warning/20 text-warning-foreground dark:text-warning border-warning/40 data-[interactive=true]:hover:bg-warning/30 data-[selected=true]:bg-warning data-[selected=true]:text-warning-foreground dark:data-[selected=true]:text-warning-foreground data-[selected=true]:border-warning",
         outline:
