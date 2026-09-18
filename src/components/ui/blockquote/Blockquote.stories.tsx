@@ -50,7 +50,7 @@ function BlockquoteExample({
 }
 
 const meta = {
-  title: "Components/Blockquote",
+  title: "Data Display/Blockquote",
   component: BlockquoteExample,
   parameters: {
     layout: "centered",

@@ -19,7 +19,7 @@ import {
 } from "./time-picker";
 
 const meta = {
-  title: "Components/TimePicker",
+  title: "Date & Time/TimePicker",
   component: TimePicker,
   parameters: {
     layout: "centered",

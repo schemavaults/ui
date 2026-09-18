@@ -70,7 +70,7 @@ const afterSql: string = `CREATE TABLE users (
 CREATE INDEX users_email_idx ON users (email);`;
 
 const meta = {
-  title: "Components/DiffViewer",
+  title: "Developer Tools/DiffViewer",
   component: DiffViewer,
   parameters: {
     layout: "padded",

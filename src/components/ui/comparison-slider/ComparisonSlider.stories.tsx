@@ -41,7 +41,7 @@ function AfterPane({
 }
 
 const meta = {
-  title: "Components/Comparison Slider",
+  title: "Media & Frames/Comparison Slider",
   component: ComparisonSlider,
   decorators: [
     (Story, context) => {

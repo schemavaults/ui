@@ -14,14 +14,14 @@ import {
 } from "./attachment-card";
 
 const meta = {
-  title: "Components/AttachmentCard",
+  title: "Forms/AttachmentCard",
   component: AttachmentCard,
   parameters: {
     layout: "centered",
     docs: {
       description: {
         component:
-          "A file attachment card with an auto-inferred file-type icon, formatted byte size, optional preview thumbnail, and lifecycle states (`uploading`, `error`, `complete`). Sits naturally next to [`FileInput`](?path=/docs/components-fileinput--docs) for the upload flow, and works standalone in email/chat/document lists. Icons and colours come from a curated palette keyed to file kind (image / video / audio / code / archive / spreadsheet / json / pdf / text) and are inferred from the file extension or MIME type when not supplied explicitly. All colours resolve to `@schemavaults/theme` tokens where possible (`bg-card`, `text-foreground`, `border-border`, `bg-primary`, `bg-destructive`, `bg-muted`) so the card tracks the active theme.",
+          "A file attachment card with an auto-inferred file-type icon, formatted byte size, optional preview thumbnail, and lifecycle states (`uploading`, `error`, `complete`). Sits naturally next to [`FileInput`](?path=/docs/forms-file-input--docs) for the upload flow, and works standalone in email/chat/document lists. Icons and colours come from a curated palette keyed to file kind (image / video / audio / code / archive / spreadsheet / json / pdf / text) and are inferred from the file extension or MIME type when not supplied explicitly. All colours resolve to `@schemavaults/theme` tokens where possible (`bg-card`, `text-foreground`, `border-border`, `bg-primary`, `bg-destructive`, `bg-muted`) so the card tracks the active theme.",
       },
     },
   },

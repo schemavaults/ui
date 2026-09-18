@@ -20,7 +20,7 @@ const LEGEND_SWATCH_CLASSES: Record<RadarChartColorId, string> = {
 };
 
 const meta = {
-  title: "Components/RadarChart",
+  title: "Charts & Graphs/RadarChart",
   component: RadarChart,
   parameters: {
     layout: "centered",

@@ -10,7 +10,7 @@ import {
 } from "./notification-bell-variants";
 
 const meta = {
-  title: "Components/NotificationBell",
+  title: "Feedback/NotificationBell",
   component: NotificationBell,
   parameters: {
     layout: "centered",

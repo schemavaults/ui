@@ -5,7 +5,7 @@ import { DateRangePicker } from "./date-range-picker";
 import { calendarSizeIds, type DateRange } from "@/components/ui/calendar";
 
 const meta = {
-  title: "Components/DateRangePicker",
+  title: "Date & Time/DateRangePicker",
   component: DateRangePicker,
   parameters: {
     layout: "centered",

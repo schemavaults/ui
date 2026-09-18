@@ -10,7 +10,7 @@ import {
 } from "./presence-indicator";
 
 const meta = {
-  title: "Components/PresenceIndicator",
+  title: "Feedback/PresenceIndicator",
   component: PresenceIndicator,
   parameters: {
     layout: "centered",

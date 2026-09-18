@@ -7,7 +7,7 @@ import { SwitchProps } from "@radix-ui/react-switch";
 import { useArgs } from "storybook/preview-api";
 
 const meta = {
-  title: "Components/Switch",
+  title: "Forms/Switch",
   component: Switch,
   parameters: {
     layout: "centered",

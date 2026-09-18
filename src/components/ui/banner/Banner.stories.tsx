@@ -35,7 +35,7 @@ function BannerExample({
 }
 
 const meta = {
-  title: "Components/Banner",
+  title: "Feedback/Banner",
   component: BannerExample,
   parameters: {
     layout: "padded",

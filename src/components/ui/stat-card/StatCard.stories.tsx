@@ -104,7 +104,7 @@ function StatCardExample({
 }
 
 const meta = {
-  title: "Components/StatCard",
+  title: "Charts & Graphs/StatCard",
   component: StatCardExample,
   parameters: {
     layout: "padded",
