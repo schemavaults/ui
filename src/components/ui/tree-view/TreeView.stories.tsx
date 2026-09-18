@@ -78,7 +78,7 @@ function FileExplorerDemo({
 }
 
 const meta = {
-  title: "Components/TreeView",
+  title: "Data Display/TreeView",
   component: FileExplorerDemo,
   parameters: { layout: "centered" },
   tags: ["autodocs"],

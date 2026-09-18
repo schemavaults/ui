@@ -57,7 +57,7 @@ function FloatingActionButtonExample({
 }
 
 const meta = {
-  title: "Components/FloatingActionButton",
+  title: "Actions/FloatingActionButton",
   component: FloatingActionButtonExample,
   parameters: {
     layout: "padded",

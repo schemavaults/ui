@@ -10,14 +10,14 @@ import {
 } from "./segmented-bar";
 
 const meta = {
-  title: "Components/SegmentedBar",
+  title: "Charts & Graphs/SegmentedBar",
   component: SegmentedBar,
   parameters: {
     layout: "centered",
     docs: {
       description: {
         component:
-          "A stacked horizontal bar composed of multiple coloured segments — one visualisation for showing the composition of a whole. Use for capacity breakdowns (used / reserved / free of a quota), traffic sources, cost distribution, task status counts, or any other categorical split. Complements [`ProgressBar`](?path=/docs/components-progressbar--docs) (single value toward a goal) and [`Meter`](?path=/docs/components-meter--docs) (scalar with thresholds); pairs naturally with [`PieChart`](?path=/docs/components-piechart--docs) when a numeric legend is easier to read than a pie. Segment colours use the same palette as `PieChart` so both visualisations agree on which segment is which.",
+          "A stacked horizontal bar composed of multiple coloured segments — one visualisation for showing the composition of a whole. Use for capacity breakdowns (used / reserved / free of a quota), traffic sources, cost distribution, task status counts, or any other categorical split. Complements [`ProgressBar`](?path=/docs/charts-graphs-progressbar--docs) (single value toward a goal) and [`Meter`](?path=/docs/charts-graphs-meter--docs) (scalar with thresholds); pairs naturally with [`PieChart`](?path=/docs/charts-graphs-piechart--docs) when a numeric legend is easier to read than a pie. Segment colours use the same palette as `PieChart` so both visualisations agree on which segment is which.",
       },
     },
   },

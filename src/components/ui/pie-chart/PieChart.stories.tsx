@@ -18,7 +18,7 @@ const LEGEND_SWATCH_CLASSES: Record<PieChartSegmentColorId, string> = {
 };
 
 const meta = {
-  title: "Components/PieChart",
+  title: "Charts & Graphs/PieChart",
   component: PieChart,
   parameters: {
     layout: "centered",

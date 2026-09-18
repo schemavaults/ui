@@ -12,7 +12,7 @@ import {
 } from "./spinner-variants";
 
 const meta = {
-  title: "Components/Spinner",
+  title: "Feedback/Spinner",
   component: Spinner,
   parameters: {
     layout: "centered",

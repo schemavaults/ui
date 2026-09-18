@@ -7,7 +7,7 @@ import Input from "./input";
 import { Button } from "@/components/ui/button";
 
 const meta = {
-  title: "Components/Input",
+  title: "Forms/Input",
   component: Input,
   parameters: {
     layout: "centered",
@@ -46,7 +46,7 @@ export const NumberInput: Story = {
     docs: {
       description: {
         story:
-          'Renders a basic numeric `<input type="number" />`. For richer numeric entry — increment / decrement stepper buttons, min / max bounds, fractional `step` with `precision`, prefix / suffix slots, multiple sizes & variants, and `ArrowUp` / `ArrowDown` keyboard support — use the dedicated [`NumberInput` component](?path=/docs/components-numberinput--docs) instead.',
+          'Renders a basic numeric `<input type="number" />`. For richer numeric entry — increment / decrement stepper buttons, min / max bounds, fractional `step` with `precision`, prefix / suffix slots, multiple sizes & variants, and `ArrowUp` / `ArrowDown` keyboard support — use the dedicated [`NumberInput` component](?path=/docs/forms-numberinput--docs) instead.',
       },
     },
   },

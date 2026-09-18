@@ -16,7 +16,7 @@ import {
 } from "./device-frame";
 
 const meta = {
-  title: "Components/DeviceFrame",
+  title: "Media & Frames/DeviceFrame",
   component: DeviceFrame,
   parameters: {
     layout: "centered",

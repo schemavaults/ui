@@ -77,7 +77,7 @@ function buildDeep(depth: number): JsonValue {
 const sampleDeep: JsonValue = buildDeep(8);
 
 const meta = {
-  title: "Components/JsonViewer",
+  title: "Developer Tools/JsonViewer",
   component: JsonViewer,
   parameters: {
     layout: "padded",

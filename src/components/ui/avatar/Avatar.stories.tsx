@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback, AvatarGroup, avatarSizeIds, avatar
 const avatarImage: string = "/media/example_images/avatar-placeholder.svg";
 
 const meta = {
-  title: "Components/Avatar",
+  title: "Data Display/Avatar",
   component: Avatar,
   parameters: {
     layout: "centered",

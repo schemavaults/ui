@@ -86,7 +86,7 @@ function ScrollToTopExample({
 }
 
 const meta = {
-  title: "Components/ScrollToTop",
+  title: "Navigation/ScrollToTop",
   component: ScrollToTopExample,
   parameters: {
     layout: "padded",

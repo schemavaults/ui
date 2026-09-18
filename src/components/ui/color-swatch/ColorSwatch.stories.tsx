@@ -10,7 +10,7 @@ import {
 } from "./color-swatch-variants";
 
 const meta = {
-  title: "Components/ColorSwatch",
+  title: "Theme/ColorSwatch",
   component: ColorSwatch,
   parameters: {
     layout: "centered",

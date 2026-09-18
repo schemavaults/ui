@@ -24,7 +24,7 @@ function ExamplePane({ message }: { message: string }): ReactElement {
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: "Components/Split Pane",
+  title: "Layout/Split Pane",
   component: SplitPane,
   decorators: [
     (Story, context) => {

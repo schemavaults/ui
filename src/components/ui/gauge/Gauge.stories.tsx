@@ -11,14 +11,14 @@ import {
 } from "./gauge";
 
 const meta = {
-  title: "Components/Gauge",
+  title: "Charts & Graphs/Gauge",
   component: Gauge,
   parameters: {
     layout: "centered",
     docs: {
       description: {
         component:
-          "Semi-circular meter (a.k.a. half-gauge / radial dial) for dashboard tiles, SLO views, and resource-usage panels. Distinct from [`CircularProgress`](?path=/docs/components-circularprogress--docs) (full ring, percentage-only) and [`ProgressBar`](?path=/docs/components-progressbar--docs) (linear). Supports an optional needle, color zones (good / warning / danger bands), and automatic color selection based on which zone the current value falls into.\n\n**See also:** [CircularProgress](?path=/docs/components-circularprogress--docs), [ProgressBar](?path=/docs/components-progressbar--docs).",
+          "Semi-circular meter (a.k.a. half-gauge / radial dial) for dashboard tiles, SLO views, and resource-usage panels. Distinct from [`CircularProgress`](?path=/docs/charts-graphs-circularprogress--docs) (full ring, percentage-only) and [`ProgressBar`](?path=/docs/charts-graphs-progressbar--docs) (linear). Supports an optional needle, color zones (good / warning / danger bands), and automatic color selection based on which zone the current value falls into.\n\n**See also:** [CircularProgress](?path=/docs/charts-graphs-circularprogress--docs), [ProgressBar](?path=/docs/charts-graphs-progressbar--docs).",
       },
     },
   },

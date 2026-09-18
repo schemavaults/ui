@@ -27,7 +27,7 @@ function ToastPlayground(props: ToastOptions): ReactElement {
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: "Components/Toast",
+  title: "Feedback/Toast",
   decorators: [
     (Story) => {
       return (
@@ -47,7 +47,7 @@ const meta = {
         component:
           "Toast is the individual notification element with variants for `default`, `destructive`, and `warning` styles. " +
           "Use the `useToast` hook to trigger toasts imperatively. " +
-          "To render toasts in your app, mount the [Toaster](?path=/docs/components-toaster--docs) container component — it subscribes to the toast state and displays active toasts.",
+          "To render toasts in your app, mount the [Toaster](?path=/docs/feedback-toaster--docs) container component — it subscribes to the toast state and displays active toasts.",
       },
     },
   },

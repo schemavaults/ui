@@ -31,7 +31,7 @@ import {
 } from "./prompt-input";
 
 const meta = {
-  title: "Components/PromptInput",
+  title: "AI & Chat/PromptInput",
   component: PromptInput,
   parameters: {
     layout: "centered",

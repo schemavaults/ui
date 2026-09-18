@@ -42,7 +42,7 @@ interface StoryArgs {
 }
 
 const meta = {
-  title: "Components/RadioCardGroup",
+  title: "Forms/RadioCardGroup",
   parameters: {
     layout: "centered",
     docs: {
@@ -55,8 +55,8 @@ const meta = {
           "\n\nReach for it whenever you'd otherwise use a radio group but the options need",
           "more room to breathe: plan/pricing selection, payment methods, onboarding",
           "'what are you trying to do?' screens, environment/region pickers, and so on.",
-          "Complements the simpler [`RadioGroup`](?path=/docs/components-radiogroup--docs)",
-          "(bare-bones radio buttons) and [`SegmentedControl`](?path=/docs/components-segmentedcontrol--docs)",
+          "Complements the simpler [`RadioGroup`](?path=/docs/forms-radio-group--docs)",
+          "(bare-bones radio buttons) and [`SegmentedControl`](?path=/docs/forms-segmentedcontrol--docs)",
           "(single-row exclusive toggle).",
         ].join(" "),
       },

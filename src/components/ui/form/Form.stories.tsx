@@ -292,7 +292,7 @@ function FormWithErrorsDemo(): ReactElement {
 }
 
 const meta = {
-  title: "Components/Form",
+  title: "Forms/Form",
   component: BasicFormDemo,
   parameters: {
     layout: "centered",

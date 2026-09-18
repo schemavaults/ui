@@ -36,7 +36,7 @@ const ContainerDecorator: Decorator = (Story) => (
 );
 
 const meta = {
-  title: "Components/Ribbon",
+  title: "Data Display/Ribbon",
   component: Ribbon,
   parameters: {
     layout: "centered",

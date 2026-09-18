@@ -18,7 +18,7 @@ const base64SampleSvg: string = Buffer.from(rawSampleSvg, "utf-8").toString(
 );
 
 const meta = {
-  title: "Components/Icon",
+  title: "Data Display/Icon",
   component: Icon,
   parameters: {
     layout: "centered",

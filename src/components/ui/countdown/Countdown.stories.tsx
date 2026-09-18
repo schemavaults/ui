@@ -19,7 +19,7 @@ function fromNow(ms: number): number {
 }
 
 const meta = {
-  title: "Components/Countdown",
+  title: "Date & Time/Countdown",
   component: Countdown,
   parameters: {
     layout: "centered",

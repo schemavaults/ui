@@ -85,7 +85,7 @@ const oneYearOfActivity: ReadonlyArray<CalendarHeatmapValue> =
   });
 
 const meta = {
-  title: "Components/CalendarHeatmap",
+  title: "Charts & Graphs/CalendarHeatmap",
   component: CalendarHeatmap,
   parameters: {
     layout: "padded",

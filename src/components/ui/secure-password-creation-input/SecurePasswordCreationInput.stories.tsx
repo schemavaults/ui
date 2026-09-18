@@ -22,7 +22,7 @@ function SecurePasswordCreationInputWrapper(
 }
 
 const meta = {
-  title: "Components/SecurePasswordCreationInput",
+  title: "Forms/SecurePasswordCreationInput",
   component: SecurePasswordCreationInputWrapper,
   parameters: {
     layout: "centered",

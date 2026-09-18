@@ -15,7 +15,7 @@ import {
 } from "./browser-frame";
 
 const meta = {
-  title: "Components/BrowserFrame",
+  title: "Media & Frames/BrowserFrame",
   component: BrowserFrame,
   parameters: {
     layout: "padded",

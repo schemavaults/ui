@@ -10,7 +10,7 @@ import {
 } from "./number-input-variants";
 
 const meta = {
-  title: "Components/NumberInput",
+  title: "Forms/NumberInput",
   component: NumberInput,
   parameters: {
     layout: "centered",
