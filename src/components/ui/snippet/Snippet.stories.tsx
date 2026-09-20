@@ -9,7 +9,7 @@ import {
 } from "./snippet-variants";
 
 const meta = {
-  title: "Components/Snippet",
+  title: "Developer Tools/Snippet",
   component: Snippet,
   parameters: {
     layout: "centered",

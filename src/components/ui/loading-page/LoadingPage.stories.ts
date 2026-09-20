@@ -4,7 +4,7 @@ import LoadingPage, { type LoadingPageProps } from "./loading-page";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: "Components/Loading Page",
+  title: "Feedback/Loading Page",
   component: LoadingPage,
   parameters: {
     // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout

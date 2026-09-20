@@ -17,7 +17,7 @@ import {
 } from "../stat-card";
 
 const meta = {
-  title: "Components/NumberTicker",
+  title: "Charts & Graphs/NumberTicker",
   component: NumberTicker,
   parameters: {
     layout: "centered",

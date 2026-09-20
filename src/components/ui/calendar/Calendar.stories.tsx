@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const meta = {
-  title: "Components/Calendar",
+  title: "Date & Time/Calendar",
   component: Calendar,
   parameters: {
     layout: "centered",

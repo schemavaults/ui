@@ -180,7 +180,7 @@ function WithHiddenColumnsDemo(): ReactElement {
 }
 
 const meta = {
-  title: "Components/Datatable",
+  title: "Data Display/Datatable",
   component: SingleColumnSearchDemo,
   parameters: {
     layout: "padded",

@@ -17,7 +17,7 @@ import { chipSizeIds, chipVariantIds, type ChipVariant } from "./chip-variants";
 import { Avatar, AvatarFallback, AvatarImage } from "../avatar";
 
 const meta = {
-  title: "Components/Chip",
+  title: "Data Display/Chip",
   component: Chip,
   parameters: {
     layout: "centered",

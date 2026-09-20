@@ -129,7 +129,7 @@ function AgentChatMessagesExample({
 }
 
 const meta = {
-  title: "Components/AgentChatMessages",
+  title: "AI & Chat/AgentChatMessages",
   component: AgentChatMessagesExample,
   parameters: {
     layout: "centered",

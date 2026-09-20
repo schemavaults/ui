@@ -16,7 +16,7 @@ import {
 } from "./terminal-frame";
 
 const meta = {
-  title: "Components/TerminalFrame",
+  title: "Media & Frames/TerminalFrame",
   component: TerminalFrame,
   parameters: {
     layout: "padded",

@@ -5,7 +5,7 @@ import type { ComponentProps, ReactElement } from "react";
 import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
 
 const meta = {
-  title: "Components/Fullscreen Image",
+  title: "Media & Frames/Fullscreen Image",
   component: FullscreenImage,
   parameters: {
     layout: "fullscreen",

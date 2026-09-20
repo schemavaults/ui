@@ -83,6 +83,42 @@ src/components/ui/button/
 └── Button.stories.ts
 ```
 
+### Storybook Story Groups
+
+A story's `title` is `"<Group>/<Component Name>"`. The group decides where the
+story lands in the Storybook sidebar — **do not** use the old catch-all
+`Components/` or `Layouts/` prefixes. Pick the group that matches what the
+component is *for*:
+
+| Group | What belongs in it |
+| --- | --- |
+| `Actions` | Buttons and action triggers (Button, SplitButton, CopyButton, Toolbar) |
+| `Forms` | Inputs, form controls, and file pickers (Input, Select, Checkbox, Dropzone) |
+| `Date & Time` | Calendars, date/time pickers, Countdown |
+| `Data Display` | Rendering records and content (Table, Timeline, Card, Badge, Avatar) |
+| `Charts & Graphs` | Data visualization and value indicators (LineChart, PieChart, Gauge, ProgressBar, StatCard) |
+| `Navigation` | Moving around an app (Breadcrumb, Tabs, Pagination, Stepper) |
+| `Overlays` | Anything portalled above the page (Dialog, Popover, Tooltip, Sheet) |
+| `Feedback` | Status and messaging (Alert, Toast, EmptyState, Skeleton, Spinner) |
+| `Developer Tools` | Code/API surfaces (CodeBlock, JsonViewer, DiffViewer, SecretReveal) |
+| `AI & Chat` | AI-facing surfaces (AgentChatMessages, PromptInput) |
+| `Media & Frames` | Images and device/browser chrome (BrowserFrame, Carousel, AspectRatio) |
+| `Layout` | Page structure and content containers (DashboardLayout, Accordion, Separator) |
+| `Motion & Effects` | Animation and decorative effects (Marquee, TypewriterEffect, BackgroundBlur) |
+| `Theme` | Theming reference and brand surfaces (Colors, ThemeSelector, Wordmark) |
+
+Sidebar ordering is pinned by the `options.storySort.order` list in
+`.storybook/preview.ts`; add new groups there too, or they sort to the bottom
+under the `"*"` bucket. That list must stay an inline array literal — Storybook
+statically parses it while building the story index, so hoisting it into a
+named constant breaks `build:storybook`.
+
+Storybook derives a story's URL from its title, so **renaming a group breaks
+every deep link to it**. Stories cross-link each other in their docs
+descriptions with `?path=/docs/<sanitized-title>--docs` (e.g.
+`?path=/docs/charts-graphs-progressbar--docs`). When a title changes, grep for
+the old id and update every link.
+
 ### Key Conventions
 
 - Components use `"use client"` directive for client-side rendering

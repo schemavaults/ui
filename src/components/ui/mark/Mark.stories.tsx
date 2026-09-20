@@ -11,7 +11,7 @@ import {
 } from "./mark-variants";
 
 const meta = {
-  title: "Components/Mark",
+  title: "Data Display/Mark",
   component: Mark,
   parameters: {
     layout: "centered",

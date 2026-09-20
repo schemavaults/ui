@@ -47,7 +47,7 @@ function ViewSwitcherDemo({
 }
 
 const meta = {
-  title: "Components/SegmentedControl",
+  title: "Forms/SegmentedControl",
   component: ViewSwitcherDemo,
   parameters: {
     layout: "centered",

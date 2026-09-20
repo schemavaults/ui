@@ -16,7 +16,7 @@ const EXAMPLE_API_KEY: string = "sv_live_4f7a9b2c3d8e1f5a6b9c0d2e3f4a5b6c";
 const EXAMPLE_SHORT_TOKEN: string = "abc123-xyz789";
 
 const meta = {
-  title: "Components/SecretReveal",
+  title: "Developer Tools/SecretReveal",
   component: SecretReveal,
   parameters: {
     layout: "centered",

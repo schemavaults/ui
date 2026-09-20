@@ -88,7 +88,7 @@ function EmptyStateExample({
 }
 
 const meta = {
-  title: "Components/EmptyState",
+  title: "Feedback/EmptyState",
   component: EmptyStateExample,
   parameters: {
     layout: "padded",

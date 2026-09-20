@@ -62,7 +62,7 @@ function PlaygroundDemo({
 }
 
 const meta = {
-  title: "Components/Collapsible",
+  title: "Layout/Collapsible",
   component: PlaygroundDemo,
   parameters: {
     layout: "centered",

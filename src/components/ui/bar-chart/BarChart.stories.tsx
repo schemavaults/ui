@@ -19,7 +19,7 @@ const LEGEND_SWATCH_CLASSES: Record<BarChartBarColorId, string> = {
 };
 
 const meta = {
-  title: "Components/BarChart",
+  title: "Charts & Graphs/BarChart",
   component: BarChart,
   parameters: {
     layout: "centered",

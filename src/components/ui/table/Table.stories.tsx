@@ -128,7 +128,7 @@ function TableWithSelectedRowDemo(): ReactElement {
 }
 
 const meta = {
-  title: "Components/Table",
+  title: "Data Display/Table",
   component: BasicTableDemo,
   parameters: {
     layout: "centered",

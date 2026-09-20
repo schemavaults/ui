@@ -47,7 +47,7 @@ const longSample: string = Array.from(
 ).join("\n");
 
 const meta = {
-  title: "Components/CodeBlock",
+  title: "Developer Tools/CodeBlock",
   component: CodeBlock,
   parameters: {
     layout: "padded",

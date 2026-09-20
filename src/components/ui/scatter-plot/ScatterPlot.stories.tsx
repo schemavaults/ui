@@ -22,7 +22,7 @@ const LEGEND_SWATCH_CLASSES: Record<ScatterPlotColorId, string> = {
 };
 
 const meta = {
-  title: "Components/ScatterPlot",
+  title: "Charts & Graphs/ScatterPlot",
   component: ScatterPlot,
   parameters: {
     layout: "centered",

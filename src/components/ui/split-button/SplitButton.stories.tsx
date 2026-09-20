@@ -29,7 +29,7 @@ import {
 } from "./split-button-variants";
 
 const meta = {
-  title: "Components/SplitButton",
+  title: "Actions/SplitButton",
   component: SplitButton,
   parameters: {
     layout: "centered",

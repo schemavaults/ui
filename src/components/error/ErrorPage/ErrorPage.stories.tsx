@@ -76,7 +76,7 @@ function ThrowOnClick(): ReactElement {
 // -- Stories --
 
 const meta = {
-  title: "Components/Error Page",
+  title: "Feedback/Error Page",
   component: ErrorPage,
   parameters: {
     layout: "fullscreen",

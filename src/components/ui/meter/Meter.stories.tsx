@@ -4,14 +4,14 @@ import { LazyFramerMotionProvider } from "@/providers/lazy_framer";
 import { Meter, meterSizeIds, meterColorIds } from "./meter";
 
 const meta = {
-  title: "Components/Meter",
+  title: "Charts & Graphs/Meter",
   component: Meter,
   parameters: {
     layout: "centered",
     docs: {
       description: {
         component:
-          "A scalar meter that displays a value within a known range, following the semantics of the HTML `<meter>` element. Configure `low`, `high`, and `optimum` thresholds to define which sub-range is preferable; enable `autoColorFromThresholds` to have the fill automatically switch between the `positive`, `warning`, and `destructive` theme colors as the value crosses those thresholds. Use for capacity indicators (storage / RAM / quota), health scores, or ratings — reserve [`ProgressBar`](?path=/docs/components-progressbar--docs) for progress toward completion and [`Gauge`](?path=/docs/components-gauge--docs) for arc-style dial displays.",
+          "A scalar meter that displays a value within a known range, following the semantics of the HTML `<meter>` element. Configure `low`, `high`, and `optimum` thresholds to define which sub-range is preferable; enable `autoColorFromThresholds` to have the fill automatically switch between the `positive`, `warning`, and `destructive` theme colors as the value crosses those thresholds. Use for capacity indicators (storage / RAM / quota), health scores, or ratings — reserve [`ProgressBar`](?path=/docs/charts-graphs-progressbar--docs) for progress toward completion and [`Gauge`](?path=/docs/charts-graphs-gauge--docs) for arc-style dial displays.",
       },
     },
   },

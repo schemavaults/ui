@@ -14,7 +14,7 @@ const sampleImage: string = "/media/example_images/milky-way-1920x1080.webp";
 const sampleImageThumb: string = "/media/example_images/milky-way-400x300.webp";
 
 const meta = {
-  title: "Components/AspectRatio",
+  title: "Media & Frames/AspectRatio",
   component: AspectRatio,
   parameters: {
     layout: "centered",
