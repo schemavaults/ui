@@ -53,7 +53,7 @@ function WithCloseButtonDemo(): ReactElement {
 }
 
 const meta = {
-  title: "Components/InlineMenu",
+  title: "Navigation/InlineMenu",
   component: BasicDemo,
   parameters: {
     layout: "centered",

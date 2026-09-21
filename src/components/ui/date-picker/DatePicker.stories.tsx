@@ -5,7 +5,7 @@ import { DatePicker } from "./date-picker";
 import { calendarSizeIds } from "@/components/ui/calendar";
 
 const meta = {
-  title: "Components/DatePicker",
+  title: "Date & Time/DatePicker",
   component: DatePicker,
   parameters: {
     layout: "centered",

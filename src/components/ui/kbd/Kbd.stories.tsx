@@ -23,7 +23,7 @@ function KbdExample({
 }
 
 const meta = {
-  title: "Components/Kbd",
+  title: "Data Display/Kbd",
   component: KbdExample,
   parameters: {
     layout: "centered",

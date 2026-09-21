@@ -10,7 +10,7 @@ import {
 } from "./http-method-badge-variants";
 
 const meta = {
-  title: "Components/HttpMethodBadge",
+  title: "Developer Tools/HttpMethodBadge",
   component: HttpMethodBadge,
   parameters: {
     layout: "centered",

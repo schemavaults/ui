@@ -11,7 +11,7 @@ import {
 } from "./copy-button-variants";
 
 const meta = {
-  title: "Components/CopyButton",
+  title: "Actions/CopyButton",
   component: CopyButton,
   parameters: {
     layout: "centered",

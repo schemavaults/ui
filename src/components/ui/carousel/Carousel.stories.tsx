@@ -130,7 +130,7 @@ function CarouselDemo(args: DemoArgs): ReactElement {
 }
 
 const meta = {
-  title: "Components/Carousel",
+  title: "Media & Frames/Carousel",
   component: CarouselDemo,
   parameters: {
     layout: "centered",

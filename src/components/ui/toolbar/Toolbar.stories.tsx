@@ -58,7 +58,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "../popover";
 
 const meta = {
-  title: "Components/Toolbar",
+  title: "Actions/Toolbar",
   component: Toolbar,
   parameters: {
     layout: "padded",

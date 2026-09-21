@@ -14,7 +14,7 @@ import {
 } from "./inline-edit-variants";
 
 const meta = {
-  title: "Components/InlineEdit",
+  title: "Forms/InlineEdit",
   component: InlineEdit,
   parameters: {
     layout: "centered",

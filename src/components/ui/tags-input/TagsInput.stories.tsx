@@ -9,7 +9,7 @@ import { chipVariantIds } from "../chip/chip-variants";
 import { Label } from "../label";
 
 const meta = {
-  title: "Components/TagsInput",
+  title: "Forms/TagsInput",
   component: TagsInput,
   parameters: {
     layout: "centered",

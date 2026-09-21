@@ -54,7 +54,7 @@ function ToasterDemo(): ReactElement {
 }
 
 const meta = {
-  title: "Components/Toaster",
+  title: "Feedback/Toaster",
   decorators: [
     (Story) => {
       return (
@@ -73,7 +73,7 @@ const meta = {
         component:
           "Toaster is the container component that subscribes to the `useToast` hook and renders active toasts. " +
           "Mount it once at your app root. " +
-          "For details on individual toast variants and styling, see the [Toast](?path=/docs/components-toast--docs) component.",
+          "For details on individual toast variants and styling, see the [Toast](?path=/docs/feedback-toast--docs) component.",
       },
     },
   },

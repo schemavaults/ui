@@ -32,7 +32,7 @@ const flatTrend: ReadonlyArray<number> = [
 ];
 
 const meta = {
-  title: "Components/Sparkline",
+  title: "Charts & Graphs/Sparkline",
   component: Sparkline,
   parameters: {
     layout: "centered",

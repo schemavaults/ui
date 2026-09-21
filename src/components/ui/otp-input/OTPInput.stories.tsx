@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 const meta = {
-  title: "Components/OTPInput",
+  title: "Forms/OTPInput",
   component: OTPInput,
   parameters: {
     layout: "centered",

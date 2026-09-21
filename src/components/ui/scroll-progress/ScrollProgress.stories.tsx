@@ -43,7 +43,7 @@ function ScrollProgressDemo(props: ScrollProgressProps): ReactElement {
 }
 
 const meta = {
-  title: "Components/ScrollProgress",
+  title: "Motion & Effects/ScrollProgress",
   component: ScrollProgressDemo,
   parameters: {
     layout: "centered",

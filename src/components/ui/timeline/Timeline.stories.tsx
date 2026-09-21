@@ -134,7 +134,7 @@ function TimelineDemo({
 }
 
 const meta = {
-  title: "Components/Timeline",
+  title: "Data Display/Timeline",
   component: TimelineDemo,
   parameters: {
     layout: "padded",

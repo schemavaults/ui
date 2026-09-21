@@ -81,7 +81,7 @@ function FrameworkComboboxDemo({
 }
 
 const meta = {
-  title: "Components/Combobox",
+  title: "Forms/Combobox",
   component: FrameworkComboboxDemo,
   parameters: {
     layout: "centered",

@@ -73,7 +73,7 @@ function PlaygroundDemo({
 }
 
 const meta = {
-  title: "Components/Toggle",
+  title: "Actions/Toggle",
   component: PlaygroundDemo,
   parameters: {
     layout: "centered",

@@ -8,14 +8,14 @@ import {
 } from "./circular-progress";
 
 const meta = {
-  title: "Components/CircularProgress",
+  title: "Charts & Graphs/CircularProgress",
   component: CircularProgress,
   parameters: {
     layout: "centered",
     docs: {
       description: {
         component:
-          "Circular / ring-style progress indicator. A drop-in alternative to [`ProgressBar`](?path=/docs/components-progressbar--docs) for compact, fixed-width areas (dashboard tiles, sync indicators, storage gauges, completion rings). Same API conventions as `ProgressBar` (`value`, `label`, `min`, `max`, `color`, `size`).\n\n**See also:** [ProgressBar](?path=/docs/components-progressbar--docs) — the horizontal-bar counterpart.",
+          "Circular / ring-style progress indicator. A drop-in alternative to [`ProgressBar`](?path=/docs/charts-graphs-progressbar--docs) for compact, fixed-width areas (dashboard tiles, sync indicators, storage gauges, completion rings). Same API conventions as `ProgressBar` (`value`, `label`, `min`, `max`, `color`, `size`).\n\n**See also:** [ProgressBar](?path=/docs/charts-graphs-progressbar--docs) — the horizontal-bar counterpart.",
       },
     },
   },

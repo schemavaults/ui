@@ -67,7 +67,7 @@ function BreadcrumbExample({
 }
 
 const meta = {
-  title: "Components/Breadcrumb",
+  title: "Navigation/Breadcrumb",
   component: BreadcrumbExample,
   parameters: {
     layout: "centered",

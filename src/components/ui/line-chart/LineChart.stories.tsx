@@ -20,7 +20,7 @@ const LEGEND_SWATCH_CLASSES: Record<LineChartColorId, string> = {
 };
 
 const meta = {
-  title: "Components/LineChart",
+  title: "Charts & Graphs/LineChart",
   component: LineChart,
   parameters: {
     layout: "centered",

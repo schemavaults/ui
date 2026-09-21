@@ -82,7 +82,7 @@ function LogoStripDemo({
 }
 
 const meta = {
-  title: "Components/Marquee",
+  title: "Motion & Effects/Marquee",
   component: LogoStripDemo,
   parameters: {
     layout: "centered",

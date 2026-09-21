@@ -75,7 +75,7 @@ function PaginationExample({
 }
 
 const meta = {
-  title: "Components/Pagination",
+  title: "Navigation/Pagination",
   component: PaginationExample,
   parameters: {
     layout: "centered",

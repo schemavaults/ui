@@ -100,7 +100,7 @@ function FrameworkMultiSelectDemo({
 }
 
 const meta = {
-  title: "Components/MultiSelect",
+  title: "Forms/MultiSelect",
   component: FrameworkMultiSelectDemo,
   parameters: {
     layout: "centered",

@@ -17,7 +17,7 @@ import { Button } from "../button";
 import { Label } from "../label";
 
 const meta = {
-  title: "Components/Dropzone",
+  title: "Forms/Dropzone",
   component: Dropzone,
   parameters: {
     layout: "centered",

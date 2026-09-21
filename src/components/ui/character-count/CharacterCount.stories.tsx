@@ -13,7 +13,7 @@ import { Input } from "../input";
 import { Label } from "../label";
 
 const meta = {
-  title: "Components/CharacterCount",
+  title: "Forms/CharacterCount",
   component: CharacterCount,
   parameters: {
     layout: "centered",

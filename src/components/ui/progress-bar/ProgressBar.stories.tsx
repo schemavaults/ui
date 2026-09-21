@@ -8,14 +8,14 @@ import {
 } from "./progress-bar";
 
 const meta = {
-  title: "Components/ProgressBar",
+  title: "Charts & Graphs/ProgressBar",
   component: ProgressBar,
   parameters: {
     layout: "centered",
     docs: {
       description: {
         component:
-          "Horizontal progress bar. For a circular/ring-style progress indicator with the same API and theming, see [`CircularProgress`](?path=/docs/components-circularprogress--docs) — useful for compact dashboard tiles and fixed-width areas where a horizontal bar would not fit.",
+          "Horizontal progress bar. For a circular/ring-style progress indicator with the same API and theming, see [`CircularProgress`](?path=/docs/charts-graphs-circularprogress--docs) — useful for compact dashboard tiles and fixed-width areas where a horizontal bar would not fit.",
       },
     },
   },

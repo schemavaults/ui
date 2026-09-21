@@ -7,7 +7,7 @@ import ThemedPageBackground, {
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: "Components/Themed Page Background",
+  title: "Theme/Themed Page Background",
   component: ThemedPageBackground,
   parameters: {
     // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout

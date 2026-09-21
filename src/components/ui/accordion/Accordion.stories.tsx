@@ -48,7 +48,7 @@ function AccordionExample({ variant }: AccordionExampleProps): ReactElement {
 }
 
 const meta = {
-  title: "Components/Accordion",
+  title: "Layout/Accordion",
   component: AccordionExample,
   parameters: {
     layout: "centered",

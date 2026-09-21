@@ -66,7 +66,7 @@ function DescriptionListExample({
 }
 
 const meta = {
-  title: "Components/DescriptionList",
+  title: "Data Display/DescriptionList",
   component: DescriptionListExample,
   parameters: {
     layout: "padded",

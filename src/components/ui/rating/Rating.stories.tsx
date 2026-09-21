@@ -9,7 +9,7 @@ import {
 } from "./rating-variants";
 
 const meta = {
-  title: "Components/Rating",
+  title: "Forms/Rating",
   component: Rating,
   parameters: {
     layout: "centered",

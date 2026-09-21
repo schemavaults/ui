@@ -43,7 +43,7 @@ function CalloutExample({
 }
 
 const meta = {
-  title: "Components/Callout",
+  title: "Feedback/Callout",
   component: CalloutExample,
   parameters: {
     layout: "centered",
