@@ -30,7 +30,7 @@ const ingestionFunnel: ReadonlyArray<FunnelChartStage> = [
 ];
 
 const meta = {
-  title: "Components/FunnelChart",
+  title: "Charts & Graphs/FunnelChart",
   component: FunnelChart,
   parameters: {
     layout: "centered",
