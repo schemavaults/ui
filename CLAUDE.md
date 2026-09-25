@@ -32,6 +32,9 @@ bun run typecheck:storybook
 # Lint source files
 bun run lint
 
+# Run the framework-free unit tests (`*.test.ts`, e.g. the histogram binning)
+bun run test:unit
+
 # Run Storybook interaction + smoke tests against a running dev server on :6006
 # (start `bun run storybook` first, then in another shell:)
 bun run test-storybook

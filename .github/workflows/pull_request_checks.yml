@@ -58,6 +58,26 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
+  Unit-Tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Configure bun to install from GitHub Packages
+        run: rm -rf .npmrc
+      - name: Install dependencies
+        run: bun install
+        env:
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_USER: ${{ github.actor }}
+          SCHEMAVAULTS_GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Unit tests
+        run: bun run test:unit
+
   Build:
     name: Build
     needs:

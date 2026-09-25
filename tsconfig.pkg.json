@@ -34,6 +34,8 @@
     "old_ui",
     "dist",
     "**/**.stories.tsx",
-    "**/**.stories.ts"
+    "**/**.stories.ts",
+    "**/**.test.ts",
+    "**/**.test.tsx"
   ]
 }

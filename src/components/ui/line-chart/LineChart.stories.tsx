@@ -1,23 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ReactElement } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import {
   LineChart,
   lineChartSizeIds,
   lineChartCurveIds,
-  type LineChartColorId,
   type LineChartPoint,
   type LineChartSeries,
 } from "./line-chart";
-
-const LEGEND_SWATCH_CLASSES: Record<LineChartColorId, string> = {
-  default: "bg-schemavaults-brand-blue",
-  primary: "bg-primary",
-  positive: "bg-emerald-500 dark:bg-emerald-400",
-  warning: "bg-warning",
-  destructive: "bg-destructive",
-  muted: "bg-muted-foreground",
-};
 
 const meta = {
   title: "Charts & Graphs/LineChart",
@@ -27,7 +17,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "SVG line chart for trend data. Plots one or more named series sharing a single x/y domain, with theme-aware preset colors (or raw `stroke` overrides), optional point markers, gap support (`y: NaN`), linear or smoothed interpolation, area fills, gridlines, and per-series `onPointClick` handlers (falling back to the chart-level `onPointClick`).",
+          "SVG line chart for trend data. Plots one or more named series sharing a single x/y domain. Series take the chart palette in slot order (`--chart-1` …, never cycled; pass `seriesOrder` so colour follows the series id), with a legend for two or more. A crosshair snaps to the nearest x and one readout lists every series there, on hover or with the arrow keys. Also: `width=\"auto\"`, `formatX` / `formatY`, point markers, gaps (`y: NaN`), smoothing, area fills, gridlines, and `onPointClick` handlers.",
       },
     },
   },
@@ -61,7 +51,6 @@ const meta = {
     showAxis: true,
     showPoints: false,
     showValueLabels: false,
-    showYAxisLabels: false,
     yTickCount: 5,
     onPointClick: fn(),
   },
@@ -84,7 +73,6 @@ const SINGLE_SERIES: ReadonlyArray<LineChartSeries> = [
   {
     id: "active-users",
     label: "Active users",
-    color: "default",
     points: [
       { y: 320 },
       { y: 412 },
@@ -101,7 +89,6 @@ const MULTI_SERIES: ReadonlyArray<LineChartSeries> = [
   {
     id: "active-users",
     label: "Active users",
-    color: "default",
     points: [
       { y: 320 },
       { y: 412 },
@@ -115,7 +102,6 @@ const MULTI_SERIES: ReadonlyArray<LineChartSeries> = [
   {
     id: "new-signups",
     label: "New signups",
-    color: "positive",
     points: [
       { y: 40 },
       { y: 62 },
@@ -129,7 +115,6 @@ const MULTI_SERIES: ReadonlyArray<LineChartSeries> = [
   {
     id: "churned",
     label: "Churned",
-    color: "destructive",
     points: [
       { y: 18 },
       { y: 22 },
@@ -146,7 +131,6 @@ const GAP_SERIES: ReadonlyArray<LineChartSeries> = [
   {
     id: "latency",
     label: "p95 latency (ms)",
-    color: "warning",
     points: [
       { y: 120 },
       { y: 135 },
@@ -241,7 +225,6 @@ export const FormattedYAxisLabels: Story = {
       {
         id: "revenue",
         label: "Daily revenue",
-        color: "positive",
         area: true,
         points: [
           { y: 1240 },
@@ -273,31 +256,230 @@ export const MultipleSeries: Story = {
     gridLineCount: 3,
     showPoints: true,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Series take palette slots 1, 2, 3 … in order, and two or more series get a legend whose keys mirror the mark (a short line).",
+      },
+    },
+  },
+};
+
+const HOUR_MS: number = 3_600_000;
+const DAY_START_UTC: number = Date.UTC(2026, 8, 24);
+const TIME_FORMAT: Intl.DateTimeFormat = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: "UTC",
+});
+
+/** A tick every four hours, on the hour. */
+const FOUR_HOURLY_TICKS: ReadonlyArray<number> = Array.from(
+  { length: 7 },
+  (_, i): number => DAY_START_UTC + i * 4 * HOUR_MS,
+);
+
+const REQUESTS_BY_HOUR: ReadonlyArray<LineChartSeries> = [
+  {
+    id: "requests",
+    label: "Requests",
+    points: Array.from({ length: 24 }, (_, hour): LineChartPoint => ({
+      x: DAY_START_UTC + hour * HOUR_MS,
+      y: Math.round(1_200 + 900 * Math.sin((hour - 6) / 3.8) + (hour % 5) * 70),
+    })),
+  },
+  {
+    id: "errors",
+    label: "Errors × 10",
+    points: Array.from({ length: 24 }, (_, hour): LineChartPoint => ({
+      x: DAY_START_UTC + hour * HOUR_MS,
+      y: hour === 14 || hour === 15 ? Number.NaN : 200 + ((hour * 37) % 160),
+    })),
+  },
+];
+
+export const Crosshair: Story = {
+  args: {
+    series: MULTI_SERIES,
+    categories: WEEK_LABELS,
+    size: "lg",
+    showYAxisLabels: true,
+    gridLineCount: 3,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Move the pointer anywhere over the plot: a vertical crosshair snaps to the nearest x, a dot marks every series there, and one readout lists them all (value first, series second). Focus the chart with Tab and use the left / right arrow keys (Home / End, Escape) for the same readout.",
+      },
+    },
+  },
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const chart = canvas.getByRole("img", { name: "Sample metrics" });
+
+    chart.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => {
+      const readout = canvas.getByRole("status");
+      expect(readout).toHaveTextContent("Mon");
+      expect(readout).toHaveTextContent("320Active users");
+      expect(readout).toHaveTextContent("40New signups");
+      expect(readout).toHaveTextContent("18Churned");
+    });
+    await userEvent.keyboard("{End}");
+    await waitFor(() => {
+      expect(canvas.getByRole("status")).toHaveTextContent("Sun");
+    });
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(canvas.queryByRole("status")).toBeNull();
+    });
+
+    // The pointer only has to be near an x, not on a line.
+    const bounds = chart.getBoundingClientRect();
+    await userEvent.pointer({
+      target: chart,
+      coords: {
+        clientX: bounds.left + bounds.width * 0.52,
+        clientY: bounds.top + 10,
+      },
+    });
+    await waitFor(() => {
+      expect(canvas.getByRole("status")).toHaveTextContent("Thu");
+    });
+  },
+};
+
+export const TimeAxis: Story = {
+  args: {
+    series: REQUESTS_BY_HOUR,
+    size: "xl",
+    showYAxisLabels: true,
+    xTickValues: FOUR_HOURLY_TICKS,
+    formatX: (x: number): string => TIME_FORMAT.format(x),
+    formatY: (y: number): string => y.toLocaleString("en-US"),
+    yTickLabelWidth: 44,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`formatX` formats the x-axis ticks and the readout heading, so a timestamp axis reads as times rather than epoch milliseconds; `formatY` does the same for values, and y ticks land on round numbers. `xTickValues` puts the x ticks on whole hours. A gap (`NaN`) shows as a dash in the readout.",
+      },
+    },
+  },
+};
+
+export const FillsContainer: Story = {
+  args: {
+    series: REQUESTS_BY_HOUR,
+    width: "auto",
+    height: 240,
+    showYAxisLabels: true,
+    xTickValues: FOUR_HOURLY_TICKS,
+    formatX: (x: number): string => TIME_FORMAT.format(x),
+    formatY: (y: number): string => y.toLocaleString("en-US"),
+    yTickLabelWidth: 44,
+  },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story:
+          "`width=\"auto\"` fills the card and follows it as the window resizes. The server render (and the first client render) is an empty box at the chart's height: no guessed width and no tick labels formatted in the server's time zone.",
+      },
+    },
+  },
   render: (args): ReactElement => (
-    <div className="flex flex-col items-start gap-3">
+    <div className="w-full max-w-4xl rounded-lg border bg-card p-4">
+      <p className="mb-3 text-sm font-medium">Traffic today (UTC)</p>
       <LineChart {...args} />
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        {args.series.map((s) => {
-          const swatchClass: string = s.color
-            ? LEGEND_SWATCH_CLASSES[s.color]
-            : LEGEND_SWATCH_CLASSES.default;
-          return (
-            <span
-              key={s.id}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1"
-            >
-              <span
-                aria-hidden="true"
-                className={`inline-block h-2 w-2 rounded-full ${swatchClass}`}
-                style={s.stroke ? { backgroundColor: s.stroke } : undefined}
-              />
-              {s.label ?? s.id}
-            </span>
-          );
-        })}
-      </div>
     </div>
   ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const root = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="line-chart"]',
+    )!;
+    await waitFor(() => {
+      expect(root.querySelector("svg")).not.toBeNull();
+    });
+    const svg = root.querySelector("svg")!;
+    expect(Math.abs(svg.getBoundingClientRect().width - root.clientWidth)).toBeLessThanOrEqual(1);
+  },
+};
+
+const ALL_REGIONS: ReadonlyArray<LineChartSeries> = [
+  { id: "us-east", label: "us-east", points: [{ y: 42 }, { y: 48 }, { y: 45 }, { y: 51 }, { y: 58 }, { y: 55 }, { y: 61 }] },
+  { id: "eu-west", label: "eu-west", points: [{ y: 30 }, { y: 34 }, { y: 39 }, { y: 36 }, { y: 41 }, { y: 44 }, { y: 43 }] },
+  { id: "ap-south", label: "ap-south", points: [{ y: 18 }, { y: 16 }, { y: 22 }, { y: 27 }, { y: 25 }, { y: 29 }, { y: 33 }] },
+  { id: "sa-east", label: "sa-east", points: [{ y: 9 }, { y: 12 }, { y: 11 }, { y: 14 }, { y: 13 }, { y: 17 }, { y: 16 }] },
+];
+
+export const StableColorsWhenFiltering: Story = {
+  args: {
+    series: ALL_REGIONS,
+    categories: WEEK_LABELS,
+    size: "lg",
+    showYAxisLabels: true,
+    seriesOrder: ALL_REGIONS.map((s) => s.id),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Colour follows the series, not its position: pass the full, unfiltered `seriesOrder`, and toggling a region off leaves the others their colours.",
+      },
+    },
+  },
+  render: (args): ReactElement => {
+    const Filterable = (): ReactElement => {
+      const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
+      return (
+        <div className="flex flex-col items-start gap-3">
+          <div className="flex flex-wrap gap-2">
+            {ALL_REGIONS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                aria-pressed={!hidden.has(s.id)}
+                onClick={(): void => {
+                  const next = new Set(hidden);
+                  if (next.has(s.id)) next.delete(s.id);
+                  else next.add(s.id);
+                  setHidden(next);
+                }}
+                className="rounded-md border px-2 py-1 text-xs aria-pressed:bg-muted"
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <LineChart
+            {...args}
+            series={ALL_REGIONS.filter((s) => !hidden.has(s.id))}
+          />
+        </div>
+      );
+    };
+    return <Filterable />;
+  },
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const strokeOf = (id: string): string | null =>
+      canvasElement
+        .querySelector(`[data-series-id="${id}"] path:not([fill^="url"])`)
+        ?.getAttribute("class") ?? null;
+    const before: string | null = strokeOf("ap-south");
+    expect(before).toContain("--chart-3");
+
+    await userEvent.click(canvas.getByRole("button", { name: "eu-west" }));
+    await waitFor(() => {
+      expect(canvasElement.querySelector('[data-series-id="eu-west"]')).toBeNull();
+    });
+    expect(strokeOf("ap-south")).toBe(before);
+  },
 };
 
 export const GapsInData: Story = {
@@ -327,13 +509,12 @@ export const DashedAndSolid: Story = {
       {
         id: "actual",
         label: "Actual",
-        color: "default",
         points: SINGLE_SERIES[0]!.points,
       },
       {
         id: "forecast",
         label: "Forecast",
-        color: "muted",
+        color: "other",
         strokeDasharray: "5 4",
         points: [
           { y: 612 },
@@ -368,7 +549,6 @@ export const PercentageLabels: Story = {
       {
         id: "conversion",
         label: "Conversion %",
-        color: "primary",
         points: [
           { y: 12 },
           { y: 18 },
@@ -396,7 +576,6 @@ export const NumericXAxis: Story = {
       {
         id: "signal",
         label: "Signal",
-        color: "primary",
         points: Array.from({ length: 12 }, (_, i): LineChartPoint => {
           const x: number = i * 10;
           const y: number = 50 + 40 * Math.sin(i / 1.5);
