@@ -90,6 +90,37 @@ describe("binValues", () => {
     expect(overflow.lower).toBeLessThan(2_000);
   });
 
+  test("does not fold a tail that isn't there when the data sits below zero", () => {
+    const uniformNegative: number[] = Array.from({ length: 101 }, (_, i) => -100 + i);
+    const buckets = binValues(uniformNegative, { minBinWidth: 1 });
+    expect(buckets.every((bucket) => bucket.upper !== null)).toBe(true);
+    expect(totalCount(buckets)).toBe(101);
+
+    const mixedSign: number[] = Array.from({ length: 111 }, (_, i) => -100 + i);
+    const mixed = binValues(mixedSign, { minBinWidth: 1 });
+    expect(mixed.every((bucket) => bucket.upper !== null)).toBe(true);
+    expect(mixed[0]!.lower).toBeLessThanOrEqual(-100);
+    expect(mixed[mixed.length - 1]!.upper!).toBeGreaterThan(10);
+    expect(totalCount(mixed)).toBe(111);
+  });
+
+  test("terminates and keeps every value when bins are finer than the values' precision", () => {
+    // Epoch milliseconds a tenth of a millisecond apart: 13 significant digits.
+    const epochs: number[] = Array.from({ length: 50 }, (_, i) => 1_727_000_000_000 + i * 0.1);
+    const buckets = binValues(epochs);
+    expect(totalCount(buckets)).toBe(50);
+    expect(buckets.length).toBeGreaterThan(1);
+    expectAdjacent(buckets);
+
+    const wholeMs: number[] = Array.from({ length: 50 }, (_, i) => 1e12 + i);
+    const whole = binValues(wholeMs, { minBinWidth: 1 });
+    expect(totalCount(whole)).toBe(50);
+    // Bins keep their nice width instead of drifting.
+    for (const bucket of whole) {
+      expect(bucket.upper! - bucket.lower).toBe(whole[0]!.upper! - whole[0]!.lower);
+    }
+  });
+
   test("keeps the tail when folding is off", () => {
     const values: number[] = [
       ...Array.from({ length: 95 }, (_, i) => i % 50),

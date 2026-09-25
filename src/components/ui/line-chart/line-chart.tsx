@@ -31,6 +31,7 @@ import {
   thinLabels,
 } from "@/components/ui/chart-primitives/chart-scale";
 import {
+  ChartLiveRegion,
   ChartTooltip,
   ChartTooltipRow,
 } from "@/components/ui/chart-primitives/chart-tooltip";
@@ -289,8 +290,9 @@ export interface LineChartProps
    * Place the y-axis ticks (and numeric x-axis ticks) on round values inside
    * the domain (0, 100, 200 …) rather than evenly between its ends (13.7,
    * 27.4 …). Only the ticks move; the lines are drawn the same either way.
-   * Defaults to `true`; `false` restores evenly spaced ticks that include
-   * both ends.
+   * Defaults to on, except for an axis given an `xTickFormatter` /
+   * `yTickFormatter`, which keeps evenly spaced ticks that include both
+   * ends (as before). For a time axis, pass `xTickValues` on round times.
    */
   niceTicks?: boolean;
   /**
@@ -498,7 +500,7 @@ function LineChart({
   showXAxisLabels,
   yTickFormatter,
   yTickCount = 5,
-  niceTicks = true,
+  niceTicks,
   showYAxisLabels,
   yTickLabelWidth = 36,
   showValueLabels = false,
@@ -524,8 +526,10 @@ function LineChart({
 
   const gradientIdPrefix: string = useId();
   const hintId: string = useId();
-  /** Index into `xValues` the crosshair sits on. */
-  const [active, setActive] = useState<number | null>(null);
+  /** The x the crosshair sits on (kept as a value, so it survives a data refresh). */
+  const [activeXValue, setActiveXValue] = useState<number | null>(null);
+  /** Whether the crosshair was moved with the arrow keys (so it is announced). */
+  const [announce, setAnnounce] = useState<boolean>(false);
 
   // Reserve gutters for axis labels.
   const hasCategoryLabels: boolean =
@@ -645,6 +649,20 @@ function LineChart({
   )
     .filter((x) => x >= effectiveXMin && x <= effectiveXMax)
     .sort((a, b) => a - b);
+  const activeIndex: number =
+    activeXValue === null ? -1 : xValues.indexOf(activeXValue);
+  /** Index into `xValues` the crosshair sits on; null when its x is gone. */
+  const active: number | null = activeIndex >= 0 ? activeIndex : null;
+  const setActive = (index: number | null): void => {
+    setActiveXValue(index === null ? null : (xValues[index] ?? null));
+  };
+
+  // Points without an explicit x are plotted by index: ticks must be whole.
+  const isIndexMode: boolean = series.every((s) =>
+    s.points.every((p) => !isFiniteNumber(p.x)),
+  );
+  const niceXTicks: boolean = niceTicks ?? typeof xTickFormatter !== "function";
+  const niceYTicks: boolean = niceTicks ?? typeof yTickFormatter !== "function";
 
   const baselineYClamped: number =
     effectiveYMin <= 0 && effectiveYMax >= 0
@@ -692,13 +710,13 @@ function LineChart({
       const ticks: { x: number; text: string }[] = [];
       xTickValues.forEach((domainX, i) => {
         if (domainX < effectiveXMin || domainX > effectiveXMax) return;
-        const text: string | null =
+        const text: string | null | undefined =
           typeof xTickFormatter === "function"
             ? xTickFormatter(domainX, i)
             : formatX
               ? formatX(domainX)
               : formatChartNumber(domainX);
-        if (text === null || text === "") return;
+        if (typeof text !== "string" || text === "") return;
         ticks.push({ x: projectX(domainX), text });
       });
       return ticks;
@@ -706,20 +724,25 @@ function LineChart({
     if (hasCategoryLabels && xTickCount > 0 && hasData) {
       const ticks: { x: number; text: string }[] = [];
       const count: number = Math.max(2, xTickCount);
-      const values: number[] = niceTicks
-        ? niceTicksWithin(effectiveXMin, effectiveXMax, count - 1)
+      const values: number[] = niceXTicks
+        ? niceTicksWithin(
+            effectiveXMin,
+            effectiveXMax,
+            count - 1,
+            isIndexMode ? 1 : 0,
+          )
         : Array.from(
             { length: count },
             (_, i: number): number => effectiveXMin + (i / (count - 1)) * xSpan,
-          );
+          ).filter((x) => !isIndexMode || Number.isInteger(x));
       values.forEach((domainX: number, i: number): void => {
-        const text: string | null =
+        const text: string | null | undefined =
           typeof xTickFormatter === "function"
             ? xTickFormatter(domainX, i)
             : formatX
               ? formatX(domainX)
               : formatChartNumber(domainX);
-        if (text === null || text === "") return;
+        if (typeof text !== "string" || text === "") return;
         ticks.push({ x: projectX(domainX), text });
       });
       return ticks;
@@ -734,7 +757,7 @@ function LineChart({
     // Top-down (the largest value first), so the first call to a custom
     // formatter receives the largest value -- the order most consumers
     // expect.
-    const values: number[] = niceTicks
+    const values: number[] = niceYTicks
       ? niceTicksWithin(effectiveYMin, effectiveYMax, count - 1).reverse()
       : Array.from(
           { length: count },
@@ -742,11 +765,11 @@ function LineChart({
         );
     const ticks: { y: number; value: number; text: string }[] = [];
     values.forEach((value: number, i: number): void => {
-      const text: string | null =
+      const text: string | null | undefined =
         typeof yTickFormatter === "function"
           ? yTickFormatter(value, i)
           : formatY(value);
-      if (text === null || text === "") return;
+      if (typeof text !== "string" || text === "") return;
       ticks.push({ y: projectY(value), value, text });
     });
     return ticks;
@@ -797,6 +820,7 @@ function LineChart({
       plotW > 0 ? effectiveXMin + ((px - plotX0) / plotW) * xSpan : effectiveXMin;
     const nearest: number = nearestSortedIndex(xValues, domainX);
     setActive(nearest < 0 ? null : nearest);
+    setAnnounce(false);
   };
 
   const onKeyDown = (event: KeyboardEvent<SVGSVGElement>): void => {
@@ -818,6 +842,7 @@ function LineChart({
     }
     event.preventDefault();
     setActive(next);
+    setAnnounce(true);
   };
 
   const onBlur = (event: FocusEvent<SVGSVGElement>): void => {
@@ -999,7 +1024,10 @@ function LineChart({
                           aria-hidden={isInteractive ? undefined : "true"}
                           onFocus={
                             isInteractive && readoutEnabled && xIndex >= 0
-                              ? (): void => setActive(xIndex)
+                              ? (): void => {
+                                  setActive(xIndex);
+                                  setAnnounce(false);
+                                }
                               : undefined
                           }
                           onClick={
@@ -1198,9 +1226,24 @@ function LineChart({
       >
         {plot}
         {readoutEnabled && W !== null ? (
-          <span id={hintId} hidden>
-            Use the left and right arrow keys to read the values at each point.
-          </span>
+          <>
+            <span id={hintId} hidden>
+              Use the left and right arrow keys to read the values at each
+              point.
+            </span>
+            <ChartLiveRegion
+              message={
+                announce && activeX !== undefined
+                  ? `${describeX(activeX)}: ${activeValues
+                      .map(
+                        (entry) =>
+                          `${entry.series.label ?? entry.series.id} ${entry.formattedValue}`,
+                      )
+                      .join(", ")}`
+                  : ""
+              }
+            />
+          </>
         ) : null}
         {showTooltip && activeX !== undefined && W !== null ? (
           <ChartTooltip

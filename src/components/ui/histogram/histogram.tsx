@@ -25,6 +25,7 @@ import {
   thinIndices,
 } from "@/components/ui/chart-primitives/chart-scale";
 import {
+  ChartLiveRegion,
   ChartTooltip,
   ChartTooltipRow,
 } from "@/components/ui/chart-primitives/chart-tooltip";
@@ -144,6 +145,8 @@ function Histogram({
   const H: number = height;
   const hintId: string = useId();
   const [activeState, setActive] = useState<number | null>(null);
+  /** Whether the bucket was reached with the arrow keys (so it is announced). */
+  const [announce, setAnnounce] = useState<boolean>(false);
 
   const count: number = buckets.length;
   // A stale index (the data shrank under the pointer) reads as nothing active.
@@ -224,6 +227,7 @@ function Histogram({
     }
     event.preventDefault();
     setActive(next);
+    setAnnounce(true);
   };
 
   const onBlur = (event: FocusEvent<SVGSVGElement>): void => {
@@ -363,7 +367,10 @@ function Histogram({
                 width={Math.max(0, slot)}
                 height={plotY1 - plotY0}
                 fill="transparent"
-                onPointerEnter={(): void => setActive(index)}
+                onPointerEnter={(): void => {
+                  setActive(index);
+                  setAnnounce(false);
+                }}
               />
             ))
           : null}
@@ -409,9 +416,18 @@ function Histogram({
       >
         {plot}
         {readoutEnabled && W !== null ? (
-          <span id={hintId} hidden>
-            Use the arrow keys to read each bucket.
-          </span>
+          <>
+            <span id={hintId} hidden>
+              Use the arrow keys to read each bucket.
+            </span>
+            <ChartLiveRegion
+              message={
+                announce && activeBucket
+                  ? `${describe(activeBucket)}: ${formatCount(activeBucket.count)} ${noun(activeBucket.count)}${sampleSize > 0 ? `, ${SHARE_FORMAT.format(activeBucket.count / sampleSize)}` : ""}`
+                  : ""
+              }
+            />
+          </>
         ) : null}
         {showTooltip && activeBucket && active !== null && W !== null ? (
           <ChartTooltip

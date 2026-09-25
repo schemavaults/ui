@@ -11,7 +11,7 @@ import type {
   ReactNode,
   Ref,
 } from "react";
-import { memo, useId, useMemo, useState } from "react";
+import { memo, useCallback, useId, useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -31,6 +31,7 @@ import {
   thinLabels,
 } from "@/components/ui/chart-primitives/chart-scale";
 import {
+  ChartLiveRegion,
   ChartTooltip,
   ChartTooltipRow,
 } from "@/components/ui/chart-primitives/chart-tooltip";
@@ -334,8 +335,9 @@ export interface ScatterPlotProps
   /**
    * Place the x-axis and linear y-axis ticks on round values inside the
    * domain rather than evenly between its ends. Only the ticks move.
-   * Defaults to `true`; `false` restores evenly spaced ticks that include
-   * both ends.
+   * Defaults to on, except for an axis given an `xTickFormatter` /
+   * `yTickFormatter`, which keeps evenly spaced ticks that include both
+   * ends (as before). For a time axis, pass `xTickValues` on round times.
    */
   niceTicks?: boolean;
   /** Render y-axis tick labels. Defaults to on when `formatY` is given. */
@@ -671,7 +673,7 @@ function ScatterPlot({
   showXAxisLabels,
   yTickFormatter,
   yTickCount = 5,
-  niceTicks = true,
+  niceTicks,
   showYAxisLabels,
   yTickLabelWidth = 36,
   xAxisTitle,
@@ -703,6 +705,8 @@ function ScatterPlot({
   const svgId: string = useId();
   /** Index into the flat point list of the point being read out. */
   const [active, setActive] = useState<number | null>(null);
+  /** Whether the point was reached with the arrow keys (so it is announced). */
+  const [announce, setAnnounce] = useState<boolean>(false);
 
   const hasXAxisLabels: boolean =
     typeof xTickFormatter === "function" ||
@@ -898,9 +902,22 @@ function ScatterPlot({
           flat.push({ seriesIndex, rp });
         });
 
+        // On a log scale the fit is made on log10(y), so it is the straight
+        // line the reader sees; values at or below the floor sit on it.
         const fit = s.trendLine
-          ? computeTrendLine(points.map((rp) => rp.point))
+          ? computeTrendLine(
+              points.map((rp) => ({
+                x: rp.point.x,
+                y: isLog
+                  ? Math.log10(Math.max(rp.point.y, effectiveYMin))
+                  : rp.point.y,
+              })),
+            )
           : null;
+        const fitY = (x: number): number => {
+          const y: number = fit!.slope * x + fit!.intercept;
+          return isLog ? 10 ** y : y;
+        };
         return {
           series: s,
           points,
@@ -910,9 +927,9 @@ function ScatterPlot({
           trend: fit
             ? {
                 x1: projectX(effectiveXMin),
-                y1: projectY(fit.slope * effectiveXMin + fit.intercept),
+                y1: projectY(fitY(effectiveXMin)),
                 x2: projectX(effectiveXMax),
-                y2: projectY(fit.slope * effectiveXMax + fit.intercept),
+                y2: projectY(fitY(effectiveXMax)),
               }
             : null,
         };
@@ -987,6 +1004,9 @@ function ScatterPlot({
     byX,
   } = layout;
 
+  const niceXTicks: boolean = niceTicks ?? typeof xTickFormatter !== "function";
+  const niceYTicks: boolean = niceTicks ?? typeof yTickFormatter !== "function";
+
   const xTicks: ReadonlyArray<{ x: number; text: string }> = (() => {
     if (!hasXAxisLabels || !hasData) return [];
     const count: number = Math.max(2, xTickCount);
@@ -994,7 +1014,7 @@ function ScatterPlot({
       ? xTickValues.filter(
           (value) => value >= effectiveXMin && value <= layout.effectiveXMax,
         )
-      : niceTicks
+      : niceXTicks
         ? niceTicksWithin(effectiveXMin, layout.effectiveXMax, count - 1)
         : Array.from(
             { length: count },
@@ -1003,11 +1023,11 @@ function ScatterPlot({
           );
     const ticks: { x: number; text: string }[] = [];
     values.forEach((value: number, i: number): void => {
-      const text: string | null =
+      const text: string | null | undefined =
         typeof xTickFormatter === "function"
           ? xTickFormatter(value, i)
           : formatX(value);
-      if (text === null || text === "") return;
+      if (typeof text !== "string" || text === "") return;
       ticks.push({ x: projectX(value), text });
     });
     return thinLabels(ticks, SIZE_TO_FONT_PX[resolvedSize]);
@@ -1020,7 +1040,7 @@ function ScatterPlot({
       ? logTicks
           .filter((v) => v >= effectiveYMin && v <= effectiveYMax)
           .reverse()
-      : niceTicks
+      : niceYTicks
         ? // Top-down, so a custom formatter sees the largest value first.
           niceTicksWithin(
             effectiveYMin,
@@ -1036,11 +1056,11 @@ function ScatterPlot({
           });
     const ticks: { y: number; text: string }[] = [];
     values.forEach((value: number, i: number): void => {
-      const text: string | null =
+      const text: string | null | undefined =
         typeof yTickFormatter === "function"
           ? yTickFormatter(value, i)
           : formatY(value);
-      if (text === null || text === "") return;
+      if (typeof text !== "string" || text === "") return;
       ticks.push({ y: projectY(value), text });
     });
     return ticks;
@@ -1101,6 +1121,7 @@ function ScatterPlot({
       }
     }
     if (nearest !== active) setActive(nearest);
+    if (announce) setAnnounce(false);
   };
 
   const onKeyDown = (event: KeyboardEvent<SVGSVGElement>): void => {
@@ -1125,6 +1146,7 @@ function ScatterPlot({
     }
     event.preventDefault();
     setActive(byX[next]!);
+    setAnnounce(true);
   };
 
   const onBlur = (event: FocusEvent<SVGSVGElement>): void => {
@@ -1133,11 +1155,18 @@ function ScatterPlot({
     }
   };
 
+  // Stable, so the memoized points layer doesn't re-render on hover. The
+  // focused point's own label is read out, so it isn't announced again.
+  const onPointFocus = useCallback((flatIndex: number): void => {
+    setActive(flatIndex);
+    setAnnounce(false);
+  }, []);
+
   const pointsLayer: ReactElement = (
     <PointsLayer
       resolved={resolved}
       onPointClick={onPointClick}
-      onPointFocus={setActive}
+      onPointFocus={onPointFocus}
       formatX={formatX}
       formatY={formatY}
       showValueLabels={showValueLabels}
@@ -1516,9 +1545,27 @@ function ScatterPlot({
       >
         {plot}
         {readoutEnabled && W !== null ? (
-          <span id={hintId} hidden>
-            Use the arrow keys to read the points from left to right.
-          </span>
+          <>
+            <span id={hintId} hidden>
+              Use the arrow keys to read the points from left to right.
+            </span>
+            <ChartLiveRegion
+              message={
+                announce && activePoint && activeSeries
+                  ? [
+                      multiSeries
+                        ? `${activeSeries.series.label ?? activeSeries.series.id}:`
+                        : "",
+                      formatY(activePoint.rp.point.y),
+                      `at ${formatX(activePoint.rp.point.x)}`,
+                      activePoint.rp.point.label ?? activePoint.rp.point.group ?? "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")
+                  : ""
+              }
+            />
+          </>
         ) : null}
         {showTooltip && activePoint && activeSeries && W !== null ? (
           <ChartTooltip

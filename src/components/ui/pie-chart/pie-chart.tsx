@@ -10,7 +10,7 @@ import type {
   ReactNode,
   Ref,
 } from "react";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -25,6 +25,7 @@ import { ChartDataTable } from "@/components/ui/chart-primitives/chart-data-tabl
 import { formatChartNumber } from "@/components/ui/chart-primitives/chart-format";
 import { ChartLegend } from "@/components/ui/chart-primitives/chart-legend";
 import {
+  ChartLiveRegion,
   ChartTooltip,
   ChartTooltipRow,
 } from "@/components/ui/chart-primitives/chart-tooltip";
@@ -324,13 +325,19 @@ function PieChart({
 
   const hintId: string = useId();
   const [activeState, setActive] = useState<number | null>(null);
+  /** Whether the segment was reached with the arrow keys (so it is announced). */
+  const [announce, setAnnounce] = useState<boolean>(false);
+  const svgRef = useRef<SVGSVGElement>(null);
 
-  const validSegments: ReadonlyArray<PieChartSegment> = segments.filter(
-    (s) => s.value > 0 && Number.isFinite(s.value),
-  );
+  // Each segment keeps its position in `segments`, so its default colour
+  // slot doesn't shift when an earlier segment is zero.
+  const validSegments: ReadonlyArray<{ segment: PieChartSegment; slot: number }> =
+    segments
+      .map((segment, slot) => ({ segment, slot }))
+      .filter(({ segment: s }) => s.value > 0 && Number.isFinite(s.value));
 
   const total: number = validSegments.reduce(
-    (acc, s) => acc + s.value,
+    (acc, { segment }) => acc + segment.value,
     0,
   );
 
@@ -341,14 +348,14 @@ function PieChart({
   const resolved: ReadonlyArray<ResolvedSegment> = (() => {
     if (total <= 0) return [];
     let angle: number = 0;
-    return validSegments.map((segment, index) => {
+    return validSegments.map(({ segment, slot }, index) => {
       const sweep: number = (segment.value / total) * Math.PI * 2;
       const startAngle: number = angle;
       const endAngle: number = angle + sweep;
       angle = endAngle;
       const colorId: ChartColorId =
         segment.color ??
-        (colorScale ? colorScale(segment.id) : getChartSeriesColorId(index));
+        (colorScale ? colorScale(segment.id) : getChartSeriesColorId(slot));
       return {
         segment,
         index,
@@ -393,6 +400,31 @@ function PieChart({
     }
     event.preventDefault();
     setActive(next);
+    setAnnounce(true);
+  };
+
+  /** Moves focus to the next clickable segment in the key's direction (wrapping). */
+  const focusNextInteractiveSegment = (key: string, from: number): void => {
+    const n: number = resolved.length;
+    const isInteractive = (i: number): boolean =>
+      typeof (resolved[i]!.segment.onClick ?? onSegmentClick) === "function";
+    const forward: boolean = key === "ArrowRight" || key === "ArrowDown";
+    const backward: boolean = key === "ArrowLeft" || key === "ArrowUp";
+    let candidates: number[] = [];
+    if (forward || backward) {
+      candidates = Array.from({ length: n - 1 }, (_, step) =>
+        forward ? (from + step + 1) % n : (from - step - 1 + n) % n,
+      );
+    } else if (key === "Home") {
+      candidates = Array.from({ length: n }, (_, i) => i);
+    } else if (key === "End") {
+      candidates = Array.from({ length: n }, (_, i) => n - 1 - i);
+    }
+    const next: number | undefined = candidates.find(isInteractive);
+    if (next === undefined || next === from) return;
+    svgRef.current
+      ?.querySelector<SVGElement>(`[data-segment-index="${next}"]`)
+      ?.focus();
   };
 
   const onBlur = (event: FocusEvent<SVGSVGElement>): void => {
@@ -407,6 +439,7 @@ function PieChart({
   const plot: ReactElement | null =
     pixelSize === null ? null : (
       <svg
+        ref={svgRef}
         width={pixelSize}
         height={pixelSize}
         viewBox={`0 0 ${pixelSize} ${pixelSize}`}
@@ -456,11 +489,23 @@ function PieChart({
                     ? `${segment.label ?? segment.id}: ${formatValue(segment.value)}`
                     : undefined
                 }
+                data-segment-index={r.index}
                 onPointerEnter={
-                  readoutEnabled ? (): void => setActive(r.index) : undefined
+                  readoutEnabled
+                    ? (): void => {
+                        setActive(r.index);
+                        setAnnounce(false);
+                      }
+                    : undefined
                 }
                 onFocus={
-                  readoutEnabled ? (): void => setActive(r.index) : undefined
+                  readoutEnabled
+                    ? (): void => {
+                        // The focused button's own label is read out.
+                        setActive(r.index);
+                        setAnnounce(false);
+                      }
+                    : undefined
                 }
                 onClick={
                   isInteractive
@@ -475,6 +520,20 @@ function PieChart({
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
                           handler!(segment, event);
+                        } else if (
+                          [
+                            "ArrowRight",
+                            "ArrowDown",
+                            "ArrowLeft",
+                            "ArrowUp",
+                            "Home",
+                            "End",
+                          ].includes(event.key)
+                        ) {
+                          event.preventDefault();
+                          focusNextInteractiveSegment(event.key, r.index);
+                        } else if (event.key === "Escape") {
+                          setActive(null);
                         }
                       }
                     : undefined
@@ -575,9 +634,18 @@ function PieChart({
       >
         {plot}
         {readoutEnabled && pixelSize !== null ? (
-          <span id={hintId} hidden>
-            Use the arrow keys to read each segment.
-          </span>
+          <>
+            <span id={hintId} hidden>
+              Use the arrow keys to read each segment.
+            </span>
+            <ChartLiveRegion
+              message={
+                announce && activeSegment
+                  ? `${activeSegment.segment.label ?? activeSegment.segment.id}: ${formatValue(activeSegment.segment.value)}, ${SHARE_FORMAT.format(activeSegment.segment.value / total)} of the total`
+                  : ""
+              }
+            />
+          </>
         ) : null}
         {showTooltip && activeSegment && tooltipAnchor && chart.width !== null ? (
           <ChartTooltip

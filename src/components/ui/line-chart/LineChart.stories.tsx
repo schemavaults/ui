@@ -9,6 +9,14 @@ import {
   type LineChartSeries,
 } from "./line-chart";
 
+/**
+ * The visual readout. The tooltip is `aria-hidden`; screen readers hear
+ * keyboard moves through the chart's live region (`role="status"`) instead.
+ */
+function readoutOf(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>('[data-slot="chart-tooltip"]');
+}
+
 const meta = {
   title: "Charts & Graphs/LineChart",
   component: LineChart,
@@ -322,19 +330,22 @@ export const Crosshair: Story = {
     chart.focus();
     await userEvent.keyboard("{ArrowRight}");
     await waitFor(() => {
-      const readout = canvas.getByRole("status");
+      const readout = readoutOf(canvasElement);
       expect(readout).toHaveTextContent("Mon");
       expect(readout).toHaveTextContent("320Active users");
       expect(readout).toHaveTextContent("40New signups");
       expect(readout).toHaveTextContent("18Churned");
+      expect(canvas.getByRole("status")).toHaveTextContent(
+        "Mon: Active users 320, New signups 40, Churned 18",
+      );
     });
     await userEvent.keyboard("{End}");
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toHaveTextContent("Sun");
+      expect(readoutOf(canvasElement)).toHaveTextContent("Sun");
     });
     await userEvent.keyboard("{Escape}");
     await waitFor(() => {
-      expect(canvas.queryByRole("status")).toBeNull();
+      expect(readoutOf(canvasElement)).toBeNull();
     });
 
     // The pointer only has to be near an x, not on a line.
@@ -347,7 +358,7 @@ export const Crosshair: Story = {
       },
     });
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toHaveTextContent("Thu");
+      expect(readoutOf(canvasElement)).toHaveTextContent("Thu");
     });
   },
 };

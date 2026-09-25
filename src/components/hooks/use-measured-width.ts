@@ -19,15 +19,16 @@ export interface UseMeasuredWidthResult<T extends HTMLElement> {
   isMeasured: boolean;
 }
 
+/**
+ * The content-box width from layout (`clientWidth` minus padding), which,
+ * unlike `getBoundingClientRect()`, ignores CSS transforms: a chart inside a
+ * dialog that is still zooming in measures its real width, not 95% of it.
+ */
 function contentBoxWidth(element: HTMLElement): number {
-  const rect: DOMRect = element.getBoundingClientRect();
   const style: CSSStyleDeclaration = window.getComputedStyle(element);
-  const horizontalChrome: number =
-    parseFloat(style.paddingLeft) +
-    parseFloat(style.paddingRight) +
-    parseFloat(style.borderLeftWidth) +
-    parseFloat(style.borderRightWidth);
-  return rect.width - (Number.isFinite(horizontalChrome) ? horizontalChrome : 0);
+  const padding: number =
+    parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+  return element.clientWidth - (Number.isFinite(padding) ? padding : 0);
 }
 
 /**

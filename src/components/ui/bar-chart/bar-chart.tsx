@@ -33,6 +33,7 @@ import {
   roundedBarPath,
 } from "@/components/ui/chart-primitives/chart-scale";
 import {
+  ChartLiveRegion,
   ChartTooltip,
   ChartTooltipRow,
 } from "@/components/ui/chart-primitives/chart-tooltip";
@@ -116,7 +117,11 @@ export interface BarChartBar {
    * `"var(--chart-3)"`). Takes precedence over `color`.
    */
   fill?: string;
-  /** Extra classes applied to this bar's shape. */
+  /**
+   * Extra classes applied to this bar's painted shape. The shape doesn't
+   * take the pointer (its whole column does), so style hover and focus with
+   * `data-[active=true]:` rather than `hover:`.
+   */
   className?: string;
   /** Fired when this bar is clicked or activated via keyboard. */
   onClick?: (
@@ -326,6 +331,8 @@ function BarChart({
   const hintId: string = useId();
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeState, setActive] = useState<number | null>(null);
+  /** Whether the active bar was reached with the arrow keys (so it is announced). */
+  const [announce, setAnnounce] = useState<boolean>(false);
 
   const isHorizontal: boolean = orientation === "horizontal";
   const gap: number = Math.max(0, Math.min(0.9, barGap));
@@ -484,11 +491,27 @@ function BarChart({
   const activeBar: ResolvedBar | undefined =
     active === null ? undefined : resolved[active];
 
-  const focusBar = (index: number): void => {
-    const target = svgRef.current?.querySelector<SVGElement>(
-      `[data-bar-index="${index}"]`,
-    );
-    target?.focus();
+  const isBarInteractive = (index: number): boolean =>
+    typeof (bars[index]?.onClick ?? onBarClick) === "function";
+
+  /** Moves focus to the next clickable bar in the key's direction. */
+  const focusNextInteractiveBar = (key: string, from: number): void => {
+    const order: number[] = Array.from({ length: count }, (_, i) => i);
+    const candidates: number[] =
+      key === "ArrowRight" || key === "ArrowDown"
+        ? order.slice(from + 1)
+        : key === "ArrowLeft" || key === "ArrowUp"
+          ? order.slice(0, from).reverse()
+          : key === "Home"
+            ? order
+            : key === "End"
+              ? order.slice().reverse()
+              : [];
+    const next: number | undefined = candidates.find(isBarInteractive);
+    if (next === undefined || next === from) return;
+    svgRef.current
+      ?.querySelector<SVGElement>(`[data-bar-index="${next}"]`)
+      ?.focus();
   };
 
   const moveActive = (key: string, from: number | null): number | null => {
@@ -514,6 +537,7 @@ function BarChart({
     if (next !== active) {
       event.preventDefault();
       setActive(next);
+      setAnnounce(true);
     }
   };
 
@@ -705,10 +729,21 @@ function BarChart({
                         : undefined
                     }
                     onPointerEnter={
-                      showTooltip ? (): void => setActive(r.index) : undefined
+                      showTooltip
+                        ? (): void => {
+                            setActive(r.index);
+                            setAnnounce(false);
+                          }
+                        : undefined
                     }
                     onFocus={
-                      showTooltip ? (): void => setActive(r.index) : undefined
+                      showTooltip
+                        ? (): void => {
+                            // The focused button's own label is read out.
+                            setActive(r.index);
+                            setAnnounce(false);
+                          }
+                        : undefined
                     }
                     onClick={
                       isInteractive
@@ -729,13 +764,18 @@ function BarChart({
                               setActive(null);
                               return;
                             }
-                            const next: number | null = moveActive(
-                              event.key,
-                              r.index,
-                            );
-                            if (next !== null && next !== r.index) {
+                            if (
+                              [
+                                "ArrowRight",
+                                "ArrowDown",
+                                "ArrowLeft",
+                                "ArrowUp",
+                                "Home",
+                                "End",
+                              ].includes(event.key)
+                            ) {
                               event.preventDefault();
-                              focusBar(next);
+                              focusNextInteractiveBar(event.key, r.index);
                             }
                           }
                         : undefined
@@ -842,9 +882,18 @@ function BarChart({
       >
         {plot}
         {count > 0 && showTooltip && W !== null ? (
-          <span id={hintId} hidden>
-            Use the arrow keys to read each bar.
-          </span>
+          <>
+            <span id={hintId} hidden>
+              Use the arrow keys to read each bar.
+            </span>
+            <ChartLiveRegion
+              message={
+                announce && activeBar
+                  ? `${activeBar.bar.label ?? activeBar.bar.id}: ${formatValue(activeBar.value)}`
+                  : ""
+              }
+            />
+          </>
         ) : null}
         {showTooltip && activeBar && W !== null ? (
           <ChartTooltip

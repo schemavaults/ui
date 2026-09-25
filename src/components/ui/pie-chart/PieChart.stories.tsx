@@ -7,6 +7,14 @@ import {
   type PieChartSegment,
 } from "./pie-chart";
 
+/**
+ * The visual readout. The tooltip is `aria-hidden`; screen readers hear
+ * keyboard moves through the chart's live region (`role="status"`) instead.
+ */
+function readoutOf(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>('[data-slot="chart-tooltip"]');
+}
+
 const meta = {
   title: "Charts & Graphs/PieChart",
   component: PieChart,
@@ -204,13 +212,13 @@ export const HoverReadout: Story = {
     chart.focus();
     await userEvent.keyboard("{ArrowRight}");
     await waitFor(() => {
-      const readout = canvas.getByRole("status");
+      const readout = readoutOf(canvasElement);
       expect(readout).toHaveTextContent("40Schemas");
       expect(readout).toHaveTextContent("40% of the total");
     });
     await userEvent.keyboard("{ArrowLeft}");
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toHaveTextContent("5Other");
+      expect(readoutOf(canvasElement)).toHaveTextContent("5Other");
     });
   },
 };

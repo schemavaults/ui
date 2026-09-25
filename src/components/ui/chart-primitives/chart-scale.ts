@@ -164,12 +164,17 @@ export function closestNiceStep(span: number, count: number): number {
 
 /**
  * Round tick values inside `[min, max]` (the domain itself is left alone),
- * about `count` intervals apart.
+ * about `count` intervals apart and at least `minStep` (1 for indices).
  */
-export function niceTicksWithin(min: number, max: number, count: number): number[] {
+export function niceTicksWithin(
+  min: number,
+  max: number,
+  count: number,
+  minStep: number = 0,
+): number[] {
   if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
   if (max <= min) return [cleanNumber(min)];
-  const step: number = closestNiceStep(max - min, count);
+  const step: number = Math.max(minStep, closestNiceStep(max - min, count));
   const first: number = Math.ceil(cleanNumber(min / step)) * step;
   const ticks: number[] = [];
   for (let value = first; value <= max + step * 1e-9; value += step) {
@@ -193,7 +198,8 @@ export function thinLabels<T extends { x: number; text: string }>(
   fontPx: number,
   minGap: number = 8,
 ): T[] {
-  const half = (label: T): number => estimateLabelWidth(label.text, fontPx) / 2;
+  const half = (label: T): number =>
+    estimateLabelWidth(String(label.text), fontPx) / 2;
   const fits = (left: T, right: T): boolean =>
     right.x - half(right) >= left.x + half(left) + minGap;
   const kept: T[] = [];

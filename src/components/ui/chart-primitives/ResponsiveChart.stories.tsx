@@ -7,6 +7,14 @@ import { ChartLegend } from "./chart-legend";
 import { ChartTooltip, ChartTooltipRow } from "./chart-tooltip";
 import { ResponsiveChart } from "./responsive-chart";
 
+/**
+ * The visual readout. The tooltip is `aria-hidden`; screen readers hear
+ * keyboard moves through the chart's live region (`role="status"`) instead.
+ */
+function readoutOf(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>('[data-slot="chart-tooltip"]');
+}
+
 /** Daily uptime (%) for two services over 30 days. */
 const DAYS: ReadonlyArray<{ day: number; api: number; web: number }> = Array.from(
   { length: 30 },
@@ -132,7 +140,7 @@ export const CustomChart: Story = {
 
     await userEvent.hover(svg.querySelectorAll("rect")[24]!);
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toHaveTextContent("Day 13");
+      expect(readoutOf(canvasElement)).toHaveTextContent("Day 13");
     });
   },
 };

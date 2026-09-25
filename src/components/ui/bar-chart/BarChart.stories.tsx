@@ -10,6 +10,14 @@ import {
   type BarChartBar,
 } from "./bar-chart";
 
+/**
+ * The visual readout. The tooltip is `aria-hidden`; screen readers hear
+ * keyboard moves through the chart's live region (`role="status"`) instead.
+ */
+function readoutOf(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>('[data-slot="chart-tooltip"]');
+}
+
 const meta = {
   title: "Charts & Graphs/BarChart",
   component: BarChart,
@@ -142,24 +150,28 @@ export const HoverReadout: Story = {
     chart.focus();
     await userEvent.keyboard("{ArrowRight}");
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toHaveTextContent("42 deploys");
-      expect(canvas.getByRole("status")).toHaveTextContent("Mon");
+      expect(readoutOf(canvasElement)).toHaveTextContent("42 deploys");
+      expect(readoutOf(canvasElement)).toHaveTextContent("Mon");
+      // Screen readers hear the same readout through the live region.
+      expect(canvas.getByRole("status")).toHaveTextContent("Mon: 42 deploys");
     });
     await userEvent.keyboard("{End}");
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toHaveTextContent("73 deploys");
+      expect(readoutOf(canvasElement)).toHaveTextContent("73 deploys");
     });
     await userEvent.keyboard("{Escape}");
     await waitFor(() => {
-      expect(canvas.queryByRole("status")).toBeNull();
+      expect(readoutOf(canvasElement)).toBeNull();
     });
 
     // Pointer: the whole column is the hover target.
     const thursday = canvasElement.querySelector('[data-bar-id="thu"]');
     await userEvent.hover(thursday as Element);
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toHaveTextContent("89 deploys");
+      expect(readoutOf(canvasElement)).toHaveTextContent("89 deploys");
     });
+    // Hovering isn't announced.
+    expect(canvas.getByRole("status")).toBeEmptyDOMElement();
   },
 };
 

@@ -8,6 +8,14 @@ import { binValues, type HistogramBucket } from "./bin-values";
 import { Histogram } from "./histogram";
 
 /**
+ * The visual readout. The tooltip is `aria-hidden`; screen readers hear
+ * keyboard moves through the chart's live region (`role="status"`) instead.
+ */
+function readoutOf(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>('[data-slot="chart-tooltip"]');
+}
+
+/**
  * 1,000 request durations (ms) shaped like a real trace sample: median
  * ~30 ms, p95 ~500 ms, a long tail out to ~4 s.
  */
@@ -85,14 +93,17 @@ export const Default: Story = {
     chart.focus();
     await userEvent.keyboard("{ArrowRight}");
     await waitFor(() => {
-      const readout = canvas.getByRole("status");
+      const readout = readoutOf(canvasElement);
       expect(readout).toHaveTextContent("325 requests");
       expect(readout).toHaveTextContent("32.5%");
       expect(readout).toHaveTextContent("0 ms – 20 ms");
+      expect(canvas.getByRole("status")).toHaveTextContent(
+        "0 ms – 20 ms: 325 requests, 32.5%",
+      );
     });
     await userEvent.keyboard("{End}");
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toHaveTextContent("500 ms or more");
+      expect(readoutOf(canvasElement)).toHaveTextContent("500 ms or more");
     });
 
     expect(

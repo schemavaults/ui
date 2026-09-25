@@ -58,6 +58,12 @@ function percentile(sorted: readonly number[], p: number): number {
   return sorted[lower]! + (sorted[upper]! - sorted[lower]!) * (rank - lower);
 }
 
+/** Decimal places that represent multiples of `width` exactly enough for edges. */
+function decimalsOf(width: number): number {
+  if (!(width > 0) || width >= 1) return 0;
+  return Math.min(20, Math.ceil(-Math.log10(width) - 1e-9) + 1);
+}
+
 function linearEdges(
   sorted: readonly number[],
   options: Required<Pick<BinValuesOptions, "minBinWidth" | "foldTail" | "minBins" | "maxBins">>,
@@ -65,8 +71,12 @@ function linearEdges(
   const min: number = sorted[0]!;
   const max: number = sorted[sorted.length - 1]!;
   const p95: number = percentile(sorted, 0.95);
+  // Distances from the minimum, so the test doesn't depend on where zero is.
   const hasLongTail: boolean =
-    options.foldTail && sorted.length >= 20 && p95 > min && max > 2 * p95;
+    options.foldTail &&
+    sorted.length >= 20 &&
+    p95 > min &&
+    max - min > 2 * (p95 - min);
   const top: number = hasLongTail ? p95 : max;
   const bins: number = Math.min(
     Math.max(1, options.maxBins),
@@ -81,11 +91,21 @@ function linearEdges(
         : min !== 0
           ? 10 ** Math.floor(Math.log10(Math.abs(min)))
           : 1;
-  const start: number = cleanNumber(Math.floor(min / width) * width);
-  const edges: number[] = [start];
-  while (edges[edges.length - 1]! <= top) {
-    edges.push(cleanNumber(edges[edges.length - 1]! + width));
+  // Each edge is start + k·width, rounded to the width's own precision (not
+  // accumulated, so no float drift), and must move forward: a width below
+  // the values' precision (epoch milliseconds binned by 0.1) stops the walk
+  // instead of looping forever.
+  const decimals: number = decimalsOf(width);
+  const edgeAt = (k: number): number =>
+    Number((Math.floor(min / width) * width + k * width).toFixed(decimals));
+  const edges: number[] = [edgeAt(0)];
+  const maxEdges: number = bins * 3 + 3;
+  for (let k = 1; edges[edges.length - 1]! <= top && k <= maxEdges; k += 1) {
+    const next: number = edgeAt(k);
+    if (next <= edges[edges.length - 1]!) break;
+    edges.push(next);
   }
+  if (edges.length === 1) edges.push(edges[0]! + width);
   return {
     edges,
     overflowFrom: hasLongTail ? edges[edges.length - 1]! : null,

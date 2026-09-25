@@ -12,6 +12,14 @@ import {
   type ScatterPlotSeries,
 } from "./scatter-plot";
 
+/**
+ * The visual readout. The tooltip is `aria-hidden`; screen readers hear
+ * keyboard moves through the chart's live region (`role="status"`) instead.
+ */
+function readoutOf(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>('[data-slot="chart-tooltip"]');
+}
+
 const meta = {
   title: "Charts & Graphs/ScatterPlot",
   component: ScatterPlot,
@@ -304,10 +312,10 @@ export const TimeAxisLogScale: Story = {
     chart.focus();
     await userEvent.keyboard("{Home}");
     await waitFor(() => {
-      const readout = canvas.getByRole("status");
+      const readout = readoutOf(canvasElement);
       // A formatted time, never the raw epoch number.
       expect(readout).toHaveTextContent(/2:00:\d\d PM/);
-      expect(readout.textContent).not.toMatch(/\d{10,}/);
+      expect(readout?.textContent ?? "").not.toMatch(/\d{10,}/);
       expect(readout).toHaveTextContent(/ms|s/);
     });
 
@@ -372,7 +380,7 @@ export const NearestPointReadout: Story = {
       },
     });
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toHaveTextContent("Themes");
+      expect(readoutOf(canvasElement)).toHaveTextContent("Themes");
     });
   },
 };
@@ -433,7 +441,7 @@ export const DensePoints: Story = {
       });
     }
     await waitFor(() => {
-      expect(canvas.getByRole("status")).toBeInTheDocument();
+      expect(readoutOf(canvasElement)).toBeInTheDocument();
     });
     observer.disconnect();
     expect(mutations).toBe(0);

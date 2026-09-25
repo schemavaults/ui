@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactElement, ReactNode } from "react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -21,11 +21,6 @@ export interface ChartTooltipProps {
   className?: string;
 }
 
-interface MeasuredSize {
-  width: number;
-  height: number;
-}
-
 /**
  * A floating readout drawn in HTML over a chart. Render it inside the
  * chart's `position: relative` container. It centers on its anchor, clamps
@@ -34,6 +29,10 @@ interface MeasuredSize {
  *
  * Lead each row with the value and follow with the label: `ChartTooltipRow`
  * does that and keys each series with a short line in its colour.
+ *
+ * It is visual only (`aria-hidden`): pair it with a `ChartLiveRegion` that
+ * announces keyboard moves, since a live region that mounts together with
+ * its text is not read out.
  */
 function ChartTooltip({
   x,
@@ -44,56 +43,36 @@ function ChartTooltip({
   className,
 }: ChartTooltipProps): ReactElement {
   const ref = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState<MeasuredSize | null>(null);
 
-  // Position from the real size, measured before the browser paints and
-  // again whenever the content (and so the size) changes.
-  useLayoutEffect((): (() => void) | undefined => {
+  // Position from the rendered size on every render, before the browser
+  // paints, so a readout whose content changed never shows a frame at the
+  // old width. React never sets left/top/visibility itself, so the values
+  // written here stick.
+  useLayoutEffect((): void => {
     const element: HTMLDivElement | null = ref.current;
-    if (!element) return undefined;
-    const measure = (): void => {
-      const width: number = element.offsetWidth;
-      const height: number = element.offsetHeight;
-      setSize((current: MeasuredSize | null): MeasuredSize =>
-        current && current.width === width && current.height === height
-          ? current
-          : { width, height },
-      );
-    };
-    measure();
-    if (typeof ResizeObserver === "undefined") return undefined;
-    const observer = new ResizeObserver(measure);
-    observer.observe(element);
-    return (): void => {
-      observer.disconnect();
-    };
-  }, []);
+    if (!element) return;
+    const width: number = element.offsetWidth;
+    const height: number = element.offsetHeight;
+    const left: number = Math.min(
+      Math.max(0, x - width / 2),
+      Math.max(0, containerWidth - width),
+    );
+    const below: boolean = y - offset - height < 0;
+    element.style.left = `${left}px`;
+    element.style.top = `${below ? y + offset : y - offset - height}px`;
+    element.style.visibility = "visible";
+    element.dataset["side"] = below ? "bottom" : "top";
+  });
 
-  const width: number = size?.width ?? 0;
-  const height: number = size?.height ?? 0;
-  const left: number = Math.min(
-    Math.max(0, x - width / 2),
-    Math.max(0, containerWidth - width),
-  );
-  const below: boolean = y - offset - height < 0;
-  const top: number = below ? y + offset : y - offset - height;
-
-  const style: CSSProperties = {
-    left,
-    top,
-    maxWidth: Math.max(0, containerWidth),
-    visibility: size ? "visible" : "hidden",
-  };
+  const style: CSSProperties = { maxWidth: Math.max(0, containerWidth) };
 
   return (
     <div
       ref={ref}
-      role="status"
-      aria-live="polite"
+      aria-hidden="true"
       data-slot="chart-tooltip"
-      data-side={below ? "bottom" : "top"}
       className={cn(
-        "pointer-events-none absolute z-10 w-max rounded-md border bg-popover px-2.5 py-1.5 text-left text-xs font-normal text-popover-foreground shadow-md",
+        "pointer-events-none invisible absolute left-0 top-0 z-10 w-max rounded-md border bg-popover px-2.5 py-1.5 text-left text-xs font-normal text-popover-foreground shadow-md",
         className,
       )}
       style={style}
@@ -153,4 +132,29 @@ function ChartTooltipRow({
 }
 ChartTooltipRow.displayName = "ChartTooltipRow";
 
-export { ChartTooltip, ChartTooltipRow };
+export interface ChartLiveRegionProps {
+  /** What to announce; an empty string says nothing. */
+  message: string;
+}
+
+/**
+ * A visually hidden, always-mounted `role="status"` region: charts put their
+ * keyboard readout here so screen readers announce each arrow-key move.
+ * Keep it mounted (empty) between moves; don't feed it pointer hovers.
+ */
+function ChartLiveRegion({ message }: ChartLiveRegionProps): ReactElement {
+  return (
+    <span
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      data-slot="chart-live-region"
+      className="sr-only"
+    >
+      {message}
+    </span>
+  );
+}
+ChartLiveRegion.displayName = "ChartLiveRegion";
+
+export { ChartTooltip, ChartTooltipRow, ChartLiveRegion };
