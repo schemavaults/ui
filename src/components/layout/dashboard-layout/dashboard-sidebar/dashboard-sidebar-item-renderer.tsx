@@ -20,6 +20,11 @@ import type { LinkComponentType } from "@/types/Link";
 import useDashboardSidebarOpenStateDispatch from "./useDashboardSidebarOpenStateDispatch";
 import useDebug from "@/components/hooks/use-debug";
 import type { SidebarItemIconComponent } from "./dashboard-sidebar-item-icon-component";
+import { useDashboardSidebarItemActiveState } from "./dashboard-sidebar-active-item-context";
+import {
+  getDashboardSidebarActiveItemClassNames,
+  type DashboardSidebarActiveItemClassNames,
+} from "./dashboard-sidebar-active-item-styles";
 
 export function DashboardSidebarItemRenderer({
   item,
@@ -43,10 +48,16 @@ export function DashboardSidebarItemRenderer({
     useToggleDashboardLayoutCollapsedTransitionTime();
   const showItemLabel: boolean = mobile || open;
 
+  const { active, style: activeItemStyle } =
+    useDashboardSidebarItemActiveState(item);
+  const activeClassNames: DashboardSidebarActiveItemClassNames | null = active
+    ? getDashboardSidebarActiveItemClassNames(activeItemStyle, isAdminItemGroup)
+    : null;
+
   const IconComponent: SidebarItemIconComponent = item.icon;
-  const itemColorClassName: string = isAdminItemGroup
-    ? "text-red-500"
-    : "text-foreground";
+  const itemColorClassName: string =
+    activeClassNames?.content ??
+    (isAdminItemGroup ? "text-red-500" : "text-foreground");
 
   function SidebarMenuItemTitle(): ReactElement {
     return (
@@ -93,6 +104,7 @@ export function DashboardSidebarItemRenderer({
       // place while grouped rows glided. Under reduced motion every row
       // snaps instead, which is the point.
       layout={!reducedMotion}
+      data-active={active ? "true" : undefined}
       className={cn(
         "w-full",
         sizes.sidebar_menu_item_height_classname,
@@ -111,6 +123,7 @@ export function DashboardSidebarItemRenderer({
         <TooltipTrigger className={cn("w-full h-full")}>
           <Link
             href={item.url}
+            aria-current={active ? "page" : undefined}
             className={cn(
               "flex flex-row flex-nowrap",
               "justify-start items-center",
@@ -118,6 +131,11 @@ export function DashboardSidebarItemRenderer({
               // Theme token rather than a hardcoded gray: bg-gray-200 was
               // near-invisible against a dark background.
               "hover:bg-accent transition-colors",
+              // Positioning context for the active indicator below. `isolate`
+              // makes the link its own stacking context, so the indicator's
+              // negative z-index puts it above the link's hover background
+              // but beneath the icon and label.
+              "relative isolate",
             )}
             onClick={(): void => {
               if (debug) {
@@ -144,6 +162,15 @@ export function DashboardSidebarItemRenderer({
               }
             }}
           >
+            {typeof activeClassNames?.indicator === "string" && (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "absolute -z-10 pointer-events-none",
+                  activeClassNames.indicator,
+                )}
+              />
+            )}
             <m.div className={cn(
               "flex-shrink-0",
               sizes.desktop_collapsed_width_classname,

@@ -84,7 +84,12 @@ import type {
   DashboardSidebarItemGroupDefinition,
   DashboardSidebarItemsAndGroupsDefinitions,
 } from "./dashboard-sidebar";
-import { DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING } from "./dashboard-sidebar";
+import {
+  DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLES,
+  DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE,
+  DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING,
+  type DashboardSidebarActiveItemStyle,
+} from "./dashboard-sidebar";
 import type {
   CustomizableDashboardLayoutComponent,
   ICustomizableDashboardLayoutComponentProps,
@@ -143,9 +148,15 @@ function Link({
   children,
   className,
   onClick,
+  "aria-current": ariaCurrent,
 }: LinkComponentProps): ReactElement {
   return (
-    <a href={href} className={className} onClick={onClick}>
+    <a
+      href={href}
+      className={className}
+      onClick={onClick}
+      aria-current={ariaCurrent}
+    >
       {children}
     </a>
   );
@@ -228,6 +239,20 @@ const meta = {
         "Width of the sidebar while open (expanded) on desktop, as any CSS length (e.g. `18rem`, `260px`). Defaults to `14rem`. The main content area shifts to match. The collapsed icon-only width and the mobile Sheet width are unaffected.",
       table: {
         defaultValue: { summary: "14rem" },
+      },
+    },
+    activeHref: {
+      control: "text",
+      description:
+        "Pathname of the current page, for marking its sidebar item active. Takes precedence over `usePathname`. An item is active when the path equals its `url` or is nested beneath it; the longest matching `url` wins.",
+    },
+    activeItemStyle: {
+      control: "inline-radio",
+      options: [...DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLES],
+      description:
+        "How the active sidebar item is marked. Every style also sets `aria-current=\"page\"` on the active link.",
+      table: {
+        defaultValue: { summary: DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE },
       },
     },
     reducedMotion: {
@@ -1367,12 +1392,14 @@ function NextLinkStyleLink({
   className,
   onClick,
   children,
+  "aria-current": ariaCurrent,
 }: LinkComponentProps): ReactElement {
   const record = useContext(RecordNavigationContext);
   return (
     <a
       href={href}
       className={className}
+      aria-current={ariaCurrent}
       onClick={(e): void => {
         // Run the consumer handler first, exactly like next/link does.
         if (typeof onClick === "function") {
@@ -1908,6 +1935,286 @@ export const WithMotionForcedOn: Story = {
         );
       },
       { timeout: 3000 },
+    );
+  },
+};
+
+// --- Active page indicator ----------------------------------------------
+//
+// The sidebar marks the item for the page being viewed. The current page comes
+// from `activeHref`, or from the `usePathname` hook when that is supplied; an
+// item is active when the path equals its `url` or is nested beneath it, and
+// the longest matching `url` wins. `activeItemStyle` picks the treatment.
+//
+// Each of the stories below pins the current page to Reports with
+// `activeHref`. Expand the sidebar with the header trigger to see the label
+// treatment; collapsed, the icon alone has to carry it.
+
+function activeItemDemoItem(
+  title: string,
+  url: string,
+  IconComponent: SidebarIconSource,
+): DashboardSidebarItemDefinition {
+  return {
+    type: "dashboard-sidebar-item-definition",
+    title,
+    url,
+    icon: ({ className }): ReactElement => (
+      <IconComponent className={className} />
+    ),
+  };
+}
+
+const activeItemSidebarItems = [
+  activeItemDemoItem("Overview", "/", LayoutDashboard),
+  activeItemDemoItem("Inbox", "/inbox", Inbox),
+  manyLinksGroup("Analytics", [
+    activeItemDemoItem("Reports", "/analytics/reports", BarChart3),
+    activeItemDemoItem("Trends", "/analytics/trends", LineChart),
+    activeItemDemoItem("Segments", "/analytics/segments", PieChart),
+  ]),
+  manyLinksGroup("Team", [
+    activeItemDemoItem("Members", "/team/members", Users),
+    activeItemDemoItem("Roles", "/team/roles", Shield),
+  ]),
+  manyLinksGroup(
+    "Admin",
+    [
+      activeItemDemoItem("Audit Log", "/admin/audit-log", Lock),
+      activeItemDemoItem("Feature Flags", "/admin/feature-flags", Flag),
+    ],
+    true,
+  ),
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+const ACTIVE_ITEM_STYLE_DESCRIPTIONS: Record<
+  DashboardSidebarActiveItemStyle,
+  string
+> = {
+  highlight: "A soft full-width fill behind the row, with a bold label.",
+  "right-border": "A thick bar along the row's right edge, with a bold label.",
+  "color-shift": "The icon and label turn blue and bold, with no fill.",
+  tinted:
+    "A blue-tinted fill with a blue bar on the left edge and a blue bold label.",
+  solid:
+    "An inset, rounded pill in the primary colour, with the icon and label inverted.",
+  none: "No visual treatment; the link still carries aria-current=\"page\".",
+};
+
+function ActiveItemPageContent({
+  activeItemStyle,
+}: {
+  activeItemStyle: DashboardSidebarActiveItemStyle;
+}): ReactElement {
+  return (
+    <PageColumnContainer>
+      <div className="flex flex-col gap-4 p-4 items-start">
+        <p className="text-sm text-muted-foreground max-w-prose">
+          <code>activeItemStyle=&quot;{activeItemStyle}&quot;</code> &mdash;{" "}
+          {ACTIVE_ITEM_STYLE_DESCRIPTIONS[activeItemStyle]} The current page is
+          pinned to <code>/analytics/reports</code> with{" "}
+          <code>activeHref</code>. Expand the sidebar with the trigger in the
+          header to see the label treatment.
+        </p>
+        <ExampleChildrenForContainer />
+      </div>
+    </PageColumnContainer>
+  );
+}
+
+// Finds a sidebar link by href anywhere in the document: on a narrow viewport
+// the sidebar is a Sheet that portals its content to document.body.
+function findSidebarLink(href: string): HTMLAnchorElement | null {
+  return document.querySelector<HTMLAnchorElement>(
+    `menu a[href="${href}"], [role="dialog"] a[href="${href}"]`,
+  );
+}
+
+async function expectOnlyActiveSidebarLink(href: string): Promise<void> {
+  // A narrow viewport renders the sidebar as a closed Sheet, whose links are
+  // not mounted until it is opened. The desktop sidebar is always mounted.
+  if (!window.matchMedia("(min-width: 768px)").matches) {
+    return;
+  }
+  await waitFor((): void => {
+    const link: HTMLAnchorElement | null = findSidebarLink(href);
+    expect(link).not.toBeNull();
+    expect(link).toHaveAttribute("aria-current", "page");
+    expect(link!.closest("li")).toHaveAttribute("data-active", "true");
+  });
+  const current: NodeListOf<HTMLAnchorElement> =
+    document.querySelectorAll<HTMLAnchorElement>(
+      'menu a[aria-current="page"]',
+    );
+  expect(current).toHaveLength(1);
+}
+
+const activeItemStoryArgs = {
+  sidebarItems: activeItemSidebarItems,
+  topBarTitle: "Reports",
+  activeHref: "/analytics/reports",
+} satisfies Partial<DashboardLayoutProps>;
+
+async function playActiveItemStory(): Promise<void> {
+  await expectOnlyActiveSidebarLink("/analytics/reports");
+}
+
+export const ActiveItemHighlight: Story = {
+  args: {
+    ...activeItemStoryArgs,
+    activeItemStyle: "highlight",
+    children: <ActiveItemPageContent activeItemStyle="highlight" />,
+  },
+  play: playActiveItemStory,
+};
+
+export const ActiveItemRightBorder: Story = {
+  args: {
+    ...activeItemStoryArgs,
+    activeItemStyle: "right-border",
+    children: <ActiveItemPageContent activeItemStyle="right-border" />,
+  },
+  play: playActiveItemStory,
+};
+
+export const ActiveItemColorShift: Story = {
+  args: {
+    ...activeItemStoryArgs,
+    activeItemStyle: "color-shift",
+    children: <ActiveItemPageContent activeItemStyle="color-shift" />,
+  },
+  play: playActiveItemStory,
+};
+
+export const ActiveItemTinted: Story = {
+  args: {
+    ...activeItemStoryArgs,
+    activeItemStyle: "tinted",
+    children: <ActiveItemPageContent activeItemStyle="tinted" />,
+  },
+  play: playActiveItemStory,
+};
+
+export const ActiveItemSolid: Story = {
+  args: {
+    ...activeItemStoryArgs,
+    activeItemStyle: "solid",
+    children: <ActiveItemPageContent activeItemStyle="solid" />,
+  },
+  play: playActiveItemStory,
+};
+
+// An admin-only item keeps its red, whichever style is in use.
+export const ActiveAdminItem: Story = {
+  args: {
+    ...activeItemStoryArgs,
+    topBarTitle: "Audit Log",
+    activeHref: "/admin/audit-log",
+    activeItemStyle: "highlight",
+    children: <ActiveItemPageContent activeItemStyle="highlight" />,
+  },
+  play: async (): Promise<void> => {
+    await expectOnlyActiveSidebarLink("/admin/audit-log");
+  },
+};
+
+// --- The active item follows navigation ---------------------------------
+//
+// Drives the active item from `usePathname`, the way a Next.js app would: the
+// story's Link performs client-side navigation by updating the pathname its
+// `usePathname` hook returns. Click around the sidebar and the marker moves.
+// A pathname nested beneath an item (`/analytics/reports/q3`) still marks
+// that item.
+
+const InAppNavigateContext = createContext<(href: string) => void>(
+  (): void => {},
+);
+
+function InAppNavigationLink({
+  href,
+  className,
+  onClick,
+  children,
+  "aria-current": ariaCurrent,
+}: LinkComponentProps): ReactElement {
+  const navigate = useContext(InAppNavigateContext);
+  return (
+    <a
+      href={href}
+      className={className}
+      aria-current={ariaCurrent}
+      onClick={(e): void => {
+        if (typeof onClick === "function") {
+          onClick(e);
+        }
+        if (e.defaultPrevented) {
+          return;
+        }
+        // Client-side navigation: keep the Storybook iframe where it is.
+        e.preventDefault();
+        navigate(href);
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
+InAppNavigationLink satisfies LinkComponentType;
+
+function ActiveItemFollowsNavigationRender(
+  args: Partial<DashboardLayoutProps>,
+): ReactElement {
+  const [pathname, setPathname] = useState<string>("/analytics/reports/q3");
+  const usePathname = (): string => pathname;
+  return (
+    <InAppNavigateContext.Provider value={setPathname}>
+      <DashboardLayout
+        {...(args as DashboardLayoutProps)}
+        Link={InAppNavigationLink}
+        usePathname={usePathname}
+      >
+        <PageColumnContainer>
+          <div className="flex flex-col gap-4 p-4 items-start">
+            <p>
+              Current pathname: <code data-testid="pathname">{pathname}</code>
+            </p>
+            <p className="text-sm text-muted-foreground max-w-prose">
+              Click a sidebar link to navigate; the active marker follows the
+              pathname returned by <code>usePathname</code>.
+            </p>
+            <ExampleChildrenForContainer />
+          </div>
+        </PageColumnContainer>
+      </DashboardLayout>
+    </InAppNavigateContext.Provider>
+  );
+}
+
+export const ActiveItemFollowsNavigation: Story = {
+  args: {
+    sidebarItems: activeItemSidebarItems,
+    topBarTitle: "Active item follows navigation",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <ActiveItemFollowsNavigationRender {...args} />
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    if (!window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+    const canvas = within(canvasElement);
+
+    // Nested beneath /analytics/reports, so Reports is the active item.
+    await expectOnlyActiveSidebarLink("/analytics/reports");
+
+    await userEvent.click(findSidebarLink("/team/roles")!);
+    await waitFor((): void => {
+      expect(canvas.getByTestId("pathname")).toHaveTextContent("/team/roles");
+    });
+    await expectOnlyActiveSidebarLink("/team/roles");
+    expect(findSidebarLink("/analytics/reports")).not.toHaveAttribute(
+      "aria-current",
     );
   },
 };

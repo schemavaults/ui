@@ -3,6 +3,8 @@
 import type { CSSProperties, ReactNode, ReactElement, FC } from "react";
 import DashboardSidebar, {
   DashboardLayoutSidebarTrigger,
+  DashboardSidebarActiveItemFromPathnameHookProvider,
+  DashboardSidebarActiveItemProvider,
   DashboardSidebarContextProvider,
   useCloseDashboardSidebarOnRouteChange,
   useDashboardSidebarOpenState,
@@ -50,6 +52,8 @@ export function DashboardLayout({
   brandHref,
   topBarTitle,
   usePathname,
+  activeHref,
+  activeItemStyle,
   printHidden = false,
   sidebarOpenWidth,
   reducedMotion,
@@ -94,6 +98,17 @@ export function DashboardLayout({
     | FC<ICustomizableDashboardLayoutComponentProps>
     | undefined = props.topBarButtons;
 
+  const sidebar: ReactElement = (
+    <DashboardSidebar
+      wordmark={wordmark}
+      Link={Link}
+      brandHref={brandHref}
+      logo={logo}
+      sidebarFooterContent={props.sidebarFooterContent}
+      className={cn(printHidden && "print:hidden")}
+    />
+  );
+
   return (
     // Hands the resolved preference to every Framer Motion element inside the
     // layout — the sidebar's own `m.*` elements, and any the consumer renders
@@ -122,14 +137,29 @@ export function DashboardLayout({
           )}
           style={containerStyle}
         >
-          <DashboardSidebar
-            wordmark={wordmark}
-            Link={Link}
-            brandHref={brandHref}
-            logo={logo}
-            sidebarFooterContent={props.sidebarFooterContent}
-            className={cn(printHidden && "print:hidden")}
-          />
+          {/*
+            Only the sidebar reads the active item, so only the sidebar is
+            wrapped. Which provider renders depends on whether a
+            `usePathname` hook was supplied (the hook cannot be called
+            conditionally); a consumer that starts or stops passing one
+            remounts the sidebar, never the page content beside it.
+          */}
+          {typeof usePathname === "function" ? (
+            <DashboardSidebarActiveItemFromPathnameHookProvider
+              usePathname={usePathname}
+              currentPathname={activeHref}
+              activeItemStyle={activeItemStyle}
+            >
+              {sidebar}
+            </DashboardSidebarActiveItemFromPathnameHookProvider>
+          ) : (
+            <DashboardSidebarActiveItemProvider
+              currentPathname={activeHref}
+              activeItemStyle={activeItemStyle}
+            >
+              {sidebar}
+            </DashboardSidebarActiveItemProvider>
+          )}
           <DashboardLayoutMainContentContainer printHidden={printHidden}>
             <header
               id="dashboard-layout-main-content-header"
