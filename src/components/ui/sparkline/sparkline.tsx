@@ -5,20 +5,28 @@ import type { HTMLAttributes, ReactElement, Ref } from "react";
 import { useId } from "react";
 
 import { cn } from "@/lib/utils";
+import {
+  chartColorIds,
+  getChartColorClasses,
+  type ChartColorId,
+} from "@/components/ui/chart-primitives/chart-colors";
+import {
+  useChartWidth,
+  type ChartWidth,
+} from "@/components/ui/chart-primitives/use-chart-width";
 
 export const sparklineVariantIds = ["line", "area", "bar"] as const satisfies string[];
 export type SparklineVariantId = (typeof sparklineVariantIds)[number];
 
+/**
+ * Preset colours (see `chartColorIds`), plus `auto`, which picks a status
+ * colour from the trend.
+ */
 export const sparklineColorIds = [
-  "default",
-  "primary",
-  "positive",
-  "warning",
-  "destructive",
-  "muted",
+  ...chartColorIds,
   "auto",
 ] as const satisfies string[];
-export type SparklineColorId = (typeof sparklineColorIds)[number];
+export type SparklineColorId = ChartColorId | "auto";
 
 export const sparklineSizeIds = ["sm", "md", "lg"] as const satisfies string[];
 export type SparklineSizeId = (typeof sparklineSizeIds)[number];
@@ -47,42 +55,6 @@ export const sparklineVariants = cva(
     },
   },
 );
-
-const SPARKLINE_STROKE_CLASSES: Record<
-  Exclude<SparklineColorId, "auto">,
-  string
-> = {
-  default: "stroke-schemavaults-brand-blue",
-  primary: "stroke-primary",
-  positive: "stroke-emerald-500 dark:stroke-emerald-400",
-  warning: "stroke-warning",
-  destructive: "stroke-destructive",
-  muted: "stroke-muted-foreground",
-};
-
-const SPARKLINE_FILL_CLASSES: Record<
-  Exclude<SparklineColorId, "auto">,
-  string
-> = {
-  default: "text-schemavaults-brand-blue",
-  primary: "text-primary",
-  positive: "text-emerald-500 dark:text-emerald-400",
-  warning: "text-warning",
-  destructive: "text-destructive",
-  muted: "text-muted-foreground",
-};
-
-const SPARKLINE_BAR_FILL_CLASSES: Record<
-  Exclude<SparklineColorId, "auto">,
-  string
-> = {
-  default: "fill-schemavaults-brand-blue",
-  primary: "fill-primary",
-  positive: "fill-emerald-500 dark:fill-emerald-400",
-  warning: "fill-warning",
-  destructive: "fill-destructive",
-  muted: "fill-muted-foreground",
-};
 
 function resolveAutoColor(data: ReadonlyArray<number>): SparklineColorId {
   if (data.length < 2) return "default";
@@ -131,8 +103,12 @@ export interface SparklineProps
   color?: SparklineColorId;
   /** Accessible label describing what the sparkline represents. */
   label: string;
-  /** Override the rendered width in pixels (defaults are size-aware). */
-  width?: number;
+  /**
+   * Width in pixels (defaults are size-aware), or `"auto"` to fill the
+   * container and redraw when it resizes (an empty placeholder at the
+   * height until it has been measured).
+   */
+  width?: ChartWidth;
   /** Override the rendered height in pixels (defaults are size-aware). */
   height?: number;
   /** Stroke width for line/area variants. Defaults to 1.5. */
@@ -169,13 +145,19 @@ function Sparkline({
   min,
   max,
   className,
+  style,
   ref,
   ...props
 }: SparklineProps): ReactElement {
   const resolvedSize: SparklineSizeId = size ?? "md";
   const dims = SIZE_TO_DIMENSIONS[resolvedSize];
-  const w: number = width ?? dims.width;
+  const measured = useChartWidth<HTMLDivElement>(width, dims.width, ref);
   const h: number = height ?? dims.height;
+  const rootClassName: string = cn(
+    sparklineVariants({ size }),
+    measured.rootClassName,
+    className,
+  );
 
   const resolvedColor: Exclude<SparklineColorId, "auto"> =
     color === "auto"
@@ -184,17 +166,35 @@ function Sparkline({
 
   const gradientId: string = useId();
 
-  if (data.length === 0) {
+  if (measured.width === null) {
+    // "auto", not measured yet: hold the height, draw nothing.
     return (
       <div
-        ref={ref}
+        ref={measured.ref}
         role="img"
         aria-label={label}
         data-slot="sparkline"
         data-variant={variant}
         data-color={resolvedColor}
-        className={cn(sparklineVariants({ size }), className)}
-        style={{ width: w, height: h }}
+        className={rootClassName}
+        style={{ ...measured.rootStyle, height: h, ...style }}
+        {...props}
+      />
+    );
+  }
+  const w: number = measured.width;
+
+  if (data.length === 0) {
+    return (
+      <div
+        ref={measured.ref}
+        role="img"
+        aria-label={label}
+        data-slot="sparkline"
+        data-variant={variant}
+        data-color={resolvedColor}
+        className={rootClassName}
+        style={{ ...measured.rootStyle, height: h, ...style }}
         {...props}
       >
         <svg
@@ -231,20 +231,21 @@ function Sparkline({
 
   const lastPoint: readonly [number, number] = points[points.length - 1]!;
 
-  const strokeClass: string = SPARKLINE_STROKE_CLASSES[resolvedColor];
-  const fillClass: string = SPARKLINE_FILL_CLASSES[resolvedColor];
-  const barFillClass: string = SPARKLINE_BAR_FILL_CLASSES[resolvedColor];
+  const colorClasses = getChartColorClasses(resolvedColor);
+  const strokeClass: string = colorClasses.stroke;
+  const fillClass: string = colorClasses.text;
+  const barFillClass: string = colorClasses.fill;
 
   return (
     <div
-      ref={ref}
+      ref={measured.ref}
       role="img"
       aria-label={label}
       data-slot="sparkline"
       data-variant={variant}
       data-color={resolvedColor}
-      className={cn(sparklineVariants({ size }), className)}
-      style={{ width: w, height: h }}
+      className={rootClassName}
+      style={{ ...measured.rootStyle, height: h, ...style }}
       {...props}
     >
       <svg

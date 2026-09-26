@@ -2,6 +2,7 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import type {
+  FocusEvent,
   HTMLAttributes,
   KeyboardEvent,
   MouseEvent,
@@ -9,9 +10,26 @@ import type {
   ReactNode,
   Ref,
 } from "react";
-import { useId } from "react";
+import { useId, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
+import {
+  chartColorIds,
+  chartPaintClass,
+  createChartColorScale,
+  getChartSeriesColorId,
+  type ChartColorId,
+  type ChartPaint,
+} from "@/components/ui/chart-primitives/chart-colors";
+import { ChartDataTable } from "@/components/ui/chart-primitives/chart-data-table";
+import { formatChartNumber } from "@/components/ui/chart-primitives/chart-format";
+import { ChartLegend } from "@/components/ui/chart-primitives/chart-legend";
+import {
+  ChartLiveRegion,
+  ChartTooltip,
+  ChartTooltipRow,
+} from "@/components/ui/chart-primitives/chart-tooltip";
+import { useChartWidth } from "@/components/ui/chart-primitives/use-chart-width";
 
 export const pieChartSizeIds = [
   "sm",
@@ -21,15 +39,9 @@ export const pieChartSizeIds = [
 ] as const satisfies string[];
 export type PieChartSizeId = (typeof pieChartSizeIds)[number];
 
-export const pieChartSegmentColorIds = [
-  "default",
-  "primary",
-  "positive",
-  "warning",
-  "destructive",
-  "muted",
-] as const satisfies string[];
-export type PieChartSegmentColorId = (typeof pieChartSegmentColorIds)[number];
+/** Preset segment colours; see `chartColorIds`. */
+export const pieChartSegmentColorIds = chartColorIds;
+export type PieChartSegmentColorId = ChartColorId;
 
 const SIZE_TO_PIXELS: Record<PieChartSizeId, number> = {
   sm: 96,
@@ -38,27 +50,10 @@ const SIZE_TO_PIXELS: Record<PieChartSizeId, number> = {
   xl: 320,
 };
 
-const SEGMENT_FILL_CLASSES: Record<PieChartSegmentColorId, string> = {
-  default: "fill-schemavaults-brand-blue",
-  primary: "fill-primary",
-  positive: "fill-emerald-500 dark:fill-emerald-400",
-  warning: "fill-warning",
-  destructive: "fill-destructive",
-  muted: "fill-muted-foreground",
-};
-
-/**
- * Fallback color rotation when a segment doesn't specify its own color. Index
- * is the segment position in the input array, modulo the palette length.
- */
-const DEFAULT_COLOR_ROTATION: ReadonlyArray<PieChartSegmentColorId> = [
-  "default",
-  "positive",
-  "warning",
-  "destructive",
-  "primary",
-  "muted",
-];
+const SHARE_FORMAT: Intl.NumberFormat = new Intl.NumberFormat("en-US", {
+  style: "percent",
+  maximumFractionDigits: 1,
+});
 
 export const pieChartVariants = cva(
   "relative inline-flex shrink-0 items-center justify-center",
@@ -87,11 +82,15 @@ export interface PieChartSegment {
   value: number;
   /** Optional human-readable label exposed via `aria-label` and tooltips. */
   label?: string;
-  /** Preset color id from the chart palette. Ignored if `fill` is provided. */
+  /**
+   * Preset color. Defaults to the segment's palette slot (its position in
+   * `segmentOrder` when the chart has one, else in `segments`); a ninth
+   * segment and beyond are painted `"other"`. Ignored if `fill` is provided.
+   */
   color?: PieChartSegmentColorId;
   /**
    * Override the fill with a raw CSS color (e.g. `"#ff0080"` or
-   * `"hsl(var(--chart-1))"`). Takes precedence over `color`.
+   * `"var(--chart-3)"`). Takes precedence over `color`.
    */
   fill?: string;
   /** Extra classes applied to this segment's `<path>`. */
@@ -112,8 +111,30 @@ export interface PieChartProps
    * values like `0.55` produce a donut. Defaults to `0`.
    */
   innerRadius?: number;
-  /** Override the rendered diameter in pixels (defaults are size-aware). */
-  diameter?: number;
+  /**
+   * Diameter in pixels (defaults are size-aware), or `"auto"` to fit the
+   * container's width, never growing past the size preset. An `"auto"`
+   * chart renders an empty placeholder at the preset's height until it has
+   * been measured.
+   */
+  diameter?: number | "auto";
+  /**
+   * Every segment id the chart can show, in colour-slot order. Pass the
+   * full, unfiltered list and a segment you filter out never repaints the
+   * others.
+   */
+  segmentOrder?: ReadonlyArray<string>;
+  /** Format a segment's value for the readout and table. */
+  formatValue?: (value: number) => string;
+  /** Show the hover / focus readout. Defaults to `true`. */
+  showTooltip?: boolean;
+  /** Show a legend of the segments under the chart. Defaults to `false`. */
+  showLegend?: boolean;
+  /**
+   * Hold the current render at reduced opacity while new data loads, rather
+   * than flashing a skeleton.
+   */
+  loading?: boolean;
   /**
    * Width of the divider stroke between segments. Defaults to `1`. Set to `0`
    * to remove the divider.
@@ -160,10 +181,10 @@ export interface PieChartProps
 
 interface ResolvedSegment {
   segment: PieChartSegment;
+  index: number;
   startAngle: number;
   endAngle: number;
-  fillClass: string | undefined;
-  fill: string | undefined;
+  paint: ChartPaint;
 }
 
 /** Convert a polar coordinate (angle in radians, measured from 12 o'clock,
@@ -261,10 +282,16 @@ function PieChart({
   size,
   innerRadius,
   diameter,
+  segmentOrder,
   segmentGap = 1,
   onSegmentClick,
+  formatValue = formatChartNumber,
+  showTooltip = true,
+  showLegend = false,
+  loading = false,
   children,
   className,
+  style,
   centerClassName,
   showSegmentLabels = false,
   segmentLabelFormatter,
@@ -274,68 +301,157 @@ function PieChart({
   ...props
 }: PieChartProps): ReactElement {
   const resolvedSize: PieChartSizeId = size ?? "md";
-  const pixelSize: number = diameter ?? SIZE_TO_PIXELS[resolvedSize];
-  const cx: number = pixelSize / 2;
-  const cy: number = pixelSize / 2;
-  const outerRadius: number = pixelSize / 2;
+  const presetDiameter: number = SIZE_TO_PIXELS[resolvedSize];
+  const chart = useChartWidth<HTMLDivElement>(
+    diameter === "auto" ? "auto" : (diameter ?? presetDiameter),
+    presetDiameter,
+    ref,
+  );
+  // "auto" fits the container, up to the preset; null until measured.
+  const pixelSize: number | null =
+    chart.width === null
+      ? null
+      : chart.isAuto
+        ? Math.min(chart.width, presetDiameter)
+        : chart.width;
+  const boxSize: number = pixelSize ?? presetDiameter;
+  const cx: number = boxSize / 2;
+  const cy: number = boxSize / 2;
+  const outerRadius: number = boxSize / 2;
   const innerR: number = Math.max(
     0,
     Math.min(0.95, innerRadius ?? 0) * outerRadius,
   );
 
-  const titleId: string = useId();
+  const hintId: string = useId();
+  const [activeState, setActive] = useState<number | null>(null);
+  /** Whether the segment was reached with the arrow keys (so it is announced). */
+  const [announce, setAnnounce] = useState<boolean>(false);
+  const svgRef = useRef<SVGSVGElement>(null);
 
-  const validSegments: ReadonlyArray<PieChartSegment> = segments.filter(
-    (s) => s.value > 0 && Number.isFinite(s.value),
-  );
+  // Each segment keeps its position in `segments`, so its default colour
+  // slot doesn't shift when an earlier segment is zero.
+  const validSegments: ReadonlyArray<{ segment: PieChartSegment; slot: number }> =
+    segments
+      .map((segment, slot) => ({ segment, slot }))
+      .filter(({ segment: s }) => s.value > 0 && Number.isFinite(s.value));
 
   const total: number = validSegments.reduce(
-    (acc, s) => acc + s.value,
+    (acc, { segment }) => acc + segment.value,
     0,
   );
+
+  const colorScale: ((id: string) => ChartColorId) | null = segmentOrder
+    ? createChartColorScale(segmentOrder)
+    : null;
 
   const resolved: ReadonlyArray<ResolvedSegment> = (() => {
     if (total <= 0) return [];
     let angle: number = 0;
-    return validSegments.map((segment, index) => {
+    return validSegments.map(({ segment, slot }, index) => {
       const sweep: number = (segment.value / total) * Math.PI * 2;
       const startAngle: number = angle;
       const endAngle: number = angle + sweep;
       angle = endAngle;
-      const presetColor: PieChartSegmentColorId =
+      const colorId: ChartColorId =
         segment.color ??
-        DEFAULT_COLOR_ROTATION[index % DEFAULT_COLOR_ROTATION.length]!;
-      const fillClass: string | undefined = segment.fill
-        ? undefined
-        : SEGMENT_FILL_CLASSES[presetColor];
+        (colorScale ? colorScale(segment.id) : getChartSeriesColorId(slot));
       return {
         segment,
+        index,
         startAngle,
         endAngle,
-        fillClass,
-        fill: segment.fill,
+        paint: { colorId, value: segment.fill },
       };
     });
   })();
+  // A stale index (the data shrank under the pointer) reads as nothing active.
+  const active: number | null =
+    activeState !== null && activeState < resolved.length ? activeState : null;
 
-  return (
-    <div
-      ref={ref}
-      role="img"
-      aria-labelledby={titleId}
-      data-slot="pie-chart"
-      className={cn(pieChartVariants({ size }), className)}
-      style={{ width: pixelSize, height: pixelSize }}
-      {...props}
-    >
+  const hasInteractiveSegments: boolean = resolved.some(
+    (r) => typeof (r.segment.onClick ?? onSegmentClick) === "function",
+  );
+  const readoutEnabled: boolean = showTooltip && resolved.length > 0;
+  const activeSegment: ResolvedSegment | undefined =
+    active === null ? undefined : resolved[active];
+  // The pie is centered in an "auto" root that may be wider than it.
+  const offsetX: number =
+    chart.isAuto && chart.width !== null && pixelSize !== null
+      ? (chart.width - pixelSize) / 2
+      : 0;
+
+  const onKeyDown = (event: KeyboardEvent<SVGSVGElement>): void => {
+    if (!readoutEnabled || event.target !== event.currentTarget) return;
+    const last: number = resolved.length - 1;
+    let next: number | null = active;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      next = active === null ? 0 : active === last ? 0 : active + 1;
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      next = active === null ? last : active === 0 ? last : active - 1;
+    } else if (event.key === "Home") {
+      next = 0;
+    } else if (event.key === "End") {
+      next = last;
+    } else if (event.key === "Escape") {
+      next = null;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    setActive(next);
+    setAnnounce(true);
+  };
+
+  /** Moves focus to the next clickable segment in the key's direction (wrapping). */
+  const focusNextInteractiveSegment = (key: string, from: number): void => {
+    const n: number = resolved.length;
+    const isInteractive = (i: number): boolean =>
+      typeof (resolved[i]!.segment.onClick ?? onSegmentClick) === "function";
+    const forward: boolean = key === "ArrowRight" || key === "ArrowDown";
+    const backward: boolean = key === "ArrowLeft" || key === "ArrowUp";
+    let candidates: number[] = [];
+    if (forward || backward) {
+      candidates = Array.from({ length: n - 1 }, (_, step) =>
+        forward ? (from + step + 1) % n : (from - step - 1 + n) % n,
+      );
+    } else if (key === "Home") {
+      candidates = Array.from({ length: n }, (_, i) => i);
+    } else if (key === "End") {
+      candidates = Array.from({ length: n }, (_, i) => n - 1 - i);
+    }
+    const next: number | undefined = candidates.find(isInteractive);
+    if (next === undefined || next === from) return;
+    svgRef.current
+      ?.querySelector<SVGElement>(`[data-segment-index="${next}"]`)
+      ?.focus();
+  };
+
+  const onBlur = (event: FocusEvent<SVGSVGElement>): void => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setActive(null);
+    }
+  };
+
+  const labelRadius: number =
+    innerR > 0 ? (innerR + outerRadius) / 2 : outerRadius * 0.65;
+
+  const plot: ReactElement | null =
+    pixelSize === null ? null : (
       <svg
+        ref={svgRef}
         width={pixelSize}
         height={pixelSize}
         viewBox={`0 0 ${pixelSize} ${pixelSize}`}
-        aria-hidden={children ? "true" : undefined}
-        className="h-full w-full overflow-visible"
+        role={hasInteractiveSegments ? "group" : "img"}
+        aria-label={label}
+        aria-describedby={readoutEnabled ? hintId : undefined}
+        tabIndex={readoutEnabled && !hasInteractiveSegments ? 0 : undefined}
+        onKeyDown={onKeyDown}
+        onBlur={onBlur}
+        onPointerLeave={(): void => setActive(null)}
+        className="block shrink-0 overflow-visible rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <title id={titleId}>{label}</title>
         {resolved.length === 0 ? (
           <circle
             cx={cx}
@@ -344,7 +460,8 @@ function PieChart({
             className="fill-muted/40 dark:fill-muted/30"
           />
         ) : (
-          resolved.map(({ segment, startAngle, endAngle, fillClass, fill }) => {
+          resolved.map((r) => {
+            const { segment, startAngle, endAngle, paint } = r;
             const d: string = buildSegmentPath(
               cx,
               cy,
@@ -355,18 +472,41 @@ function PieChart({
             );
             const handler = segment.onClick ?? onSegmentClick;
             const isInteractive: boolean = typeof handler === "function";
+            const dimmed: boolean = active !== null && active !== r.index;
             return (
               <path
                 key={segment.id}
                 d={d}
-                fill={fill}
+                fill={paint.value}
                 stroke="hsl(var(--background))"
                 strokeWidth={segmentGap}
                 strokeLinejoin="round"
                 data-segment-id={segment.id}
                 role={isInteractive ? "button" : undefined}
                 tabIndex={isInteractive ? 0 : undefined}
-                aria-label={segment.label ?? segment.id}
+                aria-label={
+                  isInteractive
+                    ? `${segment.label ?? segment.id}: ${formatValue(segment.value)}`
+                    : undefined
+                }
+                data-segment-index={r.index}
+                onPointerEnter={
+                  readoutEnabled
+                    ? (): void => {
+                        setActive(r.index);
+                        setAnnounce(false);
+                      }
+                    : undefined
+                }
+                onFocus={
+                  readoutEnabled
+                    ? (): void => {
+                        // The focused button's own label is read out.
+                        setActive(r.index);
+                        setAnnounce(false);
+                      }
+                    : undefined
+                }
                 onClick={
                   isInteractive
                     ? (event: MouseEvent<SVGPathElement>): void => {
@@ -380,15 +520,30 @@ function PieChart({
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
                           handler!(segment, event);
+                        } else if (
+                          [
+                            "ArrowRight",
+                            "ArrowDown",
+                            "ArrowLeft",
+                            "ArrowUp",
+                            "Home",
+                            "End",
+                          ].includes(event.key)
+                        ) {
+                          event.preventDefault();
+                          focusNextInteractiveSegment(event.key, r.index);
+                        } else if (event.key === "Escape") {
+                          setActive(null);
                         }
                       }
                     : undefined
                 }
                 className={cn(
                   "transition-opacity",
-                  fillClass,
+                  chartPaintClass(paint, "fill"),
+                  dimmed && "opacity-40",
                   isInteractive &&
-                    "cursor-pointer hover:opacity-80 focus:outline-none focus-visible:opacity-80",
+                    "cursor-pointer focus:outline-none",
                   segment.className,
                 )}
               />
@@ -418,10 +573,6 @@ function PieChart({
                 : (segment.label ?? segment.id);
               if (text === null || text === "") return null;
               const midAngle: number = (startAngle + endAngle) / 2;
-              const labelRadius: number =
-                innerR > 0
-                  ? (innerR + outerRadius) / 2
-                  : outerRadius * 0.65;
               const [lx, ly] = polarToCartesian(
                 cx,
                 cy,
@@ -447,15 +598,106 @@ function PieChart({
           </g>
         ) : null}
       </svg>
-      {children ? (
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-0 flex items-center justify-center text-center",
-            centerClassName,
-          )}
-        >
-          {children}
-        </div>
+    );
+
+  const tooltipAnchor: readonly [number, number] | null = activeSegment
+    ? polarToCartesian(
+        cx,
+        cy,
+        labelRadius,
+        (activeSegment.startAngle + activeSegment.endAngle) / 2,
+      )
+    : null;
+
+  return (
+    <div
+      ref={chart.ref}
+      data-slot="pie-chart"
+      aria-busy={loading || undefined}
+      className={cn(
+        pieChartVariants({ size }),
+        "h-auto flex-col items-center justify-start gap-2 transition-opacity",
+        chart.isAuto && "flex w-full min-w-0 shrink",
+        loading && "opacity-60",
+        className,
+      )}
+      style={{
+        ...(chart.isAuto ? chart.rootStyle : { width: boxSize }),
+        ...style,
+      }}
+      {...props}
+    >
+      <div
+        data-slot="pie-chart-plot"
+        className="relative flex w-full shrink-0 justify-center"
+        style={{ height: boxSize }}
+      >
+        {plot}
+        {readoutEnabled && pixelSize !== null ? (
+          <>
+            <span id={hintId} hidden>
+              Use the arrow keys to read each segment.
+            </span>
+            <ChartLiveRegion
+              message={
+                announce && activeSegment
+                  ? `${activeSegment.segment.label ?? activeSegment.segment.id}: ${formatValue(activeSegment.segment.value)}, ${SHARE_FORMAT.format(activeSegment.segment.value / total)} of the total`
+                  : ""
+              }
+            />
+          </>
+        ) : null}
+        {showTooltip && activeSegment && tooltipAnchor && chart.width !== null ? (
+          <ChartTooltip
+            x={offsetX + tooltipAnchor[0]}
+            y={tooltipAnchor[1]}
+            containerWidth={chart.isAuto ? chart.width : boxSize}
+          >
+            <ChartTooltipRow
+              value={formatValue(activeSegment.segment.value)}
+              label={activeSegment.segment.label ?? activeSegment.segment.id}
+            />
+            <div className="text-muted-foreground tabular-nums">
+              {SHARE_FORMAT.format(activeSegment.segment.value / total)} of the
+              total
+            </div>
+          </ChartTooltip>
+        ) : null}
+        {children ? (
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-0 flex items-center justify-center text-center",
+              centerClassName,
+            )}
+          >
+            {children}
+          </div>
+        ) : null}
+      </div>
+      {showLegend && resolved.length > 0 && pixelSize !== null ? (
+        <ChartLegend
+          className="justify-center"
+          items={resolved.map((r) => ({
+            id: r.segment.id,
+            label: r.segment.label ?? r.segment.id,
+            paint: r.paint,
+            swatch: "square",
+          }))}
+        />
+      ) : null}
+      {pixelSize !== null && resolved.length > 0 ? (
+        <ChartDataTable
+          caption={label}
+          columns={["Segment", "Value", "Share"]}
+          rows={resolved.map((r) => ({
+            key: r.segment.id,
+            cells: [
+              r.segment.label ?? r.segment.id,
+              formatValue(r.segment.value),
+              SHARE_FORMAT.format(r.segment.value / total),
+            ],
+          }))}
+        />
       ) : null}
     </div>
   );
