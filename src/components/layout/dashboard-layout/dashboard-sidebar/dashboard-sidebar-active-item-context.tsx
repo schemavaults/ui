@@ -8,10 +8,8 @@ import {
   type ReactElement,
 } from "react";
 import {
-  DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE,
   normalizeDashboardSidebarPath,
   resolveActiveDashboardSidebarItemPath,
-  type DashboardSidebarActiveItemStyle,
 } from "./dashboard-sidebar-active-item";
 import {
   DashboardSidebarItemsAndGroupsContext,
@@ -19,49 +17,34 @@ import {
 } from "./dashboard-sidebar-items-and-groups-context";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
 
-export interface DashboardSidebarActiveItemContextValue {
-  /**
-   * The normalized path of the menu item for the current page, or `null`
-   * when the current page is unknown or matches no item.
-   */
-  activePath: string | null;
-  style: DashboardSidebarActiveItemStyle;
-}
-
-export const DashboardSidebarActiveItemContext =
-  createContext<DashboardSidebarActiveItemContextValue>({
-    activePath: null,
-    style: DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE,
-  });
+/**
+ * The normalized path of the menu item for the current page, or `null` when
+ * the current page is unknown or matches no item.
+ */
+export const DashboardSidebarActiveItemContext = createContext<string | null>(
+  null,
+);
 
 export interface DashboardSidebarActiveItemProviderProps
   extends PropsWithChildren {
   /** The current page's pathname (or full href). */
   currentPathname?: string;
-  activeItemStyle?: DashboardSidebarActiveItemStyle;
 }
 
 export function DashboardSidebarActiveItemProvider({
   currentPathname,
-  activeItemStyle,
   children,
 }: DashboardSidebarActiveItemProviderProps): ReactElement {
   const sidebarItems: DashboardSidebarItemsAndGroupsDefinitions = useContext(
     DashboardSidebarItemsAndGroupsContext,
   );
-  const style: DashboardSidebarActiveItemStyle =
-    activeItemStyle ?? DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE;
   const activePath: string | null = useMemo(
     (): string | null =>
       resolveActiveDashboardSidebarItemPath(sidebarItems, currentPathname),
     [sidebarItems, currentPathname],
   );
-  const value: DashboardSidebarActiveItemContextValue = useMemo(
-    (): DashboardSidebarActiveItemContextValue => ({ activePath, style }),
-    [activePath, style],
-  );
   return (
-    <DashboardSidebarActiveItemContext.Provider value={value}>
+    <DashboardSidebarActiveItemContext.Provider value={activePath}>
       {children}
     </DashboardSidebarActiveItemContext.Provider>
   );
@@ -81,28 +64,27 @@ export interface DashboardSidebarActiveItemFromPathnameHookProviderProps
 export function DashboardSidebarActiveItemFromPathnameHookProvider({
   usePathname,
   currentPathname,
-  ...props
+  children,
 }: DashboardSidebarActiveItemFromPathnameHookProviderProps): ReactElement {
   const pathname: string = usePathname();
   return (
     <DashboardSidebarActiveItemProvider
       currentPathname={currentPathname ?? pathname}
-      {...props}
-    />
+    >
+      {children}
+    </DashboardSidebarActiveItemProvider>
   );
 }
 
-export interface DashboardSidebarItemActiveState {
-  active: boolean;
-  style: DashboardSidebarActiveItemStyle;
-}
-
-export function useDashboardSidebarItemActiveState(
+/** Whether `item` is the menu item for the page currently being viewed. */
+export function useIsDashboardSidebarItemActive(
   item: DashboardSidebarItemDefinition,
-): DashboardSidebarItemActiveState {
-  const { activePath, style } = useContext(DashboardSidebarActiveItemContext);
-  const active: boolean =
+): boolean {
+  const activePath: string | null = useContext(
+    DashboardSidebarActiveItemContext,
+  );
+  return (
     activePath !== null &&
-    normalizeDashboardSidebarPath(item.url) === activePath;
-  return { active, style };
+    normalizeDashboardSidebarPath(item.url) === activePath
+  );
 }

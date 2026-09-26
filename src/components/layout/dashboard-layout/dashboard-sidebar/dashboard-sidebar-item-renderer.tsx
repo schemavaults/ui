@@ -20,11 +20,20 @@ import type { LinkComponentType } from "@/types/Link";
 import useDashboardSidebarOpenStateDispatch from "./useDashboardSidebarOpenStateDispatch";
 import useDebug from "@/components/hooks/use-debug";
 import type { SidebarItemIconComponent } from "./dashboard-sidebar-item-icon-component";
-import { useDashboardSidebarItemActiveState } from "./dashboard-sidebar-active-item-context";
-import {
-  getDashboardSidebarActiveItemClassNames,
-  type DashboardSidebarActiveItemClassNames,
-} from "./dashboard-sidebar-active-item-styles";
+import { useIsDashboardSidebarItemActive } from "./dashboard-sidebar-active-item-context";
+
+// The row for the current page: a tinted fill with a bar down its left edge,
+// painted behind the icon and label, and a bold label in the same hue. Admin
+// rows are red whether or not they are active, so theirs swaps the blue for
+// red rather than losing the colour that marks them as admin-only.
+const ACTIVE_ITEM_INDICATOR_CLASSNAME: string =
+  "border-l-4 border-blue-600 bg-blue-500/10 dark:border-blue-400 dark:bg-blue-400/15";
+const ACTIVE_ITEM_CONTENT_CLASSNAME: string =
+  "font-semibold text-blue-700 dark:text-blue-300";
+const ACTIVE_ADMIN_ITEM_INDICATOR_CLASSNAME: string =
+  "border-l-4 border-red-600 bg-red-500/10 dark:border-red-400 dark:bg-red-400/15";
+const ACTIVE_ADMIN_ITEM_CONTENT_CLASSNAME: string =
+  "font-semibold text-red-700 dark:text-red-300";
 
 export function DashboardSidebarItemRenderer({
   item,
@@ -48,16 +57,17 @@ export function DashboardSidebarItemRenderer({
     useToggleDashboardLayoutCollapsedTransitionTime();
   const showItemLabel: boolean = mobile || open;
 
-  const { active, style: activeItemStyle } =
-    useDashboardSidebarItemActiveState(item);
-  const activeClassNames: DashboardSidebarActiveItemClassNames | null = active
-    ? getDashboardSidebarActiveItemClassNames(activeItemStyle, isAdminItemGroup)
-    : null;
+  const active: boolean = useIsDashboardSidebarItemActive(item);
 
   const IconComponent: SidebarItemIconComponent = item.icon;
-  const itemColorClassName: string =
-    activeClassNames?.content ??
-    (isAdminItemGroup ? "text-red-500" : "text-foreground");
+  let itemColorClassName: string;
+  if (active) {
+    itemColorClassName = isAdminItemGroup
+      ? ACTIVE_ADMIN_ITEM_CONTENT_CLASSNAME
+      : ACTIVE_ITEM_CONTENT_CLASSNAME;
+  } else {
+    itemColorClassName = isAdminItemGroup ? "text-red-500" : "text-foreground";
+  }
 
   function SidebarMenuItemTitle(): ReactElement {
     return (
@@ -162,12 +172,14 @@ export function DashboardSidebarItemRenderer({
               }
             }}
           >
-            {typeof activeClassNames?.indicator === "string" && (
+            {active && (
               <span
                 aria-hidden="true"
                 className={cn(
-                  "absolute -z-10 pointer-events-none",
-                  activeClassNames.indicator,
+                  "absolute inset-0 -z-10 pointer-events-none",
+                  isAdminItemGroup
+                    ? ACTIVE_ADMIN_ITEM_INDICATOR_CLASSNAME
+                    : ACTIVE_ITEM_INDICATOR_CLASSNAME,
                 )}
               />
             )}

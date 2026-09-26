@@ -1,7 +1,6 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import type { CustomizableDashboardLayoutComponent } from "./customizable-dashboard-component-type";
 import type {
-  DashboardSidebarActiveItemStyle,
   DashboardSidebarItemsAndGroupsDefinitions,
   DashboardLayoutSidebarSizing,
 } from "./dashboard-sidebar";
@@ -37,7 +36,7 @@ export interface DashboardLayoutProps extends PropsWithChildren {
    * Optional `usePathname` hook (e.g. from `next/navigation`). When provided,
    * the mobile sidebar will automatically close whenever the pathname
    * changes, and the sidebar item for the current page is marked active (see
-   * `activeItemStyle`). Pass the hook itself, not its return value.
+   * `activeHref`). Pass the hook itself, not its return value.
    */
   usePathname?: () => string;
   /**
@@ -51,14 +50,12 @@ export interface DashboardLayoutProps extends PropsWithChildren {
    * items match, the longest `url` wins, so only the most specific item
    * lights up. The query string and fragment are ignored, and only
    * root-relative `url`s (starting with `/`) take part.
+   *
+   * The active item gets a tinted fill, a bar down its left edge and a bold
+   * label, all in blue (red in an `adminOnly` group). Its link also gets
+   * `aria-current="page"` and its `<li>` `data-active="true"`.
    */
   activeHref?: string;
-  /**
-   * How the active sidebar item is marked. Defaults to `"highlight"`. Every
-   * style also sets `aria-current="page"` on the active item's link, and
-   * `data-active="true"` on its `<li>`.
-   */
-  activeItemStyle?: DashboardSidebarActiveItemStyle;
   /**
    * When `true`, the dashboard "chrome" (the left sidebar and the top header
    * bar) is hidden from printed output via `@media print`, so the system print

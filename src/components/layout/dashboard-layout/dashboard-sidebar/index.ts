@@ -23,12 +23,7 @@ export {
 } from "./dashboard-sidebar-sizing";
 export type { IDashboardSidebarOpenStateContextType } from "./dashboard-sidebar-open-state";
 
-export type { DashboardSidebarActiveItemStyle } from "./dashboard-sidebar-active-item";
-export {
-  DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLES,
-  DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE,
-  resolveActiveDashboardSidebarItemPath,
-} from "./dashboard-sidebar-active-item";
+export { resolveActiveDashboardSidebarItemPath } from "./dashboard-sidebar-active-item";
 export {
   DashboardSidebarActiveItemProvider,
   DashboardSidebarActiveItemFromPathnameHookProvider,

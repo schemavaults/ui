@@ -16,16 +16,11 @@ export {
   useCloseDashboardSidebarOnRouteChange,
 } from "./dashboard-sidebar";
 export type {
-  DashboardSidebarActiveItemStyle,
   DashboardSidebarItemDefinition,
   DashboardSidebarItemGroupDefinition,
   DashboardSidebarItemsAndGroupsDefinitions,
 } from "./dashboard-sidebar";
-export {
-  DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLES,
-  DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE,
-  resolveActiveDashboardSidebarItemPath,
-} from "./dashboard-sidebar";
+export { resolveActiveDashboardSidebarItemPath } from "./dashboard-sidebar";
 export {
   DASHBOARD_SIDEBAR_OPEN_WIDTH_CSS_VARIABLE,
   DEFAULT_DASHBOARD_SIDEBAR_OPEN_WIDTH,

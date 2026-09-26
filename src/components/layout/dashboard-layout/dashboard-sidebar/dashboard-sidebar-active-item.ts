@@ -2,35 +2,6 @@ import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-de
 import type { DashboardSidebarItemGroupDefinition } from "./dashboard-sidebar-item-group";
 
 /**
- * How the sidebar marks the menu item for the page currently being viewed.
- *
- * - `"highlight"` — a soft full-width fill behind the row, with a bold label.
- * - `"right-border"` — a thick bar along the row's right edge, with a bold
- *   label.
- * - `"color-shift"` — the icon and label turn blue and bold; no fill.
- * - `"tinted"` — a blue-tinted fill, a blue bar on the left edge, and a blue
- *   bold label.
- * - `"solid"` — an inset, rounded, solid pill in the primary colour, with the
- *   icon and label inverted on top of it.
- * - `"none"` — no visual treatment. The item is still exposed to assistive
- *   technology as the current page via `aria-current="page"`.
- */
-export const DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLES = [
-  "highlight",
-  "right-border",
-  "color-shift",
-  "tinted",
-  "solid",
-  "none",
-] as const;
-
-export type DashboardSidebarActiveItemStyle =
-  (typeof DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLES)[number];
-
-export const DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE: DashboardSidebarActiveItemStyle =
-  "highlight";
-
-/**
  * Reduce an href to the path the sidebar compares on: the query string and
  * fragment are dropped, and trailing slashes are trimmed so `/settings/` and
  * `/settings` are the same page.

@@ -53,7 +53,6 @@ export function DashboardLayout({
   topBarTitle,
   usePathname,
   activeHref,
-  activeItemStyle,
   printHidden = false,
   sidebarOpenWidth,
   reducedMotion,
@@ -148,15 +147,11 @@ export function DashboardLayout({
             <DashboardSidebarActiveItemFromPathnameHookProvider
               usePathname={usePathname}
               currentPathname={activeHref}
-              activeItemStyle={activeItemStyle}
             >
               {sidebar}
             </DashboardSidebarActiveItemFromPathnameHookProvider>
           ) : (
-            <DashboardSidebarActiveItemProvider
-              currentPathname={activeHref}
-              activeItemStyle={activeItemStyle}
-            >
+            <DashboardSidebarActiveItemProvider currentPathname={activeHref}>
               {sidebar}
             </DashboardSidebarActiveItemProvider>
           )}

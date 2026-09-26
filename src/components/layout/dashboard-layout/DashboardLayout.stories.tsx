@@ -84,12 +84,7 @@ import type {
   DashboardSidebarItemGroupDefinition,
   DashboardSidebarItemsAndGroupsDefinitions,
 } from "./dashboard-sidebar";
-import {
-  DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLES,
-  DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE,
-  DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING,
-  type DashboardSidebarActiveItemStyle,
-} from "./dashboard-sidebar";
+import { DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING } from "./dashboard-sidebar";
 import type {
   CustomizableDashboardLayoutComponent,
   ICustomizableDashboardLayoutComponentProps,
@@ -244,16 +239,7 @@ const meta = {
     activeHref: {
       control: "text",
       description:
-        "Pathname of the current page, for marking its sidebar item active. Takes precedence over `usePathname`. An item is active when the path equals its `url` or is nested beneath it; the longest matching `url` wins.",
-    },
-    activeItemStyle: {
-      control: "inline-radio",
-      options: [...DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLES],
-      description:
-        "How the active sidebar item is marked. Every style also sets `aria-current=\"page\"` on the active link.",
-      table: {
-        defaultValue: { summary: DEFAULT_DASHBOARD_SIDEBAR_ACTIVE_ITEM_STYLE },
-      },
+        "Pathname of the current page, for marking its sidebar item active. Takes precedence over `usePathname`. An item is active when the path equals its `url` or is nested beneath it; the longest matching `url` wins. The active item gets a blue tint, a left-edge bar and a bold label, and its link `aria-current=\"page\"`.",
     },
     reducedMotion: {
       control: "inline-radio",
@@ -1944,11 +1930,12 @@ export const WithMotionForcedOn: Story = {
 // The sidebar marks the item for the page being viewed. The current page comes
 // from `activeHref`, or from the `usePathname` hook when that is supplied; an
 // item is active when the path equals its `url` or is nested beneath it, and
-// the longest matching `url` wins. `activeItemStyle` picks the treatment.
+// the longest matching `url` wins. The active row gets a blue tint, a bar down
+// its left edge and a bold blue label; in an admin-only group, red instead.
 //
-// Each of the stories below pins the current page to Reports with
-// `activeHref`. Expand the sidebar with the header trigger to see the label
-// treatment; collapsed, the icon alone has to carry it.
+// The first two stories pin the current page with `activeHref`. Expand the
+// sidebar with the header trigger to see the label; collapsed, the tint, bar
+// and icon colour carry it.
 
 function activeItemDemoItem(
   title: string,
@@ -1987,34 +1974,18 @@ const activeItemSidebarItems = [
   ),
 ] satisfies DashboardSidebarItemsAndGroupsDefinitions;
 
-const ACTIVE_ITEM_STYLE_DESCRIPTIONS: Record<
-  DashboardSidebarActiveItemStyle,
-  string
-> = {
-  highlight: "A soft full-width fill behind the row, with a bold label.",
-  "right-border": "A thick bar along the row's right edge, with a bold label.",
-  "color-shift": "The icon and label turn blue and bold, with no fill.",
-  tinted:
-    "A blue-tinted fill with a blue bar on the left edge and a blue bold label.",
-  solid:
-    "An inset, rounded pill in the primary colour, with the icon and label inverted.",
-  none: "No visual treatment; the link still carries aria-current=\"page\".",
-};
-
 function ActiveItemPageContent({
-  activeItemStyle,
+  activeHref,
 }: {
-  activeItemStyle: DashboardSidebarActiveItemStyle;
+  activeHref: string;
 }): ReactElement {
   return (
     <PageColumnContainer>
       <div className="flex flex-col gap-4 p-4 items-start">
         <p className="text-sm text-muted-foreground max-w-prose">
-          <code>activeItemStyle=&quot;{activeItemStyle}&quot;</code> &mdash;{" "}
-          {ACTIVE_ITEM_STYLE_DESCRIPTIONS[activeItemStyle]} The current page is
-          pinned to <code>/analytics/reports</code> with{" "}
+          The current page is pinned to <code>{activeHref}</code> with{" "}
           <code>activeHref</code>. Expand the sidebar with the trigger in the
-          header to see the label treatment.
+          header to see the active item&rsquo;s label.
         </p>
         <ExampleChildrenForContainer />
       </div>
@@ -2049,70 +2020,26 @@ async function expectOnlyActiveSidebarLink(href: string): Promise<void> {
   expect(current).toHaveLength(1);
 }
 
-const activeItemStoryArgs = {
-  sidebarItems: activeItemSidebarItems,
-  topBarTitle: "Reports",
-  activeHref: "/analytics/reports",
-} satisfies Partial<DashboardLayoutProps>;
-
-async function playActiveItemStory(): Promise<void> {
-  await expectOnlyActiveSidebarLink("/analytics/reports");
-}
-
-export const ActiveItemHighlight: Story = {
+export const ActiveItem: Story = {
   args: {
-    ...activeItemStoryArgs,
-    activeItemStyle: "highlight",
-    children: <ActiveItemPageContent activeItemStyle="highlight" />,
+    sidebarItems: activeItemSidebarItems,
+    topBarTitle: "Reports",
+    activeHref: "/analytics/reports",
+    children: <ActiveItemPageContent activeHref="/analytics/reports" />,
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async (): Promise<void> => {
+    await expectOnlyActiveSidebarLink("/analytics/reports");
   },
-  play: playActiveItemStory,
 };
 
-export const ActiveItemRightBorder: Story = {
-  args: {
-    ...activeItemStoryArgs,
-    activeItemStyle: "right-border",
-    children: <ActiveItemPageContent activeItemStyle="right-border" />,
-  },
-  play: playActiveItemStory,
-};
-
-export const ActiveItemColorShift: Story = {
-  args: {
-    ...activeItemStoryArgs,
-    activeItemStyle: "color-shift",
-    children: <ActiveItemPageContent activeItemStyle="color-shift" />,
-  },
-  play: playActiveItemStory,
-};
-
-export const ActiveItemTinted: Story = {
-  args: {
-    ...activeItemStoryArgs,
-    activeItemStyle: "tinted",
-    children: <ActiveItemPageContent activeItemStyle="tinted" />,
-  },
-  play: playActiveItemStory,
-};
-
-export const ActiveItemSolid: Story = {
-  args: {
-    ...activeItemStoryArgs,
-    activeItemStyle: "solid",
-    children: <ActiveItemPageContent activeItemStyle="solid" />,
-  },
-  play: playActiveItemStory,
-};
-
-// An admin-only item keeps its red, whichever style is in use.
+// An admin-only item keeps its red when it is the active one.
 export const ActiveAdminItem: Story = {
   args: {
-    ...activeItemStoryArgs,
+    sidebarItems: activeItemSidebarItems,
     topBarTitle: "Audit Log",
     activeHref: "/admin/audit-log",
-    activeItemStyle: "highlight",
-    children: <ActiveItemPageContent activeItemStyle="highlight" />,
-  },
+    children: <ActiveItemPageContent activeHref="/admin/audit-log" />,
+  } satisfies Partial<DashboardLayoutProps>,
   play: async (): Promise<void> => {
     await expectOnlyActiveSidebarLink("/admin/audit-log");
   },
