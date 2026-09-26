@@ -185,6 +185,18 @@ export const AreaFill: Story = {
     curve: "smooth",
     showPoints: true,
   },
+  play: async ({ canvasElement }): Promise<void> => {
+    const seriesGroup = canvasElement.querySelector(
+      '[data-slot="line-chart-series"]',
+    );
+    const areaPath = seriesGroup?.querySelector('path[fill^="url("]');
+    const linePath = seriesGroup?.querySelector('path[fill="none"]');
+    const lineD: string = linePath?.getAttribute("d") ?? "";
+
+    // The fill's top edge must trace the smoothed stroke, not straight lines.
+    await expect(lineD).toContain(" C ");
+    await expect(areaPath?.getAttribute("d")).toContain(lineD);
+  },
 };
 
 export const WithGridlines: Story = {
