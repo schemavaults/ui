@@ -309,6 +309,9 @@ export type * from "./histogram";
 export * from "./bar-list";
 export type * from "./bar-list";
 
+export * from "./treemap";
+export type * from "./treemap";
+
 export * from "./comparison-slider";
 export type * from "./comparison-slider";
 
