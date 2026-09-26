@@ -270,6 +270,9 @@ export type * from "./tags-input";
 export * from "./number-ticker";
 export type * from "./number-ticker";
 
+export * from "./chart-primitives";
+export type * from "./chart-primitives";
+
 export * from "./sparkline";
 export type * from "./sparkline";
 
@@ -299,6 +302,12 @@ export type * from "./funnel-chart";
 
 export * from "./scatter-plot";
 export type * from "./scatter-plot";
+
+export * from "./histogram";
+export type * from "./histogram";
+
+export * from "./bar-list";
+export type * from "./bar-list";
 
 export * from "./treemap";
 export type * from "./treemap";

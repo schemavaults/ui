@@ -1,22 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ReactElement } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import {
   BarChart,
+  barChartBarColorIds,
   barChartSizeIds,
   barChartOrientationIds,
+  barChartSwatchProps,
   type BarChartBar,
-  type BarChartBarColorId,
 } from "./bar-chart";
 
-const LEGEND_SWATCH_CLASSES: Record<BarChartBarColorId, string> = {
-  default: "bg-schemavaults-brand-blue",
-  primary: "bg-primary",
-  positive: "bg-emerald-500 dark:bg-emerald-400",
-  warning: "bg-warning",
-  destructive: "bg-destructive",
-  muted: "bg-muted-foreground",
-};
+/**
+ * The visual readout. The tooltip is `aria-hidden`; screen readers hear
+ * keyboard moves through the chart's live region (`role="status"`) instead.
+ */
+function readoutOf(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>('[data-slot="chart-tooltip"]');
+}
 
 const meta = {
   title: "Charts & Graphs/BarChart",
@@ -26,7 +26,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "SVG bar chart built from an array of bars with absolute values. Supports vertical and horizontal orientation, theme-aware preset colors (or raw `fill` overrides), optional value/category labels, gridlines, and per-bar `onClick` handlers (falling back to the chart-level `onBarClick`).",
+          "SVG bar chart built from an array of bars with absolute values: one series of unrelated categories. Every bar shares the chart's `color` (palette slot 1 by default); pass a status colour on a bar only when it means good or bad. Hover or focus a bar (its whole column is the target) to read its value; the arrow keys step through the bars. `width=\"auto\"` fills the container, `showValueAxis` adds a nice value axis, and bars stay at most 24px thick with a rounded free end. For a histogram use `Histogram`; for long category names use `BarList`.",
       },
     },
   },
@@ -39,6 +39,10 @@ const meta = {
     orientation: {
       options: barChartOrientationIds,
       control: { type: "radio" },
+    },
+    color: {
+      options: barChartBarColorIds,
+      control: { type: "select" },
     },
     max: {
       control: { type: "number" },
@@ -76,11 +80,26 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const SAMPLE_BARS: ReadonlyArray<BarChartBar> = [
-  { id: "mon", value: 42, label: "Mon", color: "default" },
-  { id: "tue", value: 68, label: "Tue", color: "default" },
-  { id: "wed", value: 51, label: "Wed", color: "default" },
-  { id: "thu", value: 89, label: "Thu", color: "default" },
-  { id: "fri", value: 73, label: "Fri", color: "default" },
+  { id: "mon", value: 42, label: "Mon" },
+  { id: "tue", value: 68, label: "Tue" },
+  { id: "wed", value: 51, label: "Wed" },
+  { id: "thu", value: 89, label: "Thu" },
+  { id: "fri", value: 73, label: "Fri" },
+];
+
+const MONTHLY_BARS: ReadonlyArray<BarChartBar> = [
+  { id: "jan", value: 1240, label: "Jan" },
+  { id: "feb", value: 1580, label: "Feb" },
+  { id: "mar", value: 1320, label: "Mar" },
+  { id: "apr", value: 2110, label: "Apr" },
+  { id: "may", value: 1870, label: "May" },
+  { id: "jun", value: 2460, label: "Jun" },
+  { id: "jul", value: 2210, label: "Jul" },
+  { id: "aug", value: 2690, label: "Aug" },
+  { id: "sep", value: 2380, label: "Sep" },
+  { id: "oct", value: 2920, label: "Oct" },
+  { id: "nov", value: 3140, label: "Nov" },
+  { id: "dec", value: 3480, label: "Dec" },
 ];
 
 const STATUS_BARS: ReadonlyArray<BarChartBar> = [
@@ -101,6 +120,110 @@ export const WithValueLabels: Story = {
     bars: SAMPLE_BARS,
     size: "lg",
     showValueLabels: true,
+  },
+};
+
+export const HoverReadout: Story = {
+  args: {
+    bars: SAMPLE_BARS,
+    size: "lg",
+    showValueAxis: true,
+    formatValue: (value: number): string => `${value} deploys`,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Hover anywhere in a bar's column (not just the bar) to read it: the value leads, the category follows, and the other bars dim. Focus the chart with Tab and use the arrow keys for the same readout. (Without click handlers the chart itself takes focus; clickable bars are each a button instead.)",
+      },
+    },
+  },
+  // No click handler: the chart is one tab stop read with the arrow keys.
+  render: ({ onBarClick: _onBarClick, ...args }): ReactElement => (
+    <BarChart {...args} />
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const chart = canvas.getByRole("img", { name: "Sample metrics" });
+
+    // Keyboard: focus the chart, then step through the bars.
+    chart.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => {
+      expect(readoutOf(canvasElement)).toHaveTextContent("42 deploys");
+      expect(readoutOf(canvasElement)).toHaveTextContent("Mon");
+      // Screen readers hear the same readout through the live region.
+      expect(canvas.getByRole("status")).toHaveTextContent("Mon: 42 deploys");
+    });
+    await userEvent.keyboard("{End}");
+    await waitFor(() => {
+      expect(readoutOf(canvasElement)).toHaveTextContent("73 deploys");
+    });
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(readoutOf(canvasElement)).toBeNull();
+    });
+
+    // Pointer: the whole column is the hover target.
+    const thursday = canvasElement.querySelector('[data-bar-id="thu"]');
+    await userEvent.hover(thursday as Element);
+    await waitFor(() => {
+      expect(readoutOf(canvasElement)).toHaveTextContent("89 deploys");
+    });
+    // Hovering isn't announced.
+    expect(canvas.getByRole("status")).toBeEmptyDOMElement();
+  },
+};
+
+export const ValueAxis: Story = {
+  args: {
+    bars: MONTHLY_BARS,
+    size: "xl",
+    showValueAxis: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`showValueAxis` draws nice, thousands-separated ticks (0, 1,000, 2,000 …) with hairline gridlines; the scale's top rounds up to the next tick. Format them with `formatValue`.",
+      },
+    },
+  },
+};
+
+export const FillsContainer: Story = {
+  args: {
+    bars: MONTHLY_BARS,
+    width: "auto",
+    height: 240,
+    showValueAxis: true,
+    formatValue: (value: number): string => `$${value.toLocaleString("en-US")}`,
+  },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story:
+          "`width=\"auto\"` fills the container and redraws as it resizes (drag the viewport). Until it has been measured it renders an empty box at its height, so the server render holds no pixel width.",
+      },
+    },
+  },
+  render: (args): ReactElement => (
+    <div className="w-full max-w-3xl rounded-lg border bg-card p-4">
+      <p className="mb-3 text-sm font-medium">Monthly revenue</p>
+      <BarChart {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const root = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="bar-chart"]',
+    )!;
+    await waitFor(() => {
+      expect(root.querySelector("svg")).not.toBeNull();
+    });
+    const svg = root.querySelector("svg")!;
+    // The drawing matches the container, to the pixel.
+    expect(Math.abs(svg.getBoundingClientRect().width - root.clientWidth)).toBeLessThanOrEqual(1);
   },
 };
 
@@ -173,12 +296,13 @@ export const SharedScale: Story = {
         <BarChart
           {...args}
           label="Last week"
+          color="other"
           bars={[
-            { id: "mon", value: 110, label: "Mon", color: "muted" },
-            { id: "tue", value: 60, label: "Tue", color: "muted" },
-            { id: "wed", value: 95, label: "Wed", color: "muted" },
-            { id: "thu", value: 40, label: "Thu", color: "muted" },
-            { id: "fri", value: 80, label: "Fri", color: "muted" },
+            { id: "mon", value: 110, label: "Mon" },
+            { id: "tue", value: 60, label: "Tue" },
+            { id: "wed", value: 95, label: "Wed" },
+            { id: "thu", value: 40, label: "Thu" },
+            { id: "fri", value: 80, label: "Fri" },
           ]}
           max={120}
           showValueLabels
@@ -197,7 +321,7 @@ export const Empty: Story = {
 
 export const SingleBar: Story = {
   args: {
-    bars: [{ id: "only", value: 64, label: "Total", color: "primary" }],
+    bars: [{ id: "only", value: 64, label: "Total" }],
     size: "lg",
     showValueLabels: true,
   },
@@ -251,9 +375,10 @@ export const ClickableBars: Story = {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
             {args.bars.map((bar) => {
-              const swatchClass: string = bar.color
-                ? LEGEND_SWATCH_CLASSES[bar.color]
-                : LEGEND_SWATCH_CLASSES.default;
+              const swatch = barChartSwatchProps(
+                bar.color ?? args.color ?? "chart-1",
+                bar.fill,
+              );
               return (
                 <span
                   key={bar.id}
@@ -261,10 +386,8 @@ export const ClickableBars: Story = {
                 >
                   <span
                     aria-hidden="true"
-                    className={`inline-block h-2 w-2 rounded-full ${swatchClass}`}
-                    style={
-                      bar.fill ? { backgroundColor: bar.fill } : undefined
-                    }
+                    className={`inline-block h-2 w-2 rounded-[2px] ${swatch.className ?? ""}`}
+                    style={swatch.style}
                   />
                   {bar.label}
                 </span>
@@ -275,5 +398,19 @@ export const ClickableBars: Story = {
       );
     };
     return <Interactive />;
+  },
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Flaky: 18" }));
+    await waitFor(() => {
+      expect(canvas.getByText("Flaky (18)")).toBeInTheDocument();
+    });
+    // Clickable bars are buttons: Tab reaches them, the arrow keys move
+    // between them, Enter activates.
+    canvas.getByRole("button", { name: "Passed: 124" }).focus();
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}{Enter}");
+    await waitFor(() => {
+      expect(canvas.getByText("Failed (7)")).toBeInTheDocument();
+    });
   },
 };

@@ -7,19 +7,18 @@ import {
   scatterPlotColorIds,
   scatterPlotShapeIds,
   scatterPlotSizeIds,
-  type ScatterPlotColorId,
+  scatterPlotYScaleIds,
   type ScatterPlotPoint,
   type ScatterPlotSeries,
 } from "./scatter-plot";
 
-const LEGEND_SWATCH_CLASSES: Record<ScatterPlotColorId, string> = {
-  default: "bg-schemavaults-brand-blue",
-  primary: "bg-primary",
-  positive: "bg-emerald-500 dark:bg-emerald-400",
-  warning: "bg-warning",
-  destructive: "bg-destructive",
-  muted: "bg-muted-foreground",
-};
+/**
+ * The visual readout. The tooltip is `aria-hidden`; screen readers hear
+ * keyboard moves through the chart's live region (`role="status"`) instead.
+ */
+function readoutOf(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>('[data-slot="chart-tooltip"]');
+}
 
 const meta = {
   title: "Charts & Graphs/ScatterPlot",
@@ -29,7 +28,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "SVG scatter / bubble chart for correlating two numeric dimensions. Plots one or more named series on a shared x/y domain with theme-aware preset colors (or raw `color` overrides), rotating marker shapes so series stay distinguishable without relying on color alone, optional `size`-driven bubble scaling, least-squares trend lines, quadrant reference lines, axis ticks/titles, and per-series `onPointClick` handlers (falling back to the chart-level `onPointClick`).",
+          "SVG scatter / bubble chart for correlating two numeric dimensions. Hover reads out the nearest point within 24px (no need to land on the dot), and the arrow keys walk the points left to right. Series take palette slots 1–3 (no four hues stay distinguishable when every pair can sit side by side, so a fourth series is grey) plus rotating marker shapes, so identity never rests on colour alone. Also: `width=\"auto\"`, `formatX` / `formatY` (a time axis reads as times), `yScale=\"log\"` with decade ticks, per-point `group`s that fade the rest on hover, reference lines drawn above the points, bubble sizing, trend lines, and `onPointClick` handlers.",
       },
     },
   },
@@ -54,6 +53,10 @@ const meta = {
     xTickCount: { control: { type: "number", min: 2, max: 10, step: 1 } },
     yTickCount: { control: { type: "number", min: 2, max: 10, step: 1 } },
     yTickLabelWidth: { control: { type: "number", min: 16, max: 96, step: 1 } },
+    yScale: {
+      options: scatterPlotYScaleIds,
+      control: { type: "radio" },
+    },
     width: { control: { type: "number" } },
     height: { control: { type: "number" } },
   },
@@ -63,8 +66,6 @@ const meta = {
     pointRadius: 4,
     pointOpacity: 0.8,
     showAxis: true,
-    showXAxisLabels: false,
-    showYAxisLabels: false,
     showValueLabels: false,
     gridLineCount: 0,
     verticalGridLineCount: 0,
@@ -107,7 +108,6 @@ const QUERY_LATENCY: ReadonlyArray<ScatterPlotSeries> = [
   {
     id: "queries",
     label: "Queries",
-    colorId: "default",
     points: makeCloud(7, 40, 0.6, 40),
   },
 ];
@@ -116,19 +116,16 @@ const TWO_COHORTS: ReadonlyArray<ScatterPlotSeries> = [
   {
     id: "free",
     label: "Free tier",
-    colorId: "muted",
     points: makeCloud(11, 30, 0.3, 30),
   },
   {
     id: "pro",
     label: "Pro tier",
-    colorId: "default",
     points: makeCloud(23, 30, 0.8, 30),
   },
   {
     id: "enterprise",
     label: "Enterprise",
-    colorId: "positive",
     points: makeCloud(41, 20, 0.5, 60),
   },
 ];
@@ -137,7 +134,6 @@ const BUBBLE_SERIES: ReadonlyArray<ScatterPlotSeries> = [
   {
     id: "vaults",
     label: "Vaults",
-    colorId: "primary",
     points: [
       { id: "billing", x: 12, y: 78, size: 420, label: "billing" },
       { id: "analytics", x: 34, y: 45, size: 1200, label: "analytics" },
@@ -148,35 +144,6 @@ const BUBBLE_SERIES: ReadonlyArray<ScatterPlotSeries> = [
     ],
   },
 ];
-
-function Legend({
-  series,
-}: {
-  series: ReadonlyArray<ScatterPlotSeries>;
-}): ReactElement {
-  return (
-    <div className="flex flex-wrap items-center gap-2 text-xs">
-      {series.map((s) => {
-        const swatchClass: string = s.colorId
-          ? LEGEND_SWATCH_CLASSES[s.colorId]
-          : LEGEND_SWATCH_CLASSES.default;
-        return (
-          <span
-            key={s.id}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1"
-          >
-            <span
-              aria-hidden="true"
-              className={`inline-block h-2 w-2 rounded-full ${swatchClass}`}
-              style={s.color ? { backgroundColor: s.color } : undefined}
-            />
-            {s.label ?? s.id}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
 
 export const Default: Story = {
   args: {
@@ -239,20 +206,273 @@ export const MultipleSeries: Story = {
     showXAxisLabels: true,
     showYAxisLabels: true,
   },
-  render: (args): ReactElement => (
-    <div className="flex flex-col items-start gap-3">
-      <ScatterPlot {...args} />
-      <Legend series={args.series} />
-    </div>
-  ),
   parameters: {
     docs: {
       description: {
         story:
-          "Each series picks up the next color *and* marker shape from the default rotation, so overlapping clouds remain readable in greyscale or for color-blind viewers.",
+          "Each series picks up the next palette slot *and* marker shape, and two or more series get a legend whose swatches are the marker shapes, so overlapping clouds remain readable in greyscale or for color-blind viewers.",
       },
     },
   },
+};
+
+const TRACE_WINDOW_START: number = Date.UTC(2026, 8, 24, 14, 0, 0);
+const MINUTE_MS: number = 60_000;
+const CLOCK: Intl.DateTimeFormat = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+  second: "2-digit",
+  timeZone: "UTC",
+});
+const CLOCK_TICK: Intl.DateTimeFormat = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: "UTC",
+});
+
+function formatDuration(ms: number): string {
+  if (ms >= 1_000) return `${(ms / 1_000).toFixed(ms >= 10_000 ? 0 : 1)} s`;
+  return `${Math.round(ms)} ms`;
+}
+
+const OPERATIONS: ReadonlyArray<{ name: string; typicalMs: number }> = [
+  { name: "GET /api/session", typicalMs: 8 },
+  { name: "POST /api/auth/login", typicalMs: 90 },
+  { name: "SELECT users", typicalMs: 3 },
+  { name: "POST /api/auth/reset-password/confirm", typicalMs: 240 },
+  { name: "GET /api/vaults/:id", typicalMs: 35 },
+];
+
+/** An hour of request traces: start time across, duration up, one group per operation. */
+function makeTraces(count: number, seed: number): ScatterPlotPoint[] {
+  const rng = makeRng(seed);
+  return Array.from({ length: count }, (_, i): ScatterPlotPoint => {
+    const operation = OPERATIONS[Math.floor(rng() * OPERATIONS.length)]!;
+    // Log-normal-ish spread around the operation's typical duration, with
+    // the odd zero (sub-millisecond) and a rare slow outlier.
+    const spread: number = Math.exp((rng() + rng() + rng() - 1.5) * 1.6);
+    const outlier: number = rng() < 0.01 ? 25 : 1;
+    const duration: number =
+      operation.typicalMs < 5 && rng() < 0.15
+        ? 0
+        : Math.round(operation.typicalMs * spread * outlier);
+    return {
+      id: `trace-${seed}-${i}`,
+      x: TRACE_WINDOW_START + Math.round(rng() * 60 * MINUTE_MS),
+      y: duration,
+      group: operation.name,
+    };
+  });
+}
+
+const TRACE_TICKS: ReadonlyArray<number> = Array.from(
+  { length: 7 },
+  (_, i): number => TRACE_WINDOW_START + i * 10 * MINUTE_MS,
+);
+
+const TRACES: ReadonlyArray<ScatterPlotSeries> = [
+  { id: "traces", label: "Traces", points: makeTraces(600, 17) },
+];
+
+export const TimeAxisLogScale: Story = {
+  args: {
+    series: TRACES,
+    label: "Trace durations over the last hour",
+    size: "xl",
+    yScale: "log",
+    pointOpacity: 0.7,
+    xTickValues: TRACE_TICKS,
+    formatX: (x: number): string => CLOCK.format(x),
+    xTickFormatter: (x: number): string => CLOCK_TICK.format(x),
+    formatY: formatDuration,
+    yTickLabelWidth: 44,
+    yReferenceLines: [
+      { value: 30, label: "p50 · 30 ms" },
+      { value: 480, label: "p95 · 480 ms" },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Durations over time on a log scale: ticks at whole decades, zero durations on the bottom one. Hover near a trace (within 24px) to read it: its duration, its start time formatted by `formatX` (not epoch milliseconds) and its operation; the other operations fade so the hovered one's spread stands out. Reference lines sit above the points, labelled on a halo.",
+      },
+    },
+  },
+  // Points are read out, not clicked: the chart is one tab stop.
+  render: ({ onPointClick: _onPointClick, ...args }): ReactElement => (
+    <ScatterPlot {...args} />
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const chart = canvas.getByRole("img", {
+      name: "Trace durations over the last hour",
+    });
+
+    chart.focus();
+    await userEvent.keyboard("{Home}");
+    await waitFor(() => {
+      const readout = readoutOf(canvasElement);
+      // A formatted time, never the raw epoch number.
+      expect(readout).toHaveTextContent(/2:00:\d\d PM/);
+      expect(readout?.textContent ?? "").not.toMatch(/\d{10,}/);
+      expect(readout).toHaveTextContent(/ms|s/);
+    });
+
+    // Other operations fade while one is read out; its own stay opaque.
+    const opacities: number[] = Array.from(
+      canvasElement.querySelectorAll('[data-slot="scatter-plot-points"] path'),
+      (point) => Number(getComputedStyle(point).fillOpacity),
+    );
+    expect(opacities.filter((o) => o <= 0.12).length).toBeGreaterThan(0);
+    expect(opacities.filter((o) => o > 0.5).length).toBeGreaterThan(0);
+  },
+};
+
+export const NearestPointReadout: Story = {
+  args: {
+    series: [
+      {
+        id: "features",
+        label: "Features",
+        points: [
+          { id: "sso", x: 82, y: 74, label: "SSO" },
+          { id: "audit", x: 68, y: 88, label: "Audit log" },
+          { id: "themes", x: 26, y: 31, label: "Themes" },
+        ],
+      },
+    ],
+    label: "Feature impact vs. effort",
+    size: "lg",
+    xMin: 0,
+    xMax: 100,
+    yMin: 0,
+    yMax: 100,
+    showXAxisLabels: true,
+    showYAxisLabels: true,
+    xAxisTitle: "Effort",
+    yAxisTitle: "Impact",
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "The pointer need not land on a dot: the nearest point within `hitRadius` (24px) is read out and ringed.",
+      },
+    },
+  },
+  render: ({ onPointClick: _onPointClick, ...args }): ReactElement => (
+    <ScatterPlot {...args} />
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const chart = canvas.getByRole("img", { name: "Feature impact vs. effort" });
+    const themes = canvasElement.querySelector(
+      '[data-testid="scatter-plot-point-themes"]',
+    )!;
+    const box = themes.getBoundingClientRect();
+    // 14px right of the dot's centre: a miss for the dot, a hit for the readout.
+    await userEvent.pointer({
+      target: chart,
+      coords: {
+        clientX: box.left + box.width / 2 + 14,
+        clientY: box.top + box.height / 2,
+      },
+    });
+    await waitFor(() => {
+      expect(readoutOf(canvasElement)).toHaveTextContent("Themes");
+    });
+  },
+};
+
+export const DensePoints: Story = {
+  args: {
+    series: [
+      { id: "traces", label: "Traces", points: makeTraces(5_000, 29) },
+    ],
+    label: "5,000 traces",
+    size: "xl",
+    yScale: "log",
+    pointRadius: 3,
+    pointOpacity: 0.5,
+    xTickValues: TRACE_TICKS,
+    xTickFormatter: (x: number): string => CLOCK_TICK.format(x),
+    formatX: (x: number): string => CLOCK.format(x),
+    formatY: formatDuration,
+    yTickLabelWidth: 44,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "5,000 points stay smooth under the pointer: the points layer is memoized, so a pointer move re-renders only the readout (a linear nearest-point scan is fast at this size).",
+      },
+    },
+  },
+  render: ({ onPointClick: _onPointClick, ...args }): ReactElement => (
+    <ScatterPlot {...args} />
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const chart = canvas.getByRole("img", { name: "5,000 traces" });
+    const points = canvasElement.querySelector(
+      '[data-slot="scatter-plot-points"]',
+    )!;
+    expect(points.querySelectorAll("path").length).toBe(5_000);
+
+    // Moving the pointer changes the readout but never touches the points.
+    let mutations: number = 0;
+    const observer = new MutationObserver((records) => {
+      mutations += records.length;
+    });
+    observer.observe(points, {
+      subtree: true,
+      attributes: true,
+      childList: true,
+    });
+    const bounds = chart.getBoundingClientRect();
+    for (let step = 1; step <= 8; step += 1) {
+      await userEvent.pointer({
+        target: chart,
+        coords: {
+          clientX: bounds.left + (bounds.width * step) / 9,
+          clientY: bounds.top + bounds.height * 0.6,
+        },
+      });
+    }
+    await waitFor(() => {
+      expect(readoutOf(canvasElement)).toBeInTheDocument();
+    });
+    observer.disconnect();
+    expect(mutations).toBe(0);
+  },
+};
+
+export const FillsContainer: Story = {
+  args: {
+    series: TWO_COHORTS,
+    label: "Session depth by plan tier",
+    width: "auto",
+    height: 280,
+    showXAxisLabels: true,
+    showYAxisLabels: true,
+    xAxisTitle: "Sessions",
+    yAxisTitle: "Depth",
+  },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story:
+          "`width=\"auto\"` fills the card and redraws on resize; until it is measured it is an empty box at its height.",
+      },
+    },
+  },
+  render: ({ onPointClick: _onPointClick, ...args }): ReactElement => (
+    <div className="w-full max-w-3xl rounded-lg border bg-card p-4">
+      <ScatterPlot {...args} />
+    </div>
+  ),
 };
 
 export const WithTrendLine: Story = {
@@ -304,7 +524,6 @@ export const QuadrantView: Story = {
       {
         id: "features",
         label: "Features",
-        colorId: "primary",
         points: [
           { id: "sso", x: 82, y: 74, label: "SSO" },
           { id: "audit", x: 68, y: 88, label: "Audit log" },
@@ -363,12 +582,6 @@ export const CustomColorsAndShapes: Story = {
       },
     ],
   },
-  render: (args): ReactElement => (
-    <div className="flex flex-col items-start gap-3">
-      <ScatterPlot {...args} />
-      <Legend series={args.series} />
-    </div>
-  ),
 };
 
 export const Shapes: Story = {
@@ -441,7 +654,6 @@ export const SkipsNonFinitePoints: Story = {
       {
         id: "partial",
         label: "Partial",
-        colorId: "warning",
         points: [
           { id: "ok-1", x: 10, y: 20 },
           { id: "bad-1", x: Number.NaN, y: 40 },
@@ -482,7 +694,6 @@ export const ClickablePoints: Story = {
       {
         id: "vaults",
         label: "Vaults",
-        colorId: "default",
         points: [
           { id: "billing", x: 12, y: 78, label: "billing" },
           { id: "analytics", x: 34, y: 45, label: "analytics" },

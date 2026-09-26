@@ -1,21 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ReactElement } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import {
   PieChart,
   pieChartSizeIds,
   type PieChartSegment,
-  type PieChartSegmentColorId,
 } from "./pie-chart";
 
-const LEGEND_SWATCH_CLASSES: Record<PieChartSegmentColorId, string> = {
-  default: "bg-schemavaults-brand-blue",
-  primary: "bg-primary",
-  positive: "bg-emerald-500 dark:bg-emerald-400",
-  warning: "bg-warning",
-  destructive: "bg-destructive",
-  muted: "bg-muted-foreground",
-};
+/**
+ * The visual readout. The tooltip is `aria-hidden`; screen readers hear
+ * keyboard moves through the chart's live region (`role="status"`) instead.
+ */
+function readoutOf(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>('[data-slot="chart-tooltip"]');
+}
 
 const meta = {
   title: "Charts & Graphs/PieChart",
@@ -25,7 +23,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "SVG pie / donut chart built from an array of segments with relative sizes. Each segment can attach its own `onClick` handler (or fall back to the chart-level `onSegmentClick`), making it a drop-in chart for setting state on click.",
+          "SVG pie / donut chart built from an array of segments with relative sizes. Segments take the chart palette in slot order (a ninth and beyond are grey; pass `segmentOrder` so colour follows the segment). Hover a segment, or focus the chart and use the arrow keys, to read its value and share; `showLegend` adds a legend and `diameter=\"auto\"` fits a narrow container. Each segment can attach its own `onClick` handler (or fall back to the chart-level `onSegmentClick`).",
       },
     },
   },
@@ -64,11 +62,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const SAMPLE_SEGMENTS: ReadonlyArray<PieChartSegment> = [
-  { id: "a", value: 40, label: "Schemas", color: "default" },
-  { id: "b", value: 25, label: "Tables", color: "positive" },
-  { id: "c", value: 18, label: "Indexes", color: "warning" },
-  { id: "d", value: 12, label: "Views", color: "destructive" },
-  { id: "e", value: 5, label: "Other", color: "muted" },
+  { id: "a", value: 40, label: "Schemas" },
+  { id: "b", value: 25, label: "Tables" },
+  { id: "c", value: 18, label: "Indexes" },
+  { id: "d", value: 12, label: "Views" },
+  { id: "e", value: 5, label: "Other", color: "other" },
 ];
 
 export const Default: Story = {
@@ -93,15 +91,15 @@ export const Donut: Story = {
 
 export const SingleSegment: Story = {
   args: {
-    segments: [{ id: "only", value: 1, label: "All", color: "primary" }],
+    segments: [{ id: "only", value: 1, label: "All" }],
   },
 };
 
 export const TwoSegments: Story = {
   args: {
     segments: [
-      { id: "used", value: 72, label: "Used", color: "destructive" },
-      { id: "free", value: 28, label: "Free", color: "muted" },
+      { id: "used", value: 72, label: "Used" },
+      { id: "free", value: 28, label: "Free", color: "other" },
     ],
     innerRadius: 0.5,
   },
@@ -166,6 +164,7 @@ export const ClickableSegments: Story = {
             {...args}
             segments={segments}
             label="Click a segment"
+            showLegend
           >
             {selected ? (
               <div className="flex flex-col leading-tight">
@@ -182,31 +181,75 @@ export const ClickableSegments: Story = {
               </span>
             )}
           </PieChart>
-          <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-            {args.segments.map((segment) => {
-              const swatchClass: string = segment.color
-                ? LEGEND_SWATCH_CLASSES[segment.color]
-                : LEGEND_SWATCH_CLASSES.default;
-              return (
-                <span
-                  key={segment.id}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`inline-block h-2 w-2 rounded-full ${swatchClass}`}
-                    style={segment.fill ? { backgroundColor: segment.fill } : undefined}
-                  />
-                  {segment.label}
-                </span>
-              );
-            })}
-          </div>
         </div>
       );
     };
     return <InteractiveChart />;
   },
+};
+
+export const HoverReadout: Story = {
+  args: {
+    segments: SAMPLE_SEGMENTS,
+    size: "lg",
+    innerRadius: 0.55,
+    showLegend: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Hover a segment to read its value and share of the total; the others dim. Focus the chart and use the arrow keys for the same readout. `showLegend` names every segment, so identity never rests on colour alone.",
+      },
+    },
+  },
+  render: ({ onSegmentClick: _onSegmentClick, ...args }): ReactElement => (
+    <PieChart {...args} />
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const chart = canvas.getByRole("img", { name: "Sample distribution" });
+    chart.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => {
+      const readout = readoutOf(canvasElement);
+      expect(readout).toHaveTextContent("40Schemas");
+      expect(readout).toHaveTextContent("40% of the total");
+    });
+    await userEvent.keyboard("{ArrowLeft}");
+    await waitFor(() => {
+      expect(readoutOf(canvasElement)).toHaveTextContent("5Other");
+    });
+  },
+};
+
+export const FitsContainer: Story = {
+  args: {
+    segments: SAMPLE_SEGMENTS,
+    size: "xl",
+    innerRadius: 0.55,
+    diameter: "auto",
+    showLegend: true,
+  },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story:
+          "`diameter=\"auto\"` fits the container's width, never growing past the size preset: in a narrow column the pie shrinks instead of overflowing.",
+      },
+    },
+  },
+  render: (args): ReactElement => (
+    <div className="flex flex-wrap gap-4">
+      <div className="w-[200px] rounded-lg border bg-card p-3">
+        <PieChart {...args} label="Narrow card" />
+      </div>
+      <div className="w-full max-w-md rounded-lg border bg-card p-3">
+        <PieChart {...args} label="Wide card" />
+      </div>
+    </div>
+  ),
 };
 
 export const WithSegmentLabels: Story = {
@@ -250,11 +293,11 @@ export const NameAndPercentageLabels: Story = {
 export const SkipSmallSegmentLabels: Story = {
   args: {
     segments: [
-      { id: "a", value: 50, label: "Major", color: "default" },
-      { id: "b", value: 30, label: "Medium", color: "positive" },
-      { id: "c", value: 15, label: "Minor", color: "warning" },
-      { id: "d", value: 3, label: "Tiny", color: "destructive" },
-      { id: "e", value: 2, label: "Trace", color: "muted" },
+      { id: "a", value: 50, label: "Major" },
+      { id: "b", value: 30, label: "Medium" },
+      { id: "c", value: 15, label: "Minor" },
+      { id: "d", value: 3, label: "Tiny" },
+      { id: "e", value: 2, label: "Trace" },
     ],
     size: "lg",
     showSegmentLabels: true,

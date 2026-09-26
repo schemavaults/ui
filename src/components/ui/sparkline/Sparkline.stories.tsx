@@ -236,6 +236,31 @@ function VariantsGrid(): ReactElement {
   );
 }
 
+export const FillsContainer: Story = {
+  args: {
+    data: volatileTrend,
+    variant: "area",
+    width: "auto",
+    height: 48,
+    label: "Requests per minute, last hour",
+  },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story:
+          "`width=\"auto\"` stretches the sparkline across its container and redraws on resize.",
+      },
+    },
+  },
+  render: (args): ReactElement => (
+    <div className="w-full max-w-md rounded-lg border bg-card p-4">
+      <p className="mb-2 text-sm font-medium">Requests / min</p>
+      <Sparkline {...args} />
+    </div>
+  ),
+};
+
 export const VariantMatrix: StoryObj = {
   render: (): ReactElement => <VariantsGrid />,
   parameters: { layout: "padded" },
