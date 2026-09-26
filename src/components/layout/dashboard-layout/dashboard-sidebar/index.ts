@@ -22,3 +22,9 @@ export {
   DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING,
 } from "./dashboard-sidebar-sizing";
 export type { IDashboardSidebarOpenStateContextType } from "./dashboard-sidebar-open-state";
+
+export { resolveActiveDashboardSidebarItemPath } from "./dashboard-sidebar-active-item";
+export {
+  DashboardSidebarActiveItemProvider,
+  DashboardSidebarActiveItemFromPathnameHookProvider,
+} from "./dashboard-sidebar-active-item-context";

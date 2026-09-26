@@ -35,9 +35,27 @@ export interface DashboardLayoutProps extends PropsWithChildren {
   /**
    * Optional `usePathname` hook (e.g. from `next/navigation`). When provided,
    * the mobile sidebar will automatically close whenever the pathname
-   * changes. Pass the hook itself, not its return value.
+   * changes, and the sidebar item for the current page is marked active (see
+   * `activeHref`). Pass the hook itself, not its return value.
    */
   usePathname?: () => string;
+  /**
+   * The pathname of the page currently being viewed, for marking its sidebar
+   * item as active. Takes precedence over `usePathname`; use it when the
+   * router does not expose a `usePathname`-style hook, or to pin the active
+   * item explicitly.
+   *
+   * An item is active when the current path equals its `url` or is nested
+   * beneath it (`/settings/billing` is within `/settings`). When several
+   * items match, the longest `url` wins, so only the most specific item
+   * lights up. The query string and fragment are ignored, and only
+   * root-relative `url`s (starting with `/`) take part.
+   *
+   * The active item gets a tinted fill, a bar down its left edge and a bold
+   * label, all in blue (red in an `adminOnly` group). Its link also gets
+   * `aria-current="page"` and its `<li>` `data-active="true"`.
+   */
+  activeHref?: string;
   /**
    * When `true`, the dashboard "chrome" (the left sidebar and the top header
    * bar) is hidden from printed output via `@media print`, so the system print

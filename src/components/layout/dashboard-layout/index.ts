@@ -20,6 +20,7 @@ export type {
   DashboardSidebarItemGroupDefinition,
   DashboardSidebarItemsAndGroupsDefinitions,
 } from "./dashboard-sidebar";
+export { resolveActiveDashboardSidebarItemPath } from "./dashboard-sidebar";
 export {
   DASHBOARD_SIDEBAR_OPEN_WIDTH_CSS_VARIABLE,
   DEFAULT_DASHBOARD_SIDEBAR_OPEN_WIDTH,
