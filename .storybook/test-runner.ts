@@ -27,9 +27,44 @@ const config: TestRunnerConfig = {
     const emulateReducedMotion: boolean =
       storyContext.parameters?.["emulateReducedMotion"] === true;
 
+    // `matchMedia(...).matches` flips as soon as the emulation changes, but
+    // the query's `change` event is only dispatched a few frames later. Framer
+    // Motion caches the preference from that event, so a story that mounts in
+    // between reads reduced motion in CSS and in `play()` but still animates
+    // in JavaScript. Wait for the event before the story renders.
+    const changing: boolean = await page.evaluate(
+      (reduce: boolean): boolean => {
+        const query: MediaQueryList = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        );
+        if (query.matches === reduce) {
+          return false;
+        }
+        const flagged = window as Window & { __reducedMotionChanged?: boolean };
+        flagged.__reducedMotionChanged = false;
+        query.addEventListener(
+          "change",
+          (): void => {
+            flagged.__reducedMotionChanged = true;
+          },
+          { once: true },
+        );
+        return true;
+      },
+      emulateReducedMotion,
+    );
+
     await page.emulateMedia({
       reducedMotion: emulateReducedMotion ? "reduce" : "no-preference",
     });
+
+    if (changing) {
+      await page.waitForFunction(
+        (): boolean =>
+          (window as Window & { __reducedMotionChanged?: boolean })
+            .__reducedMotionChanged === true,
+      );
+    }
   },
 };
 
