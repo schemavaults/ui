@@ -300,6 +300,9 @@ export type * from "./funnel-chart";
 export * from "./scatter-plot";
 export type * from "./scatter-plot";
 
+export * from "./treemap";
+export type * from "./treemap";
+
 export * from "./comparison-slider";
 export type * from "./comparison-slider";
 
