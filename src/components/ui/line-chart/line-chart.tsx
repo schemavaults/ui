@@ -437,12 +437,18 @@ function buildSmoothPath(points: ReadonlyArray<ResolvedPoint>): string {
   return d;
 }
 
-function buildAreaPath(
-  linePath: string,
+function buildCurvePath(
   points: ReadonlyArray<ResolvedPoint>,
+  curve: LineChartCurveId,
+): string {
+  return curve === "smooth" ? buildSmoothPath(points) : buildLinePath(points);
+}
+
+function buildAreaPath(
+  points: ReadonlyArray<ResolvedPoint>,
+  curve: LineChartCurveId,
   baselineY: number,
 ): string {
-  if (linePath === "") return "";
   // Close each sub-path of the line back down to the baseline.
   const segments: ResolvedPoint[][] = [];
   let current: ResolvedPoint[] = [];
@@ -456,18 +462,13 @@ function buildAreaPath(
   }
   if (current.length > 0) segments.push(current);
 
-  // Strategy: re-emit the line path per segment and close it. This keeps the
-  // smoothing/segmentation logic in one place (the original line builder).
+  // Re-trace each segment with the same curve as the line, so the fill's top
+  // edge sits exactly under the stroke, then close it along the baseline.
   let d = "";
   for (const seg of segments) {
-    if (seg.length === 0) continue;
     const first = seg[0]!;
     const last = seg[seg.length - 1]!;
-    // Sub-path of just this segment.
-    const subPoints: ResolvedPoint[] = seg;
-    const subLine = subPoints.length > 1
-      ? buildLinePath(subPoints)
-      : `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`;
+    const subLine: string = buildCurvePath(seg, curve);
     d += `${d ? " " : ""}${subLine} L ${last.x.toFixed(2)} ${baselineY.toFixed(2)} L ${first.x.toFixed(2)} ${baselineY.toFixed(2)} Z`;
   }
   return d;
@@ -935,12 +936,9 @@ function LineChart({
         ) : (
           resolved.map((rs, seriesIndex) => {
             const strokeWidth: number = rs.series.strokeWidth ?? 2;
-            const linePath: string =
-              rs.curve === "smooth"
-                ? buildSmoothPath(rs.points)
-                : buildLinePath(rs.points);
+            const linePath: string = buildCurvePath(rs.points, rs.curve);
             const areaPath: string = rs.series.area
-              ? buildAreaPath(linePath, rs.points, baselineYClamped)
+              ? buildAreaPath(rs.points, rs.curve, baselineYClamped)
               : "";
             const gradientId: string = `${gradientIdPrefix}-grad-${seriesIndex}`;
             const markerRadius: number = Math.max(4, strokeWidth + 2);
