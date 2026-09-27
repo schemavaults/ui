@@ -7,6 +7,7 @@ import {
   useContext,
   useState,
   type ComponentType,
+  type CSSProperties,
   type ReactElement,
   type ReactNode,
 } from "react";
@@ -239,7 +240,7 @@ const meta = {
     activeHref: {
       control: "text",
       description:
-        "Pathname of the current page, for marking its sidebar item active. Takes precedence over `usePathname`. An item is active when the path equals its `url` or is nested beneath it; the longest matching `url` wins. The active item gets a blue tint, a left-edge bar and a bold label, and its link `aria-current=\"page\"`.",
+        "Pathname of the current page, for marking its sidebar item active. Takes precedence over `usePathname`. An item is active when the path equals its `url` or is nested beneath it; the longest matching `url` wins. The active item gets a gradient wash, a glowing gradient bar and a bold gradient label, from `--sidebar-active-start` to `--sidebar-active-end` (brand blue to brand red by default), and its link `aria-current=\"page\"`.",
     },
     reducedMotion: {
       control: "inline-radio",
@@ -1930,11 +1931,14 @@ export const WithMotionForcedOn: Story = {
 // The sidebar marks the item for the page being viewed. The current page comes
 // from `activeHref`, or from the `usePathname` hook when that is supplied; an
 // item is active when the path equals its `url` or is nested beneath it, and
-// the longest matching `url` wins. The active row gets a blue tint, a bar down
-// its left edge and a bold blue label; in an admin-only group, red instead.
+// the longest matching `url` wins. The active row gets a gradient wash, a
+// glowing gradient bar down its left edge and a bold gradient label, running
+// from `--sidebar-active-start` to `--sidebar-active-end` (the brand blue and
+// brand red unless something overrides them). An admin-only row keeps its red
+// label and icon.
 //
-// The first two stories pin the current page with `activeHref`. Expand the
-// sidebar with the header trigger to see the label; collapsed, the tint, bar
+// The first three stories pin the current page with `activeHref`. Expand the
+// sidebar with the header trigger to see the label; collapsed, the wash, bar
 // and icon colour carry it.
 
 function activeItemDemoItem(
@@ -2042,6 +2046,35 @@ export const ActiveAdminItem: Story = {
   } satisfies Partial<DashboardLayoutProps>,
   play: async (): Promise<void> => {
     await expectOnlyActiveSidebarLink("/admin/audit-log");
+  },
+};
+
+// The gradient's two colours are CSS custom properties, so any ancestor of
+// the layout can re-colour it. This story sets an emerald-to-violet pair on a
+// wrapper; a deployment would normally set them once, on <html>.
+export const ActiveItemCustomGradient: Story = {
+  args: {
+    sidebarItems: activeItemSidebarItems,
+    topBarTitle: "Reports",
+    activeHref: "/analytics/reports",
+    children: <ActiveItemPageContent activeHref="/analytics/reports" />,
+  } satisfies Partial<DashboardLayoutProps>,
+  decorators: [
+    (Story, context): ReactElement => (
+      <div
+        style={
+          {
+            "--sidebar-active-start": "#10b981",
+            "--sidebar-active-end": "#8b5cf6",
+          } as CSSProperties
+        }
+      >
+        <Story {...context} />
+      </div>
+    ),
+  ],
+  play: async (): Promise<void> => {
+    await expectOnlyActiveSidebarLink("/analytics/reports");
   },
 };
 

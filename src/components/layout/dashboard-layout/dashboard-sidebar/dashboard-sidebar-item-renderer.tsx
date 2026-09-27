@@ -21,19 +21,12 @@ import useDashboardSidebarOpenStateDispatch from "./useDashboardSidebarOpenState
 import useDebug from "@/components/hooks/use-debug";
 import type { SidebarItemIconComponent } from "./dashboard-sidebar-item-icon-component";
 import { useIsDashboardSidebarItemActive } from "./dashboard-sidebar-active-item-context";
-
-// The row for the current page: a tinted fill with a bar down its left edge,
-// painted behind the icon and label, and a bold label in the same hue. Admin
-// rows are red whether or not they are active, so theirs swaps the blue for
-// red rather than losing the colour that marks them as admin-only.
-const ACTIVE_ITEM_INDICATOR_CLASSNAME: string =
-  "border-l-4 border-blue-600 bg-blue-500/10 dark:border-blue-400 dark:bg-blue-400/15";
-const ACTIVE_ITEM_CONTENT_CLASSNAME: string =
-  "font-semibold text-blue-700 dark:text-blue-300";
-const ACTIVE_ADMIN_ITEM_INDICATOR_CLASSNAME: string =
-  "border-l-4 border-red-600 bg-red-500/10 dark:border-red-400 dark:bg-red-400/15";
-const ACTIVE_ADMIN_ITEM_CONTENT_CLASSNAME: string =
-  "font-semibold text-red-700 dark:text-red-300";
+import {
+  DASHBOARD_SIDEBAR_ACTIVE_ICON_STYLE,
+  DASHBOARD_SIDEBAR_ACTIVE_LABEL_CLASSNAME,
+  DASHBOARD_SIDEBAR_ACTIVE_LABEL_STYLE,
+  DashboardSidebarActiveItemIndicator,
+} from "./dashboard-sidebar-active-item-indicator";
 
 export function DashboardSidebarItemRenderer({
   item,
@@ -60,13 +53,22 @@ export function DashboardSidebarItemRenderer({
   const active: boolean = useIsDashboardSidebarItemActive(item);
 
   const IconComponent: SidebarItemIconComponent = item.icon;
-  let itemColorClassName: string;
-  if (active) {
-    itemColorClassName = isAdminItemGroup
-      ? ACTIVE_ADMIN_ITEM_CONTENT_CLASSNAME
-      : ACTIVE_ITEM_CONTENT_CLASSNAME;
+  // The active row takes the gradient's accents on its icon and label. Admin
+  // rows keep their red instead, active or not: red is what marks them as
+  // admin-only, and the row's gradient backdrop already says "active".
+  const showActiveAccents: boolean = active && !isAdminItemGroup;
+  let iconClassName: string;
+  let labelClassName: string;
+  if (isAdminItemGroup) {
+    iconClassName = "text-red-500";
+    labelClassName = cn("text-red-500", active && "font-semibold");
+  } else if (active) {
+    // No colour class: the icon inherits the accent from its wrapper below.
+    iconClassName = "";
+    labelClassName = DASHBOARD_SIDEBAR_ACTIVE_LABEL_CLASSNAME;
   } else {
-    itemColorClassName = isAdminItemGroup ? "text-red-500" : "text-foreground";
+    iconClassName = "text-foreground";
+    labelClassName = "text-foreground";
   }
 
   function SidebarMenuItemTitle(): ReactElement {
@@ -74,9 +76,10 @@ export function DashboardSidebarItemRenderer({
       <m.span
         key={`sidebar-menu-item-title-container-[${item.title}]`}
         className={cn(
-          itemColorClassName,
+          labelClassName,
           "text-nowrap",
         )}
+        style={showActiveAccents ? DASHBOARD_SIDEBAR_ACTIVE_LABEL_STYLE : undefined}
         initial={{
           opacity: 1,
           scale: 1,
@@ -173,22 +176,19 @@ export function DashboardSidebarItemRenderer({
             }}
           >
             {active && (
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "absolute inset-0 -z-10 pointer-events-none",
-                  isAdminItemGroup
-                    ? ACTIVE_ADMIN_ITEM_INDICATOR_CLASSNAME
-                    : ACTIVE_ITEM_INDICATOR_CLASSNAME,
-                )}
+              <DashboardSidebarActiveItemIndicator
+                reducedMotion={reducedMotion}
               />
             )}
-            <m.div className={cn(
-              "flex-shrink-0",
-              sizes.desktop_collapsed_width_classname,
-              "flex items-center justify-center"
-            )}>
-              <IconComponent className={cn("h-6 w-6", itemColorClassName)} />
+            <m.div
+              className={cn(
+                "flex-shrink-0",
+                sizes.desktop_collapsed_width_classname,
+                "flex items-center justify-center"
+              )}
+              style={showActiveAccents ? DASHBOARD_SIDEBAR_ACTIVE_ICON_STYLE : undefined}
+            >
+              <IconComponent className={cn("h-6 w-6", iconClassName)} />
             </m.div>
 
             <AnimatePresence>
