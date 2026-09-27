@@ -240,7 +240,7 @@ const meta = {
     activeHref: {
       control: "text",
       description:
-        "Pathname of the current page, for marking its sidebar item active. Takes precedence over `usePathname`. An item is active when the path equals its `url` or is nested beneath it; the longest matching `url` wins. The active item gets a gradient wash, a glowing gradient bar and a bold gradient label, from `--sidebar-active-start` to `--sidebar-active-end` (brand blue to brand red by default), and its link `aria-current=\"page\"`.",
+        "Pathname of the current page, for marking its sidebar item active. Takes precedence over `usePathname`. An item is active when the path equals its `url` or is nested beneath it; the longest matching `url` wins. The active item gets a gradient wash, a glowing gradient bar and a bold gradient label, between the theme's `--sidebar-active-start` and `--sidebar-active-end` tokens (brand blue to brand red by default), and its link `aria-current=\"page\"`.",
     },
     reducedMotion: {
       control: "inline-radio",
@@ -1933,9 +1933,9 @@ export const WithMotionForcedOn: Story = {
 // item is active when the path equals its `url` or is nested beneath it, and
 // the longest matching `url` wins. The active row gets a gradient wash, a
 // glowing gradient bar down its left edge and a bold gradient label, running
-// from `--sidebar-active-start` to `--sidebar-active-end` (the brand blue and
-// brand red unless something overrides them). An admin-only row keeps its red
-// label and icon.
+// between the `--sidebar-active-start` and `--sidebar-active-end` tokens from
+// `@schemavaults/theme` (the brand blue and brand red unless a deployment
+// overrides them). An admin-only row keeps its red label and icon.
 //
 // The first three stories pin the current page with `activeHref`. Expand the
 // sidebar with the header trigger to see the label; collapsed, the wash, bar
@@ -2024,6 +2024,37 @@ async function expectOnlyActiveSidebarLink(href: string): Promise<void> {
   expect(current).toHaveLength(1);
 }
 
+// Resolves a CSS colour the way the browser does, so it can be compared with
+// a computed style: a computed `color` is always an `rgb()`/`rgba()` string.
+function resolveCssColor(value: string): string {
+  const probe: HTMLSpanElement = document.createElement("span");
+  probe.style.color = value;
+  document.body.appendChild(probe);
+  const resolved: string = getComputedStyle(probe).color;
+  probe.remove();
+  return resolved;
+}
+
+// Asserts that the active row's gradient bar runs between the two colours.
+async function expectActiveItemGradient(
+  start: string,
+  end: string,
+): Promise<void> {
+  // The desktop sidebar is always mounted; the mobile Sheet is not.
+  if (!window.matchMedia("(min-width: 768px)").matches) {
+    return;
+  }
+  await waitFor((): void => {
+    const bar: HTMLElement | null = document.querySelector<HTMLElement>(
+      'menu li[data-active="true"] [data-slot="dashboard-sidebar-active-item-bar"]',
+    );
+    expect(bar).not.toBeNull();
+    const gradient: string = getComputedStyle(bar!).backgroundImage;
+    expect(gradient).toContain(resolveCssColor(start));
+    expect(gradient).toContain(resolveCssColor(end));
+  });
+}
+
 export const ActiveItem: Story = {
   args: {
     sidebarItems: activeItemSidebarItems,
@@ -2033,6 +2064,38 @@ export const ActiveItem: Story = {
   } satisfies Partial<DashboardLayoutProps>,
   play: async (): Promise<void> => {
     await expectOnlyActiveSidebarLink("/analytics/reports");
+
+    // The gradient comes from the theme's tokens, which default to the brand
+    // colours...
+    expect(resolveCssColor("var(--sidebar-active-start)")).toBe(
+      resolveCssColor("var(--schemavaults-brand-blue)"),
+    );
+    expect(resolveCssColor("var(--sidebar-active-end)")).toBe(
+      resolveCssColor("var(--schemavaults-brand-red)"),
+    );
+    await expectActiveItemGradient(
+      "var(--schemavaults-brand-blue)",
+      "var(--schemavaults-brand-red)",
+    );
+
+    // ...and follows a deployment's theme overrides on <html>.
+    const overrides: Record<string, string> = {
+      "--sv-theme-light-sidebar-active-start": "#10b981",
+      "--sv-theme-dark-sidebar-active-start": "#10b981",
+      "--sv-theme-light-sidebar-active-end": "#8b5cf6",
+      "--sv-theme-dark-sidebar-active-end": "#8b5cf6",
+    };
+    const root: HTMLElement = document.documentElement;
+    try {
+      for (const [name, value] of Object.entries(overrides)) {
+        root.style.setProperty(name, value);
+      }
+      await expectActiveItemGradient("#10b981", "#8b5cf6");
+    } finally {
+      for (const name of Object.keys(overrides)) {
+        root.style.removeProperty(name);
+      }
+    }
   },
 };
 
@@ -2049,9 +2112,11 @@ export const ActiveAdminItem: Story = {
   },
 };
 
-// The gradient's two colours are CSS custom properties, so any ancestor of
-// the layout can re-colour it. This story sets an emerald-to-violet pair on a
-// wrapper; a deployment would normally set them once, on <html>.
+// A deployment re-themes the gradient through the theme's overrides
+// (`--sv-theme-light-sidebar-active-start` and friends on <html>, or the
+// `THEME_*_SIDEBAR_ACTIVE_*` environment variables). To re-colour a single
+// layout instead, set the tokens themselves on an ancestor, as this story does
+// with an emerald-to-violet pair.
 export const ActiveItemCustomGradient: Story = {
   args: {
     sidebarItems: activeItemSidebarItems,
@@ -2075,6 +2140,7 @@ export const ActiveItemCustomGradient: Story = {
   ],
   play: async (): Promise<void> => {
     await expectOnlyActiveSidebarLink("/analytics/reports");
+    await expectActiveItemGradient("#10b981", "#8b5cf6");
   },
 };
 

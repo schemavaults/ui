@@ -5,11 +5,13 @@ import { m } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 
 /**
- * The two accent colours of the active row's gradient. Each reads a theme
- * token and falls back to the SchemaVaults brand colour, so the row renders
- * the same with a theme that predates the tokens; with one that defines
- * `--sidebar-active-start` / `--sidebar-active-end`, a deployment re-themes
- * the gradient through them.
+ * The two accent colours of the active row's gradient: the
+ * `--sidebar-active-start` / `--sidebar-active-end` tokens from
+ * `@schemavaults/theme` 0.30.0+. They default to the brand blue and red, and a
+ * deployment re-themes them with `--sv-theme-{light,dark}-sidebar-active-*`
+ * or the matching `THEME_*` environment variables. The brand-colour fallbacks
+ * keep the gradient intact in an application whose `globals.css` still comes
+ * from an older theme.
  */
 const ACTIVE_START_COLOR: string =
   "var(--sidebar-active-start, var(--schemavaults-brand-blue))";
@@ -78,6 +80,7 @@ export function DashboardSidebarActiveItemIndicator({
     <>
       <m.span
         aria-hidden="true"
+        data-slot="dashboard-sidebar-active-item-wash"
         className={cn(
           "absolute inset-0 -z-10 pointer-events-none",
           "[--dashboard-sidebar-active-tint:16%] dark:[--dashboard-sidebar-active-tint:24%]",
@@ -89,6 +92,7 @@ export function DashboardSidebarActiveItemIndicator({
       />
       <m.span
         aria-hidden="true"
+        data-slot="dashboard-sidebar-active-item-bar"
         className="absolute inset-y-1 left-0 w-1 -z-10 rounded-r-full pointer-events-none"
         style={BAR_STYLE}
         initial={{ scaleY: 0 }}

@@ -52,11 +52,14 @@ export interface DashboardLayoutProps extends PropsWithChildren {
    * root-relative `url`s (starting with `/`) take part.
    *
    * The active item gets a gradient wash, a glowing gradient bar down its
-   * left edge and a bold gradient label, running between two colours: the
-   * `--sidebar-active-start` and `--sidebar-active-end` CSS custom
-   * properties, which default to the SchemaVaults brand blue and brand red.
-   * Set them on any ancestor of the layout to re-colour it. Rows in an
-   * `adminOnly` group keep their red label and icon. The active link also gets
+   * left edge and a bold gradient label, running between the
+   * `--sidebar-active-start` and `--sidebar-active-end` tokens of
+   * `@schemavaults/theme`, which default to the SchemaVaults brand blue and
+   * brand red. Re-theme a deployment through the theme's overrides
+   * (`--sv-theme-light-sidebar-active-start`, `THEME_DARK_SIDEBAR_ACTIVE_END`,
+   * ...), or set the two tokens on an ancestor of the layout to re-colour
+   * just that subtree. Rows in an `adminOnly` group keep their red label and
+   * icon. The active link also gets
    * `aria-current="page"` and its `<li>` `data-active="true"`.
    */
   activeHref?: string;
