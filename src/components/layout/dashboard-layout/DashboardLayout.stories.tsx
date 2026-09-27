@@ -7,6 +7,7 @@ import {
   useContext,
   useState,
   type ComponentType,
+  type CSSProperties,
   type ReactElement,
   type ReactNode,
 } from "react";
@@ -143,9 +144,15 @@ function Link({
   children,
   className,
   onClick,
+  "aria-current": ariaCurrent,
 }: LinkComponentProps): ReactElement {
   return (
-    <a href={href} className={className} onClick={onClick}>
+    <a
+      href={href}
+      className={className}
+      onClick={onClick}
+      aria-current={ariaCurrent}
+    >
       {children}
     </a>
   );
@@ -229,6 +236,11 @@ const meta = {
       table: {
         defaultValue: { summary: "14rem" },
       },
+    },
+    activeHref: {
+      control: "text",
+      description:
+        "Pathname of the current page, for marking its sidebar item active. Takes precedence over `usePathname`. An item is active when the path equals its `url` or is nested beneath it; the longest matching `url` wins. The active item gets a gradient wash, a glowing gradient bar and a bold gradient label, between the theme's `--sidebar-active-start` and `--sidebar-active-end` tokens (brand blue to brand red by default), and its link `aria-current=\"page\"`.",
     },
     reducedMotion: {
       control: "inline-radio",
@@ -1367,12 +1379,14 @@ function NextLinkStyleLink({
   className,
   onClick,
   children,
+  "aria-current": ariaCurrent,
 }: LinkComponentProps): ReactElement {
   const record = useContext(RecordNavigationContext);
   return (
     <a
       href={href}
       className={className}
+      aria-current={ariaCurrent}
       onClick={(e): void => {
         // Run the consumer handler first, exactly like next/link does.
         if (typeof onClick === "function") {
@@ -1908,6 +1922,325 @@ export const WithMotionForcedOn: Story = {
         );
       },
       { timeout: 3000 },
+    );
+  },
+};
+
+// --- Active page indicator ----------------------------------------------
+//
+// The sidebar marks the item for the page being viewed. The current page comes
+// from `activeHref`, or from the `usePathname` hook when that is supplied; an
+// item is active when the path equals its `url` or is nested beneath it, and
+// the longest matching `url` wins. The active row gets a gradient wash, a
+// glowing gradient bar down its left edge and a bold gradient label, running
+// between the `--sidebar-active-start` and `--sidebar-active-end` tokens from
+// `@schemavaults/theme` (the brand blue and brand red unless a deployment
+// overrides them). An admin-only row keeps its red label and icon.
+//
+// The first three stories pin the current page with `activeHref`. Expand the
+// sidebar with the header trigger to see the label; collapsed, the wash, bar
+// and icon colour carry it.
+
+function activeItemDemoItem(
+  title: string,
+  url: string,
+  IconComponent: SidebarIconSource,
+): DashboardSidebarItemDefinition {
+  return {
+    type: "dashboard-sidebar-item-definition",
+    title,
+    url,
+    icon: ({ className }): ReactElement => (
+      <IconComponent className={className} />
+    ),
+  };
+}
+
+const activeItemSidebarItems = [
+  activeItemDemoItem("Overview", "/", LayoutDashboard),
+  activeItemDemoItem("Inbox", "/inbox", Inbox),
+  manyLinksGroup("Analytics", [
+    activeItemDemoItem("Reports", "/analytics/reports", BarChart3),
+    activeItemDemoItem("Trends", "/analytics/trends", LineChart),
+    activeItemDemoItem("Segments", "/analytics/segments", PieChart),
+  ]),
+  manyLinksGroup("Team", [
+    activeItemDemoItem("Members", "/team/members", Users),
+    activeItemDemoItem("Roles", "/team/roles", Shield),
+  ]),
+  manyLinksGroup(
+    "Admin",
+    [
+      activeItemDemoItem("Audit Log", "/admin/audit-log", Lock),
+      activeItemDemoItem("Feature Flags", "/admin/feature-flags", Flag),
+    ],
+    true,
+  ),
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+function ActiveItemPageContent({
+  activeHref,
+}: {
+  activeHref: string;
+}): ReactElement {
+  return (
+    <PageColumnContainer>
+      <div className="flex flex-col gap-4 p-4 items-start">
+        <p className="text-sm text-muted-foreground max-w-prose">
+          The current page is pinned to <code>{activeHref}</code> with{" "}
+          <code>activeHref</code>. Expand the sidebar with the trigger in the
+          header to see the active item&rsquo;s label.
+        </p>
+        <ExampleChildrenForContainer />
+      </div>
+    </PageColumnContainer>
+  );
+}
+
+// Finds a sidebar link by href anywhere in the document: on a narrow viewport
+// the sidebar is a Sheet that portals its content to document.body.
+function findSidebarLink(href: string): HTMLAnchorElement | null {
+  return document.querySelector<HTMLAnchorElement>(
+    `menu a[href="${href}"], [role="dialog"] a[href="${href}"]`,
+  );
+}
+
+async function expectOnlyActiveSidebarLink(href: string): Promise<void> {
+  // A narrow viewport renders the sidebar as a closed Sheet, whose links are
+  // not mounted until it is opened. The desktop sidebar is always mounted.
+  if (!window.matchMedia("(min-width: 768px)").matches) {
+    return;
+  }
+  await waitFor((): void => {
+    const link: HTMLAnchorElement | null = findSidebarLink(href);
+    expect(link).not.toBeNull();
+    expect(link).toHaveAttribute("aria-current", "page");
+    expect(link!.closest("li")).toHaveAttribute("data-active", "true");
+  });
+  const current: NodeListOf<HTMLAnchorElement> =
+    document.querySelectorAll<HTMLAnchorElement>(
+      'menu a[aria-current="page"]',
+    );
+  expect(current).toHaveLength(1);
+}
+
+// Resolves a CSS colour the way the browser does, so it can be compared with
+// a computed style: a computed `color` is always an `rgb()`/`rgba()` string.
+function resolveCssColor(value: string): string {
+  const probe: HTMLSpanElement = document.createElement("span");
+  probe.style.color = value;
+  document.body.appendChild(probe);
+  const resolved: string = getComputedStyle(probe).color;
+  probe.remove();
+  return resolved;
+}
+
+// Asserts that the active row's gradient bar runs between the two colours.
+async function expectActiveItemGradient(
+  start: string,
+  end: string,
+): Promise<void> {
+  // The desktop sidebar is always mounted; the mobile Sheet is not.
+  if (!window.matchMedia("(min-width: 768px)").matches) {
+    return;
+  }
+  await waitFor((): void => {
+    const bar: HTMLElement | null = document.querySelector<HTMLElement>(
+      'menu li[data-active="true"] [data-slot="dashboard-sidebar-active-item-bar"]',
+    );
+    expect(bar).not.toBeNull();
+    const gradient: string = getComputedStyle(bar!).backgroundImage;
+    expect(gradient).toContain(resolveCssColor(start));
+    expect(gradient).toContain(resolveCssColor(end));
+  });
+}
+
+export const ActiveItem: Story = {
+  args: {
+    sidebarItems: activeItemSidebarItems,
+    topBarTitle: "Reports",
+    activeHref: "/analytics/reports",
+    children: <ActiveItemPageContent activeHref="/analytics/reports" />,
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async (): Promise<void> => {
+    await expectOnlyActiveSidebarLink("/analytics/reports");
+
+    // The gradient comes from the theme's tokens, which default to the brand
+    // colours...
+    expect(resolveCssColor("var(--sidebar-active-start)")).toBe(
+      resolveCssColor("var(--schemavaults-brand-blue)"),
+    );
+    expect(resolveCssColor("var(--sidebar-active-end)")).toBe(
+      resolveCssColor("var(--schemavaults-brand-red)"),
+    );
+    await expectActiveItemGradient(
+      "var(--schemavaults-brand-blue)",
+      "var(--schemavaults-brand-red)",
+    );
+
+    // ...and follows a deployment's theme overrides on <html>.
+    const overrides: Record<string, string> = {
+      "--sv-theme-light-sidebar-active-start": "#10b981",
+      "--sv-theme-dark-sidebar-active-start": "#10b981",
+      "--sv-theme-light-sidebar-active-end": "#8b5cf6",
+      "--sv-theme-dark-sidebar-active-end": "#8b5cf6",
+    };
+    const root: HTMLElement = document.documentElement;
+    try {
+      for (const [name, value] of Object.entries(overrides)) {
+        root.style.setProperty(name, value);
+      }
+      await expectActiveItemGradient("#10b981", "#8b5cf6");
+    } finally {
+      for (const name of Object.keys(overrides)) {
+        root.style.removeProperty(name);
+      }
+    }
+  },
+};
+
+// An admin-only item keeps its red when it is the active one.
+export const ActiveAdminItem: Story = {
+  args: {
+    sidebarItems: activeItemSidebarItems,
+    topBarTitle: "Audit Log",
+    activeHref: "/admin/audit-log",
+    children: <ActiveItemPageContent activeHref="/admin/audit-log" />,
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async (): Promise<void> => {
+    await expectOnlyActiveSidebarLink("/admin/audit-log");
+  },
+};
+
+// A deployment re-themes the gradient through the theme's overrides
+// (`--sv-theme-light-sidebar-active-start` and friends on <html>, or the
+// `THEME_*_SIDEBAR_ACTIVE_*` environment variables). To re-colour a single
+// layout instead, set the tokens themselves on an ancestor, as this story does
+// with an emerald-to-violet pair.
+export const ActiveItemCustomGradient: Story = {
+  args: {
+    sidebarItems: activeItemSidebarItems,
+    topBarTitle: "Reports",
+    activeHref: "/analytics/reports",
+    children: <ActiveItemPageContent activeHref="/analytics/reports" />,
+  } satisfies Partial<DashboardLayoutProps>,
+  decorators: [
+    (Story, context): ReactElement => (
+      <div
+        style={
+          {
+            "--sidebar-active-start": "#10b981",
+            "--sidebar-active-end": "#8b5cf6",
+          } as CSSProperties
+        }
+      >
+        <Story {...context} />
+      </div>
+    ),
+  ],
+  play: async (): Promise<void> => {
+    await expectOnlyActiveSidebarLink("/analytics/reports");
+    await expectActiveItemGradient("#10b981", "#8b5cf6");
+  },
+};
+
+// --- The active item follows navigation ---------------------------------
+//
+// Drives the active item from `usePathname`, the way a Next.js app would: the
+// story's Link performs client-side navigation by updating the pathname its
+// `usePathname` hook returns. Click around the sidebar and the marker moves.
+// A pathname nested beneath an item (`/analytics/reports/q3`) still marks
+// that item.
+
+const InAppNavigateContext = createContext<(href: string) => void>(
+  (): void => {},
+);
+
+function InAppNavigationLink({
+  href,
+  className,
+  onClick,
+  children,
+  "aria-current": ariaCurrent,
+}: LinkComponentProps): ReactElement {
+  const navigate = useContext(InAppNavigateContext);
+  return (
+    <a
+      href={href}
+      className={className}
+      aria-current={ariaCurrent}
+      onClick={(e): void => {
+        if (typeof onClick === "function") {
+          onClick(e);
+        }
+        if (e.defaultPrevented) {
+          return;
+        }
+        // Client-side navigation: keep the Storybook iframe where it is.
+        e.preventDefault();
+        navigate(href);
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
+InAppNavigationLink satisfies LinkComponentType;
+
+function ActiveItemFollowsNavigationRender(
+  args: Partial<DashboardLayoutProps>,
+): ReactElement {
+  const [pathname, setPathname] = useState<string>("/analytics/reports/q3");
+  const usePathname = (): string => pathname;
+  return (
+    <InAppNavigateContext.Provider value={setPathname}>
+      <DashboardLayout
+        {...(args as DashboardLayoutProps)}
+        Link={InAppNavigationLink}
+        usePathname={usePathname}
+      >
+        <PageColumnContainer>
+          <div className="flex flex-col gap-4 p-4 items-start">
+            <p>
+              Current pathname: <code data-testid="pathname">{pathname}</code>
+            </p>
+            <p className="text-sm text-muted-foreground max-w-prose">
+              Click a sidebar link to navigate; the active marker follows the
+              pathname returned by <code>usePathname</code>.
+            </p>
+            <ExampleChildrenForContainer />
+          </div>
+        </PageColumnContainer>
+      </DashboardLayout>
+    </InAppNavigateContext.Provider>
+  );
+}
+
+export const ActiveItemFollowsNavigation: Story = {
+  args: {
+    sidebarItems: activeItemSidebarItems,
+    topBarTitle: "Active item follows navigation",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <ActiveItemFollowsNavigationRender {...args} />
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    if (!window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+    const canvas = within(canvasElement);
+
+    // Nested beneath /analytics/reports, so Reports is the active item.
+    await expectOnlyActiveSidebarLink("/analytics/reports");
+
+    await userEvent.click(findSidebarLink("/team/roles")!);
+    await waitFor((): void => {
+      expect(canvas.getByTestId("pathname")).toHaveTextContent("/team/roles");
+    });
+    await expectOnlyActiveSidebarLink("/team/roles");
+    expect(findSidebarLink("/analytics/reports")).not.toHaveAttribute(
+      "aria-current",
     );
   },
 };
