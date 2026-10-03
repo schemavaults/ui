@@ -204,6 +204,9 @@ export type * from "./meter";
 export * from "./segmented-bar";
 export type * from "./segmented-bar";
 
+export * from "./uptime-bar";
+export type * from "./uptime-bar";
+
 export * from "./breadcrumb";
 export type * from "./breadcrumb";
 
