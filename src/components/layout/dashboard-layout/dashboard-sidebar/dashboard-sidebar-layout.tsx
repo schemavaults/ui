@@ -59,7 +59,13 @@ export function DashboardLayoutSidebarLayout({
     <menu
       className={cn(
         "h-screen max-h-screen",
-        desktop ? "absolute" : undefined,
+        // The persistent desktop sidebar. `useIsMobile` can only read the
+        // viewport from an effect, so the first client render and the server
+        // render both take this branch even on a phone; `max-md:hidden` keeps
+        // that render off screen until the mobile Sheet replaces it. It is the
+        // same `md` breakpoint the hook tests, and the one the main content
+        // container's `max-md:*` classes already follow.
+        desktop ? "absolute max-md:hidden" : undefined,
         "transition-[width] ease-linear will-change-[width]",
         // Reduced motion: snap between the collapsed and expanded widths.
         reducedMotionClassName(reducedMotion),
