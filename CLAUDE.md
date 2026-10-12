@@ -53,6 +53,12 @@ bun run build:storybook && bun run test-storybook:ci
 > `prefers-reduced-motion` media query to be on sets
 > `parameters: { emulateReducedMotion: true }`; nothing inside the browser can
 > set that media feature, so Playwright emulates it per story.
+>
+> A story that must be tested at a particular page width (e.g. to exercise a
+> `max-md:` class) pins one of Storybook's viewport presets through its
+> globals: `globals: { viewport: { value: "mobile1", isRotated: false } }`.
+> The runner sizes the page to that preset and resets every other story to
+> 1280×720.
 
 ## Architecture
 

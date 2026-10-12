@@ -4,6 +4,58 @@
 
 import type { TestRunnerConfig } from "@storybook/test-runner";
 import { getStoryContext } from "@storybook/test-runner";
+import { MINIMAL_VIEWPORTS, type Viewport } from "storybook/viewport";
+
+interface ViewportSize {
+  width: number;
+  height: number;
+}
+
+/**
+ * The viewport a story is tested at unless it pins a preset for itself:
+ * Playwright's own default page size.
+ */
+const DEFAULT_VIEWPORT_SIZE: ViewportSize = { width: 1280, height: 720 };
+
+/**
+ * A story that pins one of Storybook's viewport presets through its globals,
+ *
+ * ```ts
+ * globals: { viewport: { value: "mobile1", isRotated: false } },
+ * ```
+ *
+ * is tested at that preset's size — the size Storybook's viewport tool shows
+ * it at — so a `play()` test can exercise a `max-md:` media query, or anything
+ * else that depends on the width of the page rather than of the component.
+ * The presets are the `MINIMAL_VIEWPORTS` the viewport tool offers by default:
+ * `mobile1`, `mobile2`, `tablet` and `desktop`.
+ *
+ * Every other story is reset to the default, because the viewport is a
+ * property of the page and the runner reuses a page across the stories in a
+ * file.
+ */
+function viewportSizeForStory(
+  storyGlobals: Record<string, unknown> | undefined,
+): ViewportSize {
+  const viewportGlobal: unknown = storyGlobals?.["viewport"];
+  if (typeof viewportGlobal !== "object" || viewportGlobal === null) {
+    return DEFAULT_VIEWPORT_SIZE;
+  }
+  const { value, isRotated } = viewportGlobal as {
+    value?: unknown;
+    isRotated?: unknown;
+  };
+  const preset: Viewport | undefined =
+    typeof value === "string"
+      ? (MINIMAL_VIEWPORTS as Record<string, Viewport | undefined>)[value]
+      : undefined;
+  if (!preset) {
+    return DEFAULT_VIEWPORT_SIZE;
+  }
+  const width: number = Number.parseInt(preset.styles.width, 10);
+  const height: number = Number.parseInt(preset.styles.height, 10);
+  return isRotated === true ? { width: height, height: width } : { width, height };
+}
 
 /**
  * A story opts into being rendered as though the viewer had asked their
@@ -24,6 +76,16 @@ import { getStoryContext } from "@storybook/test-runner";
 const config: TestRunnerConfig = {
   async preVisit(page, context): Promise<void> {
     const storyContext = await getStoryContext(page, context);
+
+    // `getStoryContext` is typed as the enhancer-time context, which predates
+    // story-level globals, but the preview hands back the full story context.
+    // Fall back to the merged globals, which carry a story's own overrides too.
+    const { storyGlobals, globals } = storyContext as {
+      storyGlobals?: Record<string, unknown>;
+      globals?: Record<string, unknown>;
+    };
+    await page.setViewportSize(viewportSizeForStory(storyGlobals ?? globals));
+
     const emulateReducedMotion: boolean =
       storyContext.parameters?.["emulateReducedMotion"] === true;
 

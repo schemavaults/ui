@@ -5,9 +5,12 @@ import {
   createContext,
   useCallback,
   useContext,
+  useLayoutEffect,
+  useRef,
   useState,
   type ComponentType,
   type CSSProperties,
+  type PropsWithChildren,
   type ReactElement,
   type ReactNode,
 } from "react";
@@ -2242,5 +2245,148 @@ export const ActiveItemFollowsNavigation: Story = {
     expect(findSidebarLink("/analytics/reports")).not.toHaveAttribute(
       "aria-current",
     );
+  },
+};
+
+// ---------------------------------------------------------------------------
+// First paint on either side of the `md` breakpoint
+// ---------------------------------------------------------------------------
+//
+// Which sidebar the layout renders — the persistent desktop <menu> or the
+// mobile Sheet — follows `useIsMobile`, and that hook can only read the
+// viewport from an effect. The first client render, and the server render,
+// therefore always take the desktop branch, even on a phone, and the desktop
+// sidebar used to be visible there for a frame (or until hydration) before the
+// Sheet replaced it. It is now hidden below `md` in CSS, which the browser
+// applies from the first paint.
+//
+// A `play()` test starts long after that first render, so these stories record
+// what the DOM looked like at the moment React first committed it — before any
+// effect had run — and assert on the record.
+
+/** A desktop sidebar <menu> as it was at the layout's first commit. */
+interface FirstCommitMenuRecord {
+  /** Its computed `display`. */
+  display: string;
+  /** Its rendered width in CSS pixels; `0` while it is not displayed. */
+  width: number;
+}
+
+const FIRST_COMMIT_MENUS_ATTRIBUTE = "data-first-commit-menus";
+
+/**
+ * Records every desktop sidebar <menu> inside it as of the first commit.
+ *
+ * A parent's layout effect runs once its descendants are in the DOM but before
+ * any passive effect anywhere in the tree — `useIsMobile`'s included — so it
+ * sees the layout exactly as the browser first paints it. The record is
+ * written onto the wrapper as JSON for the `play()` function to read back.
+ */
+function FirstCommitProbe({ children }: PropsWithChildren): ReactElement {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect((): void => {
+    const root: HTMLDivElement | null = ref.current;
+    // Record the first commit only; later commits are what `play()` can see
+    // for itself.
+    if (!root || root.hasAttribute(FIRST_COMMIT_MENUS_ATTRIBUTE)) {
+      return;
+    }
+    const menus: FirstCommitMenuRecord[] = Array.from(
+      root.querySelectorAll<HTMLElement>("menu"),
+      (menu: HTMLElement): FirstCommitMenuRecord => ({
+        display: getComputedStyle(menu).display,
+        width: menu.getBoundingClientRect().width,
+      }),
+    );
+    root.setAttribute(FIRST_COMMIT_MENUS_ATTRIBUTE, JSON.stringify(menus));
+  }, []);
+  return (
+    <div ref={ref} className="contents">
+      {children}
+    </div>
+  );
+}
+
+function readFirstCommitMenus(
+  canvasElement: HTMLElement,
+): FirstCommitMenuRecord[] {
+  const probe: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
+    `[${FIRST_COMMIT_MENUS_ATTRIBUTE}]`,
+  );
+  expect(probe).not.toBeNull();
+  return JSON.parse(
+    (probe as HTMLElement).getAttribute(FIRST_COMMIT_MENUS_ATTRIBUTE) as string,
+  ) as FirstCommitMenuRecord[];
+}
+
+function renderWithFirstCommitProbe(args: DashboardLayoutProps): ReactElement {
+  return (
+    <FirstCommitProbe>
+      <DashboardLayout {...args} />
+    </FirstCommitProbe>
+  );
+}
+
+// Regression test: on a phone, the desktop sidebar must not show for even a
+// single frame before `useIsMobile` catches up and the mobile Sheet replaces
+// it. The story pins a phone-sized viewport through its globals: Storybook's
+// viewport tool applies it in the UI and `.storybook/test-runner.ts` in the
+// test runner.
+export const MobileFirstPaintHidesDesktopSidebar: Story = {
+  tags: ["!autodocs"],
+  globals: {
+    viewport: { value: "mobile1", isRotated: false },
+  },
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "First paint on a phone",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: renderWithFirstCommitProbe,
+  play: async ({ canvasElement }): Promise<void> => {
+    // Only a narrow viewport puts the media query under test into effect, so
+    // a wide one is a broken test setup rather than nothing to check.
+    expect(window.matchMedia("(max-width: 767px)").matches).toBe(true);
+
+    // Whatever React committed first, none of it may have been a visible
+    // desktop sidebar.
+    for (const menu of readFirstCommitMenus(canvasElement)) {
+      expect(menu.display).toBe("none");
+      expect(menu.width).toBe(0);
+    }
+
+    // Once `useIsMobile` has read the viewport, the desktop sidebar is gone
+    // altogether: the mobile Sheet, closed, renders nothing.
+    await waitFor((): void => {
+      expect(canvasElement.querySelector("menu")).toBeNull();
+    });
+  },
+};
+
+// The desktop counterpart. The guard must not simply move the flash to the
+// other side of the breakpoint: on a wide viewport the sidebar is on screen
+// from the first commit, not only once an effect has confirmed it belongs.
+export const DesktopFirstPaintShowsSidebar: Story = {
+  tags: ["!autodocs"],
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "First paint on a desktop",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: renderWithFirstCommitProbe,
+  play: async ({ canvasElement }): Promise<void> => {
+    // The runner's default viewport is wide, and this story runs right after
+    // one that pinned a phone-sized viewport for itself, so this also checks
+    // that the runner has reset the page in between. A narrow canvas is a
+    // broken test setup rather than nothing to check.
+    expect(window.matchMedia("(min-width: 768px)").matches).toBe(true);
+
+    const menus: FirstCommitMenuRecord[] = readFirstCommitMenus(canvasElement);
+    expect(menus).toHaveLength(1);
+    expect(menus[0]?.display).not.toBe("none");
+
+    // Collapsed to the icon-only width, as on every later render.
+    const remInPx: number = parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
+    expect(Math.round(menus[0]?.width ?? 0)).toBe(Math.round(4 * remInPx));
   },
 };
