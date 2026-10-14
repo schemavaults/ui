@@ -11,8 +11,10 @@ export type PromptInputVariant = (typeof promptInputVariantIds)[number];
 export const promptInputSizeIds = ["sm", "default", "lg"] as const satisfies readonly string[];
 export type PromptInputSize = (typeof promptInputSizeIds)[number];
 
+// `shrink-0`: `overflow-hidden` drops the form's automatic minimum height, so
+// without it a flex column could squeeze the form and clip its toolbar.
 export const promptInputVariants = cva(
-  "group/prompt-input relative flex w-full flex-col overflow-hidden ring-offset-background transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-60",
+  "group/prompt-input relative flex w-full shrink-0 flex-col overflow-hidden ring-offset-background transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-60",
   {
     variants: {
       variant: {

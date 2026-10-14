@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -34,6 +35,11 @@ import {
   type PromptInputSize,
   type PromptInputVariant,
 } from "./prompt-input-variants";
+import {
+  sizePromptInputTextarea,
+  syncPromptInputTextareaUserResize,
+  type PromptInputTextareaSizingState,
+} from "./prompt-input-textarea-sizing";
 
 /* ------------------------------------------------------------------ */
 /* Context                                                            */
@@ -230,12 +236,34 @@ export interface PromptInputTextareaProps
    * textarea starts scrolling internally. Default: 240.
    */
   maxHeightPx?: number;
+  /**
+   * Fewest lines of text to show. Auto-resize never shrinks the textarea
+   * below this many rows, nor below the size's `min-h-*`. Default: 1.
+   */
+  rows?: number;
+  /**
+   * Let the user drag the textarea's bottom edge to resize it. The height
+   * they choose becomes its new floor: it stays through typing and after
+   * the value is cleared, and the textarea still grows with its content
+   * above it, up to `maxHeightPx` or the chosen height, whichever is
+   * taller. Dragging it smaller lowers the floor, but never below `rows`.
+   * Default: false.
+   */
+  resizable?: boolean;
+  /**
+   * Grow and shrink the textarea with its content. Set to false for a plain
+   * textarea whose height comes only from `rows`, CSS and — with
+   * `resizable` — the user's drag. Default: true.
+   */
+  autoResize?: boolean;
 }
 
 function PromptInputTextarea({
   className,
   submitOnEnter = true,
   maxHeightPx = 240,
+  resizable = false,
+  autoResize = true,
   onKeyDown,
   rows = 1,
   ref: forwardedRef,
@@ -243,6 +271,10 @@ function PromptInputTextarea({
 }: PromptInputTextareaProps & { ref?: Ref<HTMLTextAreaElement> }): ReactElement {
   const ctx = usePromptInputContext("PromptInputTextarea");
   const internalRef = ctx.textareaRef;
+  const sizingStateRef = useRef<PromptInputTextareaSizingState>({
+    lastInlineHeight: null,
+    userHeightPx: null,
+  });
 
   // Merge external ref if the consumer passed one.
   const setRef = useCallback(
@@ -261,12 +293,37 @@ function PromptInputTextarea({
   // Auto-resize: recompute height whenever the value changes.
   useLayoutEffect((): void => {
     const el = internalRef.current;
-    if (el === null) return;
-    el.style.height = "0px";
-    const nextHeight = Math.min(el.scrollHeight, maxHeightPx);
-    el.style.height = `${nextHeight}px`;
-    el.style.overflowY = el.scrollHeight > maxHeightPx ? "auto" : "hidden";
-  }, [ctx.value, maxHeightPx, internalRef]);
+    if (el === null || !autoResize) return;
+    sizePromptInputTextarea(
+      el,
+      getComputedStyle(el),
+      { rows, maxHeightPx, resizable },
+      sizingStateRef.current,
+    );
+  }, [
+    autoResize,
+    ctx.value,
+    ctx.size,
+    internalRef,
+    maxHeightPx,
+    resizable,
+    rows,
+  ]);
+
+  // A drag of the resize handle arrives as a new inline height. Watch for it
+  // so the scrollbar matches the dragged size straight away; the next value
+  // change keeps it as the floor either way. Observing the border box means
+  // that toggling the scrollbar does not trigger another observation.
+  useEffect((): (() => void) | void => {
+    const el = internalRef.current;
+    if (el === null || !autoResize || !resizable) return;
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((): void => {
+      syncPromptInputTextareaUserResize(el, sizingStateRef.current);
+    });
+    observer.observe(el, { box: "border-box" });
+    return (): void => observer.disconnect();
+  }, [autoResize, internalRef, resizable]);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>): void => {
@@ -305,7 +362,8 @@ function PromptInputTextarea({
       rows={rows}
       maxLength={ctx.maxLength}
       className={cn(
-        "w-full resize-none bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed",
+        "w-full bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed",
+        resizable ? "resize-y" : "resize-none",
         promptInputTextareaSizeClass[ctx.size],
         className,
       )}
