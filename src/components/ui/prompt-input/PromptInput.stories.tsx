@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type ReactElement,
+  type RefObject,
 } from "react";
 import {
   ArrowUp,
@@ -43,7 +44,13 @@ const meta = {
           "a Stop button while `isLoading` is true. Enter submits, " +
           "Shift+Enter inserts a newline. Uses SchemaVaults theme tokens " +
           "(border-input, bg-background, muted, ring, primary, destructive) " +
-          "so it inherits both brightness themes and org scopes.",
+          "so it inherits both brightness themes and org scopes.\n\n" +
+          "The textarea never rests below `rows` lines. Pass `resizable` to " +
+          "let the user drag it taller or shorter: the height they choose " +
+          "becomes the floor that auto-resize grows from, and it survives " +
+          "typing and submit. Pass `autoResize={false}` for a plain " +
+          "textarea sized only by `rows` and CSS. The form never shrinks in " +
+          "a flex column, so a toolbar below the textarea is never clipped.",
       },
     },
   },
@@ -517,11 +524,13 @@ export const LoadingStop: Story = {
 };
 
 /* ------------------------------------------------------------------ */
-/* AutoResize — textarea grows with content, stops at maxHeightPx     */
+/* Shared helpers for the sizing stories                              */
 /* ------------------------------------------------------------------ */
 
-function AutoResizeDemo(): ReactElement {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+/** Tracks the height of the first textarea inside `containerRef`. */
+function useTextareaHeightPx(
+  containerRef: RefObject<HTMLDivElement | null>,
+): number {
   const [heightPx, setHeightPx] = useState<number>(0);
 
   useEffect((): (() => void) | void => {
@@ -530,12 +539,45 @@ function AutoResizeDemo(): ReactElement {
     const textarea = container.querySelector("textarea");
     if (textarea === null) return;
     const observer = new ResizeObserver((entries): void => {
-      const entry = entries[0];
-      if (entry !== undefined) setHeightPx(Math.round(entry.contentRect.height));
+      const size = entries[0]?.borderBoxSize[0];
+      if (size !== undefined) setHeightPx(Math.round(size.blockSize));
     });
-    observer.observe(textarea);
+    observer.observe(textarea, { box: "border-box" });
     return (): void => observer.disconnect();
-  }, []);
+  }, [containerRef]);
+
+  return heightPx;
+}
+
+/** Resolves after the next rendering step, once ResizeObservers have run. */
+function nextFrame(): Promise<void> {
+  return new Promise((resolve): void => {
+    requestAnimationFrame((): void => {
+      requestAnimationFrame((): void => resolve());
+    });
+  });
+}
+
+/**
+ * Dragging a textarea's resize handle makes the browser write the new size
+ * as an inline height. A play function cannot drive the native handle, so it
+ * writes that height itself.
+ */
+async function simulateResizeDrag(
+  textarea: HTMLElement,
+  heightPx: number,
+): Promise<void> {
+  textarea.style.height = `${heightPx}px`;
+  await nextFrame();
+}
+
+/* ------------------------------------------------------------------ */
+/* AutoResize — textarea grows with content, stops at maxHeightPx     */
+/* ------------------------------------------------------------------ */
+
+function AutoResizeDemo(): ReactElement {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const heightPx = useTextareaHeightPx(containerRef);
 
   return (
     <div ref={containerRef} className="flex w-[520px] flex-col gap-3">
@@ -564,4 +606,315 @@ function AutoResizeDemo(): ReactElement {
 
 export const AutoResize: Story = {
   render: (): ReactElement => <AutoResizeDemo />,
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const textarea = await canvas.findByLabelText(
+      "Prompt auto-resize input",
+    );
+    expect(getComputedStyle(textarea).resize).toBe("none");
+    const restingHeight: number = textarea.offsetHeight;
+
+    await userEvent.type(
+      textarea,
+      "one{Shift>}{Enter}{/Shift}two{Shift>}{Enter}{/Shift}three",
+    );
+    const threeLineHeight: number = textarea.offsetHeight;
+    expect(threeLineHeight).toBeGreaterThan(restingHeight);
+
+    // Without `resizable`, a height from outside lasts until the next keystroke.
+    await simulateResizeDrag(textarea, 300);
+    await userEvent.type(textarea, "!");
+    expect(textarea.offsetHeight).toBe(threeLineHeight);
+
+    // Grows to maxHeightPx, then scrolls.
+    await userEvent.type(
+      textarea,
+      "{Shift>}{Enter}{/Shift}more".repeat(12),
+    );
+    expect(textarea.offsetHeight).toBe(200);
+    expect(textarea.style.overflowY).toBe("auto");
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* Resizable — the user's dragged height becomes the floor            */
+/* ------------------------------------------------------------------ */
+
+function ResizableDemo(): ReactElement {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const heightPx = useTextareaHeightPx(containerRef);
+  const [value, setValue] = useState<string>("");
+
+  return (
+    <div ref={containerRef} className="flex w-[520px] flex-col gap-3">
+      <div
+        data-testid="prompt-input-textarea-height"
+        className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
+      >
+        Textarea height: <span className="font-mono">{heightPx}px</span>
+      </div>
+      <PromptInput
+        variant="elevated"
+        value={value}
+        onValueChange={setValue}
+        onSubmit={(): void => setValue("")}
+      >
+        <PromptInputTextarea
+          resizable
+          placeholder="Drag the bottom-right corner to resize…"
+          aria-label="Prompt resizable input"
+          maxHeightPx={320}
+        />
+        <PromptInputToolbar>
+          <PromptInputActions>
+            <PromptInputHint>
+              Your height sticks through typing and sending
+            </PromptInputHint>
+          </PromptInputActions>
+          <PromptInputSubmit />
+        </PromptInputToolbar>
+      </PromptInput>
+    </div>
+  );
+}
+
+export const Resizable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`resizable` swaps `resize-none` for `resize-y`. The height the " +
+          "user drags to becomes the textarea's floor: typing keeps it, " +
+          "content still grows above it (up to `maxHeightPx`, or the " +
+          "dragged height if that is taller), and it survives submit " +
+          "clearing the value. Dragging smaller lowers the floor, but never " +
+          "below `rows` or the size's minimum height.",
+      },
+    },
+  },
+  render: (): ReactElement => <ResizableDemo />,
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const textarea = await canvas.findByLabelText(
+      "Prompt resizable input",
+    );
+    expect(getComputedStyle(textarea).resize).toBe("vertical");
+    const restingHeight: number = textarea.offsetHeight;
+
+    await userEvent.type(textarea, "Draft a reply");
+    await simulateResizeDrag(textarea, 300);
+    await userEvent.type(textarea, "!");
+    expect(textarea.offsetHeight).toBe(300);
+
+    // Submitting clears the value; the dragged height stays.
+    await userEvent.keyboard("{Enter}");
+    await waitFor((): void => {
+      expect(textarea).toHaveValue("");
+    });
+    expect(textarea.offsetHeight).toBe(300);
+
+    // Content grows past the dragged height, up to maxHeightPx.
+    await userEvent.type(textarea, "{Shift>}{Enter}{/Shift}line".repeat(20));
+    expect(textarea.offsetHeight).toBe(320);
+    expect(textarea.style.overflowY).toBe("auto");
+    await userEvent.clear(textarea);
+    expect(textarea.offsetHeight).toBe(300);
+
+    // Dragging smaller lowers the floor…
+    await simulateResizeDrag(textarea, 120);
+    await userEvent.type(textarea, "a");
+    expect(textarea.offsetHeight).toBe(120);
+
+    // …but never below the size's minimum height.
+    await simulateResizeDrag(textarea, 10);
+    await userEvent.type(textarea, "b");
+    expect(textarea.offsetHeight).toBe(restingHeight);
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* WithRows — rows is the resting height                              */
+/* ------------------------------------------------------------------ */
+
+export const WithRows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`rows` is the fewest lines the textarea shows: it rests at four " +
+          "lines here, and still grows with its content past them.",
+      },
+    },
+  },
+  render: (args): ReactElement => (
+    <div className="w-[520px]">
+      <PromptInput {...args}>
+        <PromptInputTextarea
+          rows={4}
+          placeholder="Paste a longer brief…"
+          aria-label="Prompt four-row input"
+        />
+        <PromptInputToolbar>
+          <PromptInputActions>
+            <PromptInputAction aria-label="Attach file">
+              <Paperclip aria-hidden="true" className="h-4 w-4" />
+            </PromptInputAction>
+          </PromptInputActions>
+          <PromptInputSubmit />
+        </PromptInputToolbar>
+      </PromptInput>
+    </div>
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const textarea = await canvas.findByLabelText(
+      "Prompt four-row input",
+    );
+    const style = getComputedStyle(textarea);
+    const lineHeight: number = Number.parseFloat(style.lineHeight);
+    const fourLineHeight: number =
+      4 * lineHeight +
+      Number.parseFloat(style.paddingTop) +
+      Number.parseFloat(style.paddingBottom);
+    expect(textarea.offsetHeight).toBeGreaterThanOrEqual(fourLineHeight);
+
+    await userEvent.type(textarea, "{Shift>}{Enter}{/Shift}more".repeat(5));
+    expect(textarea.offsetHeight).toBeGreaterThanOrEqual(
+      fourLineHeight + 2 * lineHeight,
+    );
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* PlainTextarea — autoResize={false}                                 */
+/* ------------------------------------------------------------------ */
+
+export const PlainTextarea: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`autoResize={false}` turns off auto-resize: the textarea is " +
+          "`rows` tall and scrolls its content. With `resizable` the user " +
+          "can still drag it to any height.",
+      },
+    },
+  },
+  render: (args): ReactElement => (
+    <div className="w-[520px]">
+      <PromptInput {...args}>
+        <PromptInputTextarea
+          autoResize={false}
+          resizable
+          rows={5}
+          placeholder="A fixed five-line box…"
+          aria-label="Prompt plain input"
+        />
+        <PromptInputToolbar>
+          <PromptInputActions>
+            <PromptInputHint>Scrolls instead of growing</PromptInputHint>
+          </PromptInputActions>
+          <PromptInputSubmit />
+        </PromptInputToolbar>
+      </PromptInput>
+    </div>
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const textarea = await canvas.findByLabelText(
+      "Prompt plain input",
+    );
+    const restingHeight: number = textarea.offsetHeight;
+
+    await userEvent.type(textarea, "{Shift>}{Enter}{/Shift}line".repeat(8));
+    expect(textarea.offsetHeight).toBe(restingHeight);
+    expect(textarea.scrollHeight).toBeGreaterThan(textarea.clientHeight);
+
+    await simulateResizeDrag(textarea, 250);
+    await userEvent.type(textarea, "!");
+    expect(textarea.offsetHeight).toBe(250);
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* InFlexColumn — a full-height pane above never squeezes the form    */
+/* ------------------------------------------------------------------ */
+
+const FLEX_COLUMN_MESSAGES: readonly string[] = [
+  "Can you summarise the last migration?",
+  "It adds an org_id column to users and backfills it from memberships.",
+  "Does it need a lock on the users table?",
+  "Only briefly: the backfill runs in batches of 1,000 rows.",
+  "Great. Draft the rollout note for the team.",
+];
+
+export const InFlexColumn: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A chat page: a message pane that takes the full height (like " +
+          "`AgentChatMessages`) above a resizable prompt, in a fixed-height " +
+          "flex column. The prompt keeps its full height — and its toolbar " +
+          "stays visible — however tall the user drags it; the pane gives " +
+          "up the space.",
+      },
+    },
+  },
+  render: (args): ReactElement => (
+    <div className="flex h-[360px] w-[520px] flex-col gap-3 rounded-xl border border-border bg-card p-3 text-card-foreground">
+      <div className="flex h-full flex-col gap-2 overflow-y-auto rounded-md bg-muted/30 p-3 text-sm">
+        {FLEX_COLUMN_MESSAGES.map((message, index) => (
+          <p
+            key={message}
+            className={
+              index % 2 === 0
+                ? "self-end rounded-lg bg-primary px-3 py-2 text-primary-foreground"
+                : "self-start rounded-lg bg-background px-3 py-2"
+            }
+          >
+            {message}
+          </p>
+        ))}
+      </div>
+      <PromptInput {...args} variant="elevated">
+        <PromptInputTextarea
+          resizable
+          placeholder="Reply…"
+          aria-label="Prompt flex column input"
+        />
+        <PromptInputToolbar>
+          <PromptInputActions>
+            <PromptInputAction aria-label="Attach file">
+              <Paperclip aria-hidden="true" className="h-4 w-4" />
+            </PromptInputAction>
+          </PromptInputActions>
+          <PromptInputSubmit />
+        </PromptInputToolbar>
+      </PromptInput>
+    </div>
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const textarea = await canvas.findByLabelText(
+      "Prompt flex column input",
+    );
+    const form = textarea.closest("form");
+    if (form === null) throw new Error("The textarea is not inside a form.");
+    const submit = canvas.getByRole("button", { name: "Send message" });
+
+    const expectFormUnclipped = (): void => {
+      expect(form.scrollHeight).toBeLessThanOrEqual(form.clientHeight);
+      expect(submit.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        form.getBoundingClientRect().bottom,
+      );
+    };
+
+    expectFormUnclipped();
+
+    await simulateResizeDrag(textarea, 180);
+    await userEvent.type(textarea, "Ship it");
+    expect(textarea.offsetHeight).toBe(180);
+    expectFormUnclipped();
+  },
 };
