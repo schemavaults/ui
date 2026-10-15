@@ -549,6 +549,20 @@ export const ImageFromAgent: StoryObj<typeof ImageFromAgentExample> = {
     onImageClick: fn(),
     onViewerOpenChange: fn(),
   },
+};
+
+/**
+ * Interaction test for `ImageFromAgent`: the preview loads `src`, a click
+ * opens the viewer on `fullscreenSrc`, and Escape closes it and returns focus
+ * to the preview. Kept apart from the showcase because Storybook runs `play()`
+ * every time a story renders, which would open the viewer on load; and out of
+ * the autodocs page, as a test rather than an example.
+ */
+export const ImageViewerOpensFullSize: StoryObj<
+  typeof ImageFromAgentExample
+> = {
+  ...ImageFromAgent,
+  tags: ["!autodocs"],
   play: async ({ args, canvasElement }): Promise<void> => {
     const canvas = within(canvasElement);
     const body = within(document.body);
@@ -653,6 +667,18 @@ export const ImageWithCustomClick: StoryObj<typeof ImageCustomClickExample> = {
   args: {
     onInspect: fn(),
   },
+};
+
+/**
+ * Interaction test for `ImageWithCustomClick`: `preventDefault()` in `onClick`
+ * keeps the viewer closed and the click reaches the inspector instead. Kept
+ * apart from the showcase so the inspector starts empty there.
+ */
+export const ImageCustomClickSkipsViewer: StoryObj<
+  typeof ImageCustomClickExample
+> = {
+  ...ImageWithCustomClick,
+  tags: ["!autodocs"],
   play: async ({ args, canvasElement }): Promise<void> => {
     const canvas = within(canvasElement);
     const inspector = canvas.getByRole("complementary", { name: "Inspector" });
@@ -937,6 +963,18 @@ export const CsvInDialog: StoryObj<typeof CsvArtifactExample> = {
   args: {
     onOpenArtifact: fn(),
   },
+};
+
+/**
+ * Interaction test for `CsvInDialog`: clicking the card opens the parsed CSV
+ * as a table, and closing the dialog returns focus to the card. Kept apart
+ * from the showcase so the dialog doesn't open on load there.
+ */
+export const CsvArtifactOpensTable: StoryObj<
+  typeof CsvArtifactExample
+> = {
+  ...CsvInDialog,
+  tags: ["!autodocs"],
   play: async ({ args, canvasElement }): Promise<void> => {
     const canvas = within(canvasElement);
     const body = within(document.body);
