@@ -6,6 +6,7 @@ import {
   resolveLineHeightPx,
   rowsMinHeightPx,
   sizePromptInputTextarea,
+  syncPromptInputTextareaRowsMinHeight,
   syncPromptInputTextareaUserResize,
   type PromptInputTextareaComputedStyle,
   type PromptInputTextareaSizingOptions,
@@ -33,12 +34,13 @@ interface FakeTextareaOptions {
  * `rows` and how many lines of text it holds, the way a browser would.
  */
 class FakeTextarea implements PromptInputTextareaSizingTarget {
-  readonly style = { height: "", overflowY: "" };
+  readonly style = { height: "", minHeight: "", overflowY: "" };
   lines: number;
   readonly rows: number;
   readonly borderPx: number;
   readonly boxSizing: "border-box" | "content-box";
-  readonly minHeightPx: number;
+  /** The stylesheet's min-height, e.g. a size's `min-h-[56px]`. */
+  minHeightPx: number;
 
   constructor({
     lines = 1,
@@ -55,10 +57,16 @@ class FakeTextarea implements PromptInputTextareaSizingTarget {
   }
 
   get computedStyle(): PromptInputTextareaComputedStyle {
+    const readMinHeight = (): string =>
+      this.style.minHeight || `${this.minHeightPx}px`;
     return {
       boxSizing: this.boxSizing,
       lineHeight: `${LINE_HEIGHT_PX}px`,
       fontSize: "14px",
+      // Live, like `getComputedStyle`: an inline min-height wins.
+      get minHeight(): string {
+        return readMinHeight();
+      },
       paddingTop: `${PADDING_TOP_PX}px`,
       paddingBottom: `${PADDING_BOTTOM_PX}px`,
       borderTopWidth: `${this.borderPx}px`,
@@ -70,6 +78,12 @@ class FakeTextarea implements PromptInputTextareaSizingTarget {
     return PADDING_TOP_PX + PADDING_BOTTOM_PX + 2 * this.borderPx;
   }
 
+  /** The min-height in effect: the inline one, else the stylesheet's. */
+  private get cssMinHeightPx(): number {
+    const inline: number = Number.parseFloat(this.style.minHeight);
+    return Number.isFinite(inline) ? inline : this.minHeightPx;
+  }
+
   get offsetHeight(): number {
     const inline: number = Number.parseFloat(this.style.height);
     const specified: number = Number.isFinite(inline)
@@ -79,8 +93,8 @@ class FakeTextarea implements PromptInputTextareaSizingTarget {
       : this.rows * LINE_HEIGHT_PX + this.chromePx;
     const minimum: number =
       this.boxSizing === "border-box"
-        ? this.minHeightPx
-        : this.minHeightPx + this.chromePx;
+        ? this.cssMinHeightPx
+        : this.cssMinHeightPx + this.chromePx;
     return Math.max(specified, minimum, this.chromePx);
   }
 
@@ -96,14 +110,21 @@ class FakeTextarea implements PromptInputTextareaSizingTarget {
     return Math.max(content, this.clientHeight);
   }
 
-  /** What the browser does while the user drags the resize handle. */
+  /**
+   * What the browser does while the user drags the resize handle. Like the
+   * browser, `offsetHeight` then holds the drag at the min-height.
+   */
   drag(heightPx: number): void {
     this.style.height = `${heightPx}px`;
   }
 }
 
 function newState(): PromptInputTextareaSizingState {
-  return { lastInlineHeight: null, userHeightPx: null };
+  return {
+    lastInlineHeight: null,
+    userHeightPx: null,
+    lastInlineMinHeight: null,
+  };
 }
 
 /** A textarea plus its sizing state, sized the way the component does it. */
@@ -428,5 +449,157 @@ describe("syncPromptInputTextareaUserResize", () => {
 
     expect(state.userHeightPx).toBe(200);
     expect(textarea.style.overflowY).toBe("hidden");
+  });
+});
+
+describe("the rows minimum while resizable", () => {
+  /** The default size's 4-row floor: 4 × 20px lines plus 18px of padding. */
+  const FOUR_ROW_FLOOR_PX =
+    4 * LINE_HEIGHT_PX + PADDING_TOP_PX + PADDING_BOTTOM_PX;
+
+  test("is written as a border-box min-height", () => {
+    const { textarea } = setup({ lines: 1, rows: 4 }, { resizable: true });
+
+    expect(textarea.style.minHeight).toBe(`${FOUR_ROW_FLOOR_PX}px`);
+    expect(textarea.offsetHeight).toBe(FOUR_ROW_FLOOR_PX);
+  });
+
+  test("is written as a content-box min-height", () => {
+    const { textarea } = setup(
+      {
+        lines: 1,
+        rows: 4,
+        borderPx: 1,
+        boxSizing: "content-box",
+        minHeightPx: 0,
+      },
+      { resizable: true },
+    );
+
+    expect(textarea.style.minHeight).toBe(`${4 * LINE_HEIGHT_PX}px`);
+    expect(textarea.offsetHeight).toBe(FOUR_ROW_FLOOR_PX + 2);
+  });
+
+  test("stops a drag at the floor, before the next value change", () => {
+    const { textarea, state, type } = setup(
+      { lines: 1, rows: 4 },
+      { resizable: true },
+    );
+
+    textarea.drag(30);
+    expect(textarea.offsetHeight).toBe(FOUR_ROW_FLOOR_PX);
+
+    syncPromptInputTextareaUserResize(textarea, state);
+    expect(state.userHeightPx).toBe(FOUR_ROW_FLOOR_PX);
+
+    type(2);
+    expect(textarea.offsetHeight).toBe(FOUR_ROW_FLOOR_PX);
+  });
+
+  test("is not written without resizable", () => {
+    const { textarea } = setup({ lines: 1, rows: 4 });
+    expect(textarea.style.minHeight).toBe("");
+  });
+
+  test("is not written for a single row", () => {
+    const { textarea } = setup({ lines: 1, rows: 1 }, { resizable: true });
+    expect(textarea.style.minHeight).toBe("");
+  });
+
+  test("is cleared when resizable turns off, or rows drops to 1", () => {
+    const textarea = new FakeTextarea({ lines: 1, rows: 4 });
+    const state = newState();
+    const size = (
+      options: Partial<PromptInputTextareaSizingOptions>,
+    ): void =>
+      sizePromptInputTextarea(
+        textarea,
+        textarea.computedStyle,
+        { rows: 4, maxHeightPx: 240, resizable: true, ...options },
+        state,
+      );
+
+    size({});
+    expect(textarea.style.minHeight).toBe(`${FOUR_ROW_FLOOR_PX}px`);
+    size({ resizable: false });
+    expect(textarea.style.minHeight).toBe("");
+
+    size({});
+    expect(textarea.style.minHeight).toBe(`${FOUR_ROW_FLOOR_PX}px`);
+    size({ rows: 1 });
+    expect(textarea.style.minHeight).toBe("");
+  });
+
+  test("leaves a taller stylesheet min-height in charge", () => {
+    const { textarea, type } = setup(
+      { lines: 1, rows: 4, minHeightPx: 128 },
+      { resizable: true },
+    );
+
+    expect(textarea.style.minHeight).toBe("");
+    expect(textarea.offsetHeight).toBe(128);
+
+    textarea.drag(30);
+    type(2);
+    expect(textarea.offsetHeight).toBe(128);
+  });
+
+  test("follows a stylesheet min-height that changes under it", () => {
+    const { textarea, type } = setup(
+      { lines: 1, rows: 4 },
+      { resizable: true },
+    );
+    expect(textarea.style.minHeight).toBe(`${FOUR_ROW_FLOOR_PX}px`);
+
+    // A new size brings a taller min-h-*: its own minimum takes over.
+    textarea.minHeightPx = 128;
+    type(1);
+    expect(textarea.style.minHeight).toBe("");
+    expect(textarea.offsetHeight).toBe(128);
+
+    textarea.minHeightPx = MIN_HEIGHT_PX;
+    type(1);
+    expect(textarea.style.minHeight).toBe(`${FOUR_ROW_FLOOR_PX}px`);
+  });
+
+  test("never clears an inline min-height it didn't write", () => {
+    const textarea = new FakeTextarea({ lines: 1, rows: 4 });
+    textarea.style.minHeight = "120px";
+    const state = newState();
+
+    for (const resizable of [false, true, false]) {
+      sizePromptInputTextarea(
+        textarea,
+        textarea.computedStyle,
+        { rows: 4, maxHeightPx: 240, resizable },
+        state,
+      );
+      expect(textarea.style.minHeight).toBe("120px");
+    }
+  });
+
+  test("is kept in step without auto-resize too", () => {
+    const textarea = new FakeTextarea({ lines: 1, rows: 4 });
+    const state = newState();
+
+    syncPromptInputTextareaRowsMinHeight(
+      textarea,
+      textarea.computedStyle,
+      { rows: 4, resizable: true },
+      state,
+    );
+    expect(textarea.style.minHeight).toBe(`${FOUR_ROW_FLOOR_PX}px`);
+    expect(textarea.style.height).toBe("");
+
+    textarea.drag(30);
+    expect(textarea.offsetHeight).toBe(FOUR_ROW_FLOOR_PX);
+
+    syncPromptInputTextareaRowsMinHeight(
+      textarea,
+      textarea.computedStyle,
+      { rows: 4, resizable: false },
+      state,
+    );
+    expect(textarea.style.minHeight).toBe("");
   });
 });

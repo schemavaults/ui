@@ -12,35 +12,14 @@ import {
 } from "react";
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Info, AlertTriangle, AlertOctagon, Sparkles } from "lucide-react";
 import {
   AnimatePresence,
   domAnimation,
   LazyMotion,
-  m,
   useReducedMotion,
 } from "@/framer-motion";
 
 import { cn } from "@/lib/utils";
-
-/**
- * Native HTML div attributes without the handlers that framer-motion's
- * `m.div` overloads (drag/animation events). Spreading these props onto
- * `m.div` otherwise causes a type conflict.
- */
-type MotionDivAttributes = Omit<
-  HTMLAttributes<HTMLDivElement>,
-  | "onDrag"
-  | "onDragStart"
-  | "onDragEnd"
-  | "onAnimationStart"
-  | "onAnimationEnd"
-  | "onAnimationIteration"
->;
-
-/* ------------------------------------------------------------------ */
-/* Container                                                          */
-/* ------------------------------------------------------------------ */
 
 export const agentChatMessagesSpacingIds = [
   "compact",
@@ -97,36 +76,70 @@ function AgentChatMessages({
   ...props
 }: AgentChatMessagesProps): ReactElement {
   const viewportRef = useRef<HTMLDivElement | null>(null);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const stackRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
+  const lastScrollTopRef = useRef(0);
   const hasMountedRef = useRef(false);
   const prefersReducedMotion = useReducedMotion();
 
   const childCount = Children.count(children);
   const ariaLabel = props["aria-label"] ?? "Chat transcript";
 
+  // Scrolls only the transcript's own viewport. `scrollIntoView` would also
+  // scroll every scrollable ancestor, jumping the whole page to the chat.
+  const scrollToBottom = useCallback((behavior: ScrollBehavior): void => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    viewport.scrollTo({ top: viewport.scrollHeight, behavior });
+  }, []);
+
   const handleScroll = useCallback((): void => {
     const viewport = viewportRef.current;
     if (!viewport) return;
-    const distanceFromBottom =
-      viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
-    stickToBottomRef.current = distanceFromBottom <= autoScrollThreshold;
+    const { scrollTop, scrollHeight, clientHeight } = viewport;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    if (distanceFromBottom <= autoScrollThreshold) {
+      stickToBottomRef.current = true;
+    } else if (scrollTop < lastScrollTopRef.current) {
+      // Only scrolling up unpins. A smooth scroll toward the bottom passes
+      // through positions far from it, and must stay pinned on the way down.
+      stickToBottomRef.current = false;
+    }
+    lastScrollTopRef.current = scrollTop;
   }, [autoScrollThreshold]);
 
   useEffect(() => {
     if (!autoScroll) return;
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
 
     const behavior: ScrollBehavior =
       !hasMountedRef.current || prefersReducedMotion ? "auto" : "smooth";
 
     if (!hasMountedRef.current || stickToBottomRef.current) {
-      sentinel.scrollIntoView({ block: "end", behavior });
+      scrollToBottom(behavior);
     }
 
     hasMountedRef.current = true;
-  }, [autoScroll, childCount, prefersReducedMotion]);
+  }, [autoScroll, childCount, prefersReducedMotion, scrollToBottom]);
+
+  // Messages also grow without a new one arriving: an image finishes
+  // loading, or a reply streams in. Keep a pinned transcript pinned.
+  useEffect(() => {
+    if (!autoScroll) return;
+    const stack = stackRef.current;
+    if (!stack || typeof ResizeObserver === "undefined") return;
+
+    let lastHeight = stack.offsetHeight;
+    const observer = new ResizeObserver((): void => {
+      const height = stack.offsetHeight;
+      const grew = height > lastHeight;
+      lastHeight = height;
+      if (grew && stickToBottomRef.current) {
+        scrollToBottom(prefersReducedMotion ? "auto" : "smooth");
+      }
+    });
+    observer.observe(stack);
+    return (): void => observer.disconnect();
+  }, [autoScroll, prefersReducedMotion, scrollToBottom]);
 
   return (
     <ScrollAreaPrimitive.Root
@@ -143,6 +156,7 @@ function AgentChatMessages({
       >
         <LazyMotion features={domAnimation} strict>
           <div
+            ref={stackRef}
             role="log"
             aria-live="polite"
             aria-relevant="additions"
@@ -154,7 +168,6 @@ function AgentChatMessages({
             )}
           >
             <AnimatePresence initial={false}>{children}</AnimatePresence>
-            <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
           </div>
         </LazyMotion>
       </ScrollAreaPrimitive.Viewport>
@@ -170,361 +183,4 @@ function AgentChatMessages({
 }
 AgentChatMessages.displayName = "AgentChatMessages";
 
-/* ------------------------------------------------------------------ */
-/* Shared motion props                                                */
-/* ------------------------------------------------------------------ */
-
-const messageMotionProps = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -4 },
-  transition: { duration: 0.18, ease: "easeOut" as const },
-};
-
-const reducedMotionProps = {
-  initial: false as const,
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-  transition: { duration: 0 },
-};
-
-function useMessageMotionProps(): typeof messageMotionProps | typeof reducedMotionProps {
-  const reduced = useReducedMotion();
-  return reduced ? reducedMotionProps : messageMotionProps;
-}
-
-/* ------------------------------------------------------------------ */
-/* Bubble                                                             */
-/* ------------------------------------------------------------------ */
-
-export const agentChatBubbleFromIds = ["user", "assistant"] as const satisfies
-  readonly string[];
-export type AgentChatBubbleFromId = (typeof agentChatBubbleFromIds)[number];
-
-const agentChatBubbleRowVariants = cva("flex w-full items-end gap-2", {
-  variants: {
-    from: {
-      user: "flex-row-reverse",
-      assistant: "flex-row",
-    } satisfies Record<AgentChatBubbleFromId, string>,
-  },
-  defaultVariants: {
-    from: "assistant",
-  },
-});
-
-const agentChatBubbleVariants = cva(
-  "max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm shadow-sm",
-  {
-    variants: {
-      from: {
-        user: "bg-primary text-primary-foreground rounded-br-sm",
-        assistant: "bg-muted text-foreground rounded-bl-sm",
-      } satisfies Record<AgentChatBubbleFromId, string>,
-    },
-    defaultVariants: {
-      from: "assistant",
-    },
-  },
-);
-
-export interface AgentChatBubbleProps extends MotionDivAttributes {
-  /** Who sent the message. Drives alignment and color. */
-  from: AgentChatBubbleFromId;
-  /** Optional avatar slot — render `<Avatar />` here. */
-  avatar?: ReactNode;
-  /** Optional sender name rendered above the bubble. */
-  senderName?: ReactNode;
-  /** Optional timestamp rendered next to the sender name. */
-  timestamp?: ReactNode;
-  /** Class applied directly to the colored bubble element. */
-  bubbleClassName?: string;
-  ref?: Ref<HTMLDivElement>;
-}
-
-function AgentChatBubble({
-  from,
-  avatar,
-  senderName,
-  timestamp,
-  className,
-  bubbleClassName,
-  children,
-  ref,
-  ...props
-}: AgentChatBubbleProps): ReactElement {
-  const motionProps = useMessageMotionProps();
-  const hasHeader = senderName !== undefined || timestamp !== undefined;
-
-  return (
-    <m.div
-      ref={ref}
-      data-slot="agent-chat-bubble"
-      data-from={from}
-      className={cn(agentChatBubbleRowVariants({ from }), className)}
-      {...motionProps}
-      {...props}
-    >
-      {avatar ? (
-        <div className="shrink-0" aria-hidden="true">
-          {avatar}
-        </div>
-      ) : null}
-      <div
-        className={cn(
-          "flex w-full min-w-0 flex-col gap-1",
-          from === "user" ? "items-end" : "items-start",
-        )}
-      >
-        {hasHeader ? (
-          <div
-            className={cn(
-              "flex items-baseline gap-2 px-1 text-xs text-muted-foreground",
-              from === "user" ? "flex-row-reverse" : "flex-row",
-            )}
-          >
-            {senderName ? (
-              <span className="font-medium text-foreground">{senderName}</span>
-            ) : null}
-            {timestamp ? <span>{timestamp}</span> : null}
-          </div>
-        ) : null}
-        <div className={cn(agentChatBubbleVariants({ from }), bubbleClassName)}>
-          {children}
-        </div>
-      </div>
-    </m.div>
-  );
-}
-AgentChatBubble.displayName = "AgentChatBubble";
-
-/* ------------------------------------------------------------------ */
-/* Typing indicator                                                   */
-/* ------------------------------------------------------------------ */
-
-export interface AgentTypingIndicatorProps extends MotionDivAttributes {
-  /** Optional avatar slot — render `<Avatar />` here. */
-  avatar?: ReactNode;
-  /** Accessible label announced by screen readers. */
-  label?: string;
-  ref?: Ref<HTMLDivElement>;
-}
-
-function AgentTypingIndicator({
-  avatar,
-  label = "Assistant is typing",
-  className,
-  ref,
-  ...props
-}: AgentTypingIndicatorProps): ReactElement {
-  const motionProps = useMessageMotionProps();
-  const prefersReducedMotion = useReducedMotion();
-
-  return (
-    <m.div
-      ref={ref}
-      data-slot="agent-typing-indicator"
-      role="status"
-      aria-live="polite"
-      aria-label={label}
-      className={cn("flex w-full items-end gap-2", className)}
-      {...motionProps}
-      {...props}
-    >
-      {avatar ? (
-        <div className="shrink-0" aria-hidden="true">
-          {avatar}
-        </div>
-      ) : null}
-      <div className="inline-flex items-center gap-1 rounded-2xl rounded-bl-sm bg-muted px-4 py-3 text-foreground shadow-sm">
-        {prefersReducedMotion ? (
-          <span
-            aria-hidden="true"
-            className="text-sm leading-none text-muted-foreground"
-          >
-            …
-          </span>
-        ) : (
-          <>
-            <span
-              aria-hidden="true"
-              className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce motion-reduce:animate-none"
-            />
-            <span
-              aria-hidden="true"
-              className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms] motion-reduce:animate-none"
-            />
-            <span
-              aria-hidden="true"
-              className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms] motion-reduce:animate-none"
-            />
-          </>
-        )}
-      </div>
-    </m.div>
-  );
-}
-AgentTypingIndicator.displayName = "AgentTypingIndicator";
-
-/* ------------------------------------------------------------------ */
-/* Announcement                                                       */
-/* ------------------------------------------------------------------ */
-
-export const agentChatAnnouncementVariantIds = [
-  "default",
-  "info",
-  "warning",
-  "destructive",
-] as const satisfies readonly string[];
-export type AgentChatAnnouncementVariantId =
-  (typeof agentChatAnnouncementVariantIds)[number];
-
-const agentChatAnnouncementVariants = cva(
-  "mx-auto inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium [&>svg]:size-3.5 [&>svg]:shrink-0",
-  {
-    variants: {
-      variant: {
-        default: "border-border bg-muted/60 text-muted-foreground",
-        info: "border-primary/20 bg-primary/10 text-primary [&>svg]:text-primary",
-        warning:
-          "border-warning/30 bg-warning/10 text-warning [&>svg]:text-warning",
-        destructive:
-          "border-destructive/30 bg-destructive/10 text-destructive [&>svg]:text-destructive",
-      } satisfies Record<AgentChatAnnouncementVariantId, string>,
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  },
-);
-
-const announcementDefaultIcons: Record<
-  AgentChatAnnouncementVariantId,
-  ReactElement | null
-> = {
-  default: null,
-  info: <Info />,
-  warning: <AlertTriangle />,
-  destructive: <AlertOctagon />,
-};
-
-export interface AgentChatAnnouncementProps
-  extends MotionDivAttributes,
-    VariantProps<typeof agentChatAnnouncementVariants> {
-  /** Override the default icon. Pass `null` to hide the icon. */
-  icon?: ReactNode | null;
-  ref?: Ref<HTMLDivElement>;
-}
-
-function AgentChatAnnouncement({
-  className,
-  variant = "default",
-  icon,
-  children,
-  ref,
-  ...props
-}: AgentChatAnnouncementProps): ReactElement {
-  const motionProps = useMessageMotionProps();
-  const resolvedIcon =
-    icon === null
-      ? null
-      : icon ?? announcementDefaultIcons[variant ?? "default"];
-
-  return (
-    <m.div
-      ref={ref}
-      data-slot="agent-chat-announcement"
-      role="status"
-      className={cn("flex w-full justify-center", className)}
-      {...motionProps}
-    >
-      <div className={cn(agentChatAnnouncementVariants({ variant }))} {...props}>
-        {resolvedIcon}
-        <span>{children}</span>
-      </div>
-    </m.div>
-  );
-}
-AgentChatAnnouncement.displayName = "AgentChatAnnouncement";
-
-/* ------------------------------------------------------------------ */
-/* Human-in-the-loop message                                          */
-/* ------------------------------------------------------------------ */
-
-export const agentChatHILMessageToneIds = [
-  "default",
-  "primary",
-  "warning",
-] as const satisfies readonly string[];
-export type AgentChatHILMessageToneId =
-  (typeof agentChatHILMessageToneIds)[number];
-
-const agentChatHILMessageVariants = cva(
-  "relative w-full rounded-lg border border-dashed bg-card text-card-foreground p-4 shadow-sm",
-  {
-    variants: {
-      tone: {
-        default: "border-border",
-        primary: "border-primary/40 bg-primary/5",
-        warning: "border-warning/40 bg-warning/5",
-      } satisfies Record<AgentChatHILMessageToneId, string>,
-    },
-    defaultVariants: {
-      tone: "default",
-    },
-  },
-);
-
-export interface AgentChatHILMessageProps
-  extends MotionDivAttributes,
-    VariantProps<typeof agentChatHILMessageVariants> {
-  /** Small uppercase label rendered at the top of the container. */
-  label?: ReactNode;
-  /** Icon rendered next to the label. Defaults to a Sparkles glyph when label is set. */
-  icon?: ReactNode | null;
-  ref?: Ref<HTMLDivElement>;
-}
-
-function AgentChatHILMessage({
-  className,
-  tone,
-  label,
-  icon,
-  children,
-  ref,
-  ...props
-}: AgentChatHILMessageProps): ReactElement {
-  const motionProps = useMessageMotionProps();
-  const resolvedIcon =
-    icon === null ? null : icon ?? (label ? <Sparkles className="size-3.5" /> : null);
-  const ariaLabel = typeof label === "string" ? label : undefined;
-
-  return (
-    <m.div
-      ref={ref}
-      data-slot="agent-chat-hil-message"
-      role="group"
-      aria-label={ariaLabel ?? "Human-in-the-loop request"}
-      className={cn(agentChatHILMessageVariants({ tone }), className)}
-      {...motionProps}
-      {...props}
-    >
-      {label !== undefined ? (
-        <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {resolvedIcon}
-          <span>{label}</span>
-        </div>
-      ) : null}
-      <div>{children}</div>
-    </m.div>
-  );
-}
-AgentChatHILMessage.displayName = "AgentChatHILMessage";
-
-export {
-  AgentChatMessages,
-  AgentChatBubble,
-  AgentTypingIndicator,
-  AgentChatAnnouncement,
-  AgentChatHILMessage,
-};
+export { AgentChatMessages };
