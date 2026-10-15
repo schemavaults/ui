@@ -21,7 +21,7 @@ import {
   AgentChatArtifact,
   agentChatMessagesSpacingIds,
   type AgentChatMessagesSpacingId,
-} from "./agent-chat-messages";
+} from ".";
 import { Avatar, AvatarFallback } from "../avatar/avatar";
 import { Button } from "../button/button";
 import {
