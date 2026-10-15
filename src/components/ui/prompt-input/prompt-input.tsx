@@ -37,6 +37,7 @@ import {
 } from "./prompt-input-variants";
 import {
   sizePromptInputTextarea,
+  syncPromptInputTextareaRowsMinHeight,
   syncPromptInputTextareaUserResize,
   type PromptInputTextareaSizingState,
 } from "./prompt-input-textarea-sizing";
@@ -246,8 +247,9 @@ export interface PromptInputTextareaProps
    * they choose becomes its new floor: it stays through typing and after
    * the value is cleared, and the textarea still grows with its content
    * above it, up to `maxHeightPx` or the chosen height, whichever is
-   * taller. Dragging it smaller lowers the floor, but never below `rows`.
-   * Default: false.
+   * taller. Dragging it smaller lowers the floor, but the drag stops at
+   * `rows`: the textarea gets an inline `min-height` for it, unless its CSS
+   * `min-height` is already taller. Default: false.
    */
   resizable?: boolean;
   /**
@@ -274,6 +276,7 @@ function PromptInputTextarea({
   const sizingStateRef = useRef<PromptInputTextareaSizingState>({
     lastInlineHeight: null,
     userHeightPx: null,
+    lastInlineMinHeight: null,
   });
 
   // Merge external ref if the consumer passed one.
@@ -309,6 +312,19 @@ function PromptInputTextarea({
     resizable,
     rows,
   ]);
+
+  // Without auto-resize nothing else keeps the `rows` minimum in step, and a
+  // drag of the resize handle still has to stop there.
+  useLayoutEffect((): void => {
+    const el = internalRef.current;
+    if (el === null || autoResize) return;
+    syncPromptInputTextareaRowsMinHeight(
+      el,
+      getComputedStyle(el),
+      { rows, resizable },
+      sizingStateRef.current,
+    );
+  }, [autoResize, ctx.size, internalRef, resizable, rows]);
 
   // A drag of the resize handle arrives as a new inline height. Watch for it
   // so the scrollbar matches the dragged size straight away; the next value

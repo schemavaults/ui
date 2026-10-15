@@ -786,6 +786,64 @@ export const WithRows: Story = {
 };
 
 /* ------------------------------------------------------------------ */
+/* ResizableWithRows — a drag stops at the rows floor                 */
+/* ------------------------------------------------------------------ */
+
+export const ResizableWithRows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "With `resizable`, the `rows` floor is also the textarea's CSS " +
+          "`min-height`, so dragging the handle up stops at four lines " +
+          "rather than at the size's smaller `min-h-*`, and nothing jumps " +
+          "back when the user starts typing.",
+      },
+    },
+  },
+  render: (args): ReactElement => (
+    <div className="w-[520px]">
+      <PromptInput {...args}>
+        <PromptInputTextarea
+          rows={4}
+          resizable
+          placeholder="Drag the corner up — it stops at four lines…"
+          aria-label="Prompt resizable four-row input"
+        />
+        <PromptInputToolbar>
+          <PromptInputActions>
+            <PromptInputHint>Never fewer than four lines</PromptInputHint>
+          </PromptInputActions>
+          <PromptInputSubmit />
+        </PromptInputToolbar>
+      </PromptInput>
+    </div>
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    const textarea = await canvas.findByLabelText(
+      "Prompt resizable four-row input",
+    );
+    const style = getComputedStyle(textarea);
+    const fourRowFloor: number =
+      4 * Number.parseFloat(style.lineHeight) +
+      Number.parseFloat(style.paddingTop) +
+      Number.parseFloat(style.paddingBottom) +
+      Number.parseFloat(style.borderTopWidth) +
+      Number.parseFloat(style.borderBottomWidth);
+    expect(textarea.offsetHeight).toBe(fourRowFloor);
+
+    // The drag itself stops at the floor…
+    await simulateResizeDrag(textarea, 10);
+    expect(textarea.offsetHeight).toBe(fourRowFloor);
+
+    // …so typing afterwards has nothing to snap back.
+    await userEvent.type(textarea, "a");
+    expect(textarea.offsetHeight).toBe(fourRowFloor);
+  },
+};
+
+/* ------------------------------------------------------------------ */
 /* PlainTextarea — autoResize={false}                                 */
 /* ------------------------------------------------------------------ */
 
@@ -833,6 +891,10 @@ export const PlainTextarea: Story = {
     await simulateResizeDrag(textarea, 250);
     await userEvent.type(textarea, "!");
     expect(textarea.offsetHeight).toBe(250);
+
+    // Without auto-resize, a drag still stops at `rows`.
+    await simulateResizeDrag(textarea, 10);
+    expect(textarea.offsetHeight).toBe(restingHeight);
   },
 };
 
