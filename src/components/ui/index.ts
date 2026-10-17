@@ -315,6 +315,9 @@ export type * from "./bar-list";
 export * from "./treemap";
 export type * from "./treemap";
 
+export * from "./waffle-chart";
+export type * from "./waffle-chart";
+
 export * from "./comparison-slider";
 export type * from "./comparison-slider";
 
