@@ -383,3 +383,6 @@ export type * from "./toolbar";
 
 export * from "./attachment-card";
 export type * from "./attachment-card";
+
+export * from "./key-value-editor";
+export type * from "./key-value-editor";
