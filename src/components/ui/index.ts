@@ -318,6 +318,9 @@ export type * from "./treemap";
 export * from "./waffle-chart";
 export type * from "./waffle-chart";
 
+export * from "./bullet-chart";
+export type * from "./bullet-chart";
+
 export * from "./comparison-slider";
 export type * from "./comparison-slider";
 
