@@ -16,6 +16,7 @@ import {
   type DashboardSidebarItemsAndGroupsDefinitions,
 } from "./dashboard-sidebar-items-and-groups-context";
 import type { DashboardSidebarItemDefinition } from "./dashboard-sidebar-item-definition";
+import type { DashboardSidebarItemGroupDefinition } from "./dashboard-sidebar-item-group";
 
 /**
  * The normalized path of the menu item for the current page, or `null` when
@@ -86,5 +87,21 @@ export function useIsDashboardSidebarItemActive(
   return (
     activePath !== null &&
     normalizeDashboardSidebarPath(item.url) === activePath
+  );
+}
+
+/** Whether one of `group`'s items is the menu item for the current page. */
+export function useDashboardSidebarItemGroupContainsActiveItem(
+  group: DashboardSidebarItemGroupDefinition,
+): boolean {
+  const activePath: string | null = useContext(
+    DashboardSidebarActiveItemContext,
+  );
+  return (
+    activePath !== null &&
+    group.items.some(
+      (item: DashboardSidebarItemDefinition): boolean =>
+        normalizeDashboardSidebarPath(item.url) === activePath,
+    )
   );
 }

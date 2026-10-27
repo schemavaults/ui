@@ -954,6 +954,395 @@ export const SidebarItemGroupFirst: Story = {
   },
 };
 
+// --- Collapsible groups --------------------------------------------------
+//
+// A group with `collapsible: true` gets a heading button that folds its links
+// away and brings them back, with a chevron that points down while the group
+// is open and right while it is collapsed. `defaultCollapsed` starts a group
+// folded, unless it holds the page being viewed: here "Team" asks to start
+// collapsed but holds the active "Members" page, so it opens anyway, while
+// "Integrations" starts folded. "Support" is an ordinary group for
+// comparison.
+//
+// Only the expanded menu folds. The collapsed desktop sidebar has no headings
+// to reopen a group with, so it lists every link in every group. Folded
+// groups stay folded while the sidebar is closed and reopened, the mobile
+// Sheet included.
+
+const collapsibleGroupChangeSpy = fn();
+
+const collapsibleGroupsSidebarItems = [
+  manyLinksItem("Overview", LayoutDashboard),
+  manyLinksItem("Inbox", Inbox),
+  {
+    ...manyLinksGroup("Analytics", [
+      manyLinksItem("Reports", BarChart3),
+      manyLinksItem("Trends", LineChart),
+      manyLinksItem("Segments", PieChart),
+    ]),
+    collapsible: true,
+    onCollapsedChange: collapsibleGroupChangeSpy,
+  },
+  {
+    ...manyLinksGroup("Team", [
+      manyLinksItem("Members", Users),
+      manyLinksItem("Roles", Shield),
+      manyLinksItem("API Keys", Key),
+    ]),
+    collapsible: true,
+    defaultCollapsed: true,
+  },
+  {
+    ...manyLinksGroup("Integrations", [
+      manyLinksItem("Email", Mail),
+      manyLinksItem("Webhooks", Webhook),
+      manyLinksItem("Plugins", Plug),
+    ]),
+    collapsible: true,
+    defaultCollapsed: true,
+  },
+  manyLinksGroup("Support", [
+    manyLinksItem("Help Center", LifeBuoy),
+    manyLinksItem("Documentation", BookOpen),
+  ]),
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+/** A collapsible group's heading button, or `null` while it is not shown. */
+function findGroupToggle(title: string): HTMLButtonElement | null {
+  return document.querySelector<HTMLButtonElement>(
+    `button[aria-controls="sidebar-group-items-[${title}]"]`,
+  );
+}
+
+/** The element that folds a collapsible group's list away. */
+function findGroupFold(title: string): HTMLElement {
+  const fold: HTMLElement | null | undefined = document
+    .getElementById(`sidebar-group-items-[${title}]`)
+    ?.closest<HTMLElement>('[data-slot="dashboard-sidebar-group-items-fold"]');
+  expect(fold).toBeTruthy();
+  return fold as HTMLElement;
+}
+
+function groupFoldHeight(title: string): number {
+  return Math.round(findGroupFold(title).getBoundingClientRect().height);
+}
+
+/** Whether a group's links are out of the tab order. */
+function isGroupInert(title: string): boolean {
+  return (
+    document
+      .getElementById(`sidebar-group-items-[${title}]`)
+      ?.closest("[inert]") != null
+  );
+}
+
+// Three 2.5rem rows with the 8px gap between them.
+const THREE_ROW_GROUP_HEIGHT: number = 3 * 40 + 2 * 8;
+
+function sidebarTriggerIn(canvasElement: HTMLElement): HTMLElement {
+  const trigger: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
+    "#dashboard-layout-main-content-header button",
+  );
+  expect(trigger).not.toBeNull();
+  return trigger as HTMLElement;
+}
+
+export const CollapsibleGroups: Story = {
+  args: {
+    sidebarItems: collapsibleGroupsSidebarItems,
+    topBarTitle: "Members",
+    activeHref: "/many-links/members",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement }): Promise<void> => {
+    collapsibleGroupChangeSpy.mockClear();
+    const desktop: boolean = window.matchMedia("(min-width: 768px)").matches;
+
+    // The collapsed desktop sidebar has no headings, so nothing could reopen a
+    // folded group: every group lists its links, even one that starts
+    // collapsed.
+    if (desktop) {
+      expect(findGroupToggle("Integrations")).toBeNull();
+      expect(findGroupFold("Integrations")).toHaveAttribute(
+        "data-state",
+        "unfolded",
+      );
+      expect(groupFoldHeight("Integrations")).toBe(THREE_ROW_GROUP_HEIGHT);
+      expect(isGroupInert("Integrations")).toBe(false);
+    }
+
+    await userEvent.click(sidebarTriggerIn(canvasElement));
+    await waitFor(
+      (): void => {
+        expect(findGroupToggle("Integrations")).not.toBeNull();
+      },
+      { timeout: 3000 },
+    );
+
+    // `defaultCollapsed` folds the group as soon as it has a heading, and its
+    // links leave the tab order with it.
+    expect(findGroupToggle("Integrations")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    await waitFor(
+      (): void => {
+        expect(groupFoldHeight("Integrations")).toBe(0);
+      },
+      { timeout: 3000 },
+    );
+    expect(isGroupInert("Integrations")).toBe(true);
+
+    // ...but not when the group holds the page being viewed.
+    expect(findGroupToggle("Team")).toHaveAttribute("aria-expanded", "true");
+    expect(groupFoldHeight("Team")).toBe(THREE_ROW_GROUP_HEIGHT);
+
+    // An ordinary group keeps its plain heading.
+    expect(findGroupToggle("Support")).toBeNull();
+
+    // At rest, an open group does not clip its rows, so an active row's glow
+    // is not cropped at the edge of the group.
+    expect(getComputedStyle(findGroupFold("Team")).overflow).toBe("visible");
+
+    // Fold a group from its heading.
+    await userEvent.click(findGroupToggle("Analytics") as HTMLButtonElement);
+    expect(findGroupToggle("Analytics")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(collapsibleGroupChangeSpy).toHaveBeenLastCalledWith(true);
+    await waitFor(
+      (): void => {
+        expect(groupFoldHeight("Analytics")).toBe(0);
+      },
+      { timeout: 3000 },
+    );
+    expect(isGroupInert("Analytics")).toBe(true);
+
+    // And open one.
+    await userEvent.click(findGroupToggle("Integrations") as HTMLButtonElement);
+    expect(findGroupToggle("Integrations")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await waitFor(
+      (): void => {
+        expect(groupFoldHeight("Integrations")).toBe(THREE_ROW_GROUP_HEIGHT);
+        expect(getComputedStyle(findGroupFold("Integrations")).overflow).toBe(
+          "visible",
+        );
+      },
+      { timeout: 3000 },
+    );
+    expect(isGroupInert("Integrations")).toBe(false);
+
+    // Close the sidebar. On desktop it drops back to the icon column, which
+    // lists the folded group's links again; on mobile the Sheet unmounts
+    // altogether (and, being modal, is closed from the keyboard here: the
+    // page behind it does not take clicks while it is open).
+    if (desktop) {
+      await userEvent.click(sidebarTriggerIn(canvasElement));
+      await waitFor(
+        (): void => {
+          expect(findGroupToggle("Analytics")).toBeNull();
+          expect(groupFoldHeight("Analytics")).toBe(THREE_ROW_GROUP_HEIGHT);
+        },
+        { timeout: 3000 },
+      );
+      expect(isGroupInert("Analytics")).toBe(false);
+    } else {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(
+        (): void => {
+          expect(findGroupToggle("Analytics")).toBeNull();
+        },
+        { timeout: 3000 },
+      );
+    }
+
+    // Reopen it: each group is as the viewer left it.
+    await userEvent.click(sidebarTriggerIn(canvasElement));
+    await waitFor(
+      (): void => {
+        expect(findGroupToggle("Analytics")).toHaveAttribute(
+          "aria-expanded",
+          "false",
+        );
+        expect(groupFoldHeight("Analytics")).toBe(0);
+        expect(findGroupToggle("Integrations")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+      },
+      { timeout: 3000 },
+    );
+  },
+};
+
+// The same, in the mobile Sheet. The Sheet unmounts its content each time it
+// closes, so this is the story that shows a folded group surviving that.
+export const CollapsibleGroupsOnMobile: Story = {
+  ...CollapsibleGroups,
+  tags: ["!autodocs"],
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  // Spelled out rather than left to the spread: the test runner finds a
+  // story's `play` by reading the object literal, and runs only a smoke test
+  // for a story it cannot see one on.
+  play: CollapsibleGroups.play,
+};
+
+// --- Controlled collapsible groups ---------------------------------------
+//
+// Pass `collapsed` and `onCollapsedChange` to own a group's state: to persist
+// it (in localStorage, a cookie, a user preference), or to drive it from
+// elsewhere on the page, like the buttons in this story. The heading still
+// toggles the group; it does so by calling `onCollapsedChange`, and the group
+// shows whatever `collapsed` comes back.
+
+const controlledCollapsibleGroups = [
+  manyLinksGroup("Analytics", [
+    manyLinksItem("Reports", BarChart3),
+    manyLinksItem("Trends", LineChart),
+    manyLinksItem("Segments", PieChart),
+  ]),
+  manyLinksGroup("Team", [
+    manyLinksItem("Members", Users),
+    manyLinksItem("Roles", Shield),
+    manyLinksItem("API Keys", Key),
+  ]),
+] satisfies DashboardSidebarItemGroupDefinition[];
+
+function ControlledCollapsibleGroupsRender(
+  args: Partial<DashboardLayoutProps>,
+): ReactElement {
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Record<string, boolean>
+  >({ Analytics: false, Team: true });
+
+  const setAll = (collapsed: boolean): void => {
+    setCollapsedGroups(
+      Object.fromEntries(
+        controlledCollapsibleGroups.map(
+          (group: DashboardSidebarItemGroupDefinition): [string, boolean] => [
+            group.title,
+            collapsed,
+          ],
+        ),
+      ),
+    );
+  };
+
+  const sidebarItems: DashboardSidebarItemsAndGroupsDefinitions =
+    controlledCollapsibleGroups.map(
+      (
+        group: DashboardSidebarItemGroupDefinition,
+      ): DashboardSidebarItemGroupDefinition => ({
+        ...group,
+        collapsible: true,
+        collapsed: collapsedGroups[group.title] ?? false,
+        onCollapsedChange: (collapsed: boolean): void => {
+          setCollapsedGroups(
+            (previous: Record<string, boolean>): Record<string, boolean> => ({
+              ...previous,
+              [group.title]: collapsed,
+            }),
+          );
+        },
+      }),
+    );
+
+  return (
+    <DashboardLayout
+      {...(args as DashboardLayoutProps)}
+      sidebarItems={sidebarItems}
+    >
+      <PageColumnContainer>
+        <div className="flex flex-col gap-4 p-4 items-start">
+          <p className="text-sm text-muted-foreground max-w-prose">
+            The groups&rsquo; collapsed state lives in this page&rsquo;s React
+            state. Expand the sidebar, then fold groups from their headings or
+            from these buttons.
+          </p>
+          <div className="flex flex-row gap-2">
+            <Button variant="secondary" onClick={(): void => setAll(true)}>
+              Collapse all
+            </Button>
+            <Button variant="secondary" onClick={(): void => setAll(false)}>
+              Expand all
+            </Button>
+          </div>
+          <pre
+            data-testid="collapsed-groups"
+            className="text-xs bg-muted rounded-md p-2"
+          >
+            {JSON.stringify(collapsedGroups)}
+          </pre>
+        </div>
+      </PageColumnContainer>
+    </DashboardLayout>
+  );
+}
+
+export const ControlledCollapsibleGroups: Story = {
+  args: {
+    sidebarItems: controlledCollapsibleGroups,
+    topBarTitle: "Controlled collapsible groups",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <ControlledCollapsibleGroupsRender {...args} />
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    // The buttons are page content, which the modal mobile Sheet blocks while
+    // it is open; `CollapsibleGroups` covers the heading on mobile.
+    if (!window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+    const canvas = within(canvasElement);
+    const stateReadout = (): HTMLElement => canvas.getByTestId("collapsed-groups");
+
+    await userEvent.click(sidebarTriggerIn(canvasElement));
+    await waitFor(
+      (): void => {
+        expect(findGroupToggle("Team")).toHaveAttribute(
+          "aria-expanded",
+          "false",
+        );
+        expect(findGroupToggle("Analytics")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+      },
+      { timeout: 3000 },
+    );
+
+    // The heading reports the toggle, and the owner's state decides.
+    await userEvent.click(findGroupToggle("Analytics") as HTMLButtonElement);
+    await waitFor((): void => {
+      expect(stateReadout()).toHaveTextContent('"Analytics":true');
+      expect(findGroupToggle("Analytics")).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
+    });
+
+    // State driven from outside the sidebar reaches the groups.
+    await userEvent.click(canvas.getByRole("button", { name: "Expand all" }));
+    await waitFor(
+      (): void => {
+        expect(findGroupToggle("Analytics")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+        expect(findGroupToggle("Team")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+        expect(groupFoldHeight("Team")).toBe(THREE_ROW_GROUP_HEIGHT);
+      },
+      { timeout: 3000 },
+    );
+  },
+};
+
 // --- Full-screen Stepper page content ----------------------------------
 
 interface FullScreenStepperState extends BaseStepperState {
