@@ -2702,7 +2702,10 @@ function readFirstCommitMenus(
   const probe: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
     `[${FIRST_COMMIT_MENUS_ATTRIBUTE}]`,
   );
-  expect(probe).not.toBeNull();
+  expect(
+    probe,
+    `FirstCommitProbe never wrote its ${FIRST_COMMIT_MENUS_ATTRIBUTE} record: the story did not render through renderWithFirstCommitProbe, or its layout effect did not run`,
+  ).not.toBeNull();
   return JSON.parse(
     (probe as HTMLElement).getAttribute(FIRST_COMMIT_MENUS_ATTRIBUTE) as string,
   ) as FirstCommitMenuRecord[];
@@ -2714,6 +2717,52 @@ function renderWithFirstCommitProbe(args: DashboardLayoutProps): ReactElement {
       <DashboardLayout {...args} />
     </FirstCommitProbe>
   );
+}
+
+/** The canvas width a first-paint story is about. */
+interface FirstPaintViewport {
+  /** A media query that matches only that side of the `md` breakpoint. */
+  query: string;
+  /** How a failure message describes it. */
+  description: string;
+}
+
+const PHONE_VIEWPORT: FirstPaintViewport = {
+  query: "(max-width: 767px)",
+  description: "phone-sized (below the 768px md breakpoint)",
+};
+
+const DESKTOP_VIEWPORT: FirstPaintViewport = {
+  query: "(min-width: 768px)",
+  description: "desktop-sized (at or above the 768px md breakpoint)",
+};
+
+/**
+ * Wait for the canvas to reach `viewport`, then render the story.
+ *
+ * Storybook only resizes the canvas to a story's pinned viewport after it has
+ * started rendering that story. Clicking from a wide story to a phone-sized
+ * one in the Storybook UI therefore rendered — and committed — the layout at
+ * the old width and shrank the frame afterwards, so the first-commit record
+ * described a desktop and the story failed for a reason that had nothing to
+ * do with the layout. Rendering from `play()` with `mount` holds the first
+ * commit back until the canvas is the width the story is about. The test
+ * runner sizes its page before the story loads, so there this mounts at once.
+ */
+async function mountAtViewport(
+  mount: () => Promise<unknown>,
+  viewport: FirstPaintViewport,
+): Promise<void> {
+  await waitFor(
+    (): void => {
+      expect(
+        window.matchMedia(viewport.query).matches,
+        `This story checks first paint on a ${viewport.description} canvas, but the canvas is ${window.innerWidth}px wide. Its viewport global did not take effect: the story must pin it, and Storybook's viewport tool or the test runner must apply it.`,
+      ).toBe(true);
+    },
+    { timeout: 3000 },
+  );
+  await mount();
 }
 
 // Regression test: on a phone, the desktop sidebar must not show for even a
@@ -2731,22 +2780,33 @@ export const MobileFirstPaintHidesDesktopSidebar: Story = {
     topBarTitle: "First paint on a phone",
   } satisfies Partial<DashboardLayoutProps>,
   render: renderWithFirstCommitProbe,
-  play: async ({ canvasElement }): Promise<void> => {
+  play: async ({ canvasElement, mount }): Promise<void> => {
     // Only a narrow viewport puts the media query under test into effect, so
     // a wide one is a broken test setup rather than nothing to check.
-    expect(window.matchMedia("(max-width: 767px)").matches).toBe(true);
+    await mountAtViewport(mount, PHONE_VIEWPORT);
 
     // Whatever React committed first, none of it may have been a visible
     // desktop sidebar.
-    for (const menu of readFirstCommitMenus(canvasElement)) {
-      expect(menu.display).toBe("none");
-      expect(menu.width).toBe(0);
-    }
+    readFirstCommitMenus(canvasElement).forEach(
+      (menu: FirstCommitMenuRecord, index: number): void => {
+        expect(
+          menu.display,
+          `Desktop sidebar <menu> #${index + 1} was displayed ("display: ${menu.display}") at the layout's first commit on a phone-sized canvas. It must be hidden below md ("max-md:hidden") until useIsMobile swaps in the mobile Sheet.`,
+        ).toBe("none");
+        expect(
+          menu.width,
+          `Desktop sidebar <menu> #${index + 1} took up ${menu.width}px at the layout's first commit on a phone-sized canvas. It must take up no space below md.`,
+        ).toBe(0);
+      },
+    );
 
     // Once `useIsMobile` has read the viewport, the desktop sidebar is gone
     // altogether: the mobile Sheet, closed, renders nothing.
     await waitFor((): void => {
-      expect(canvasElement.querySelector("menu")).toBeNull();
+      expect(
+        canvasElement.querySelector("menu"),
+        "The desktop sidebar <menu> is still mounted on a phone-sized canvas. Once useIsMobile reports a phone, the layout should render the closed mobile Sheet instead, which mounts nothing.",
+      ).toBeNull();
     });
   },
 };
@@ -2761,21 +2821,32 @@ export const DesktopFirstPaintShowsSidebar: Story = {
     topBarTitle: "First paint on a desktop",
   } satisfies Partial<DashboardLayoutProps>,
   render: renderWithFirstCommitProbe,
-  play: async ({ canvasElement }): Promise<void> => {
+  play: async ({ canvasElement, mount }): Promise<void> => {
     // The runner's default viewport is wide, and this story runs right after
     // one that pinned a phone-sized viewport for itself, so this also checks
     // that the runner has reset the page in between. A narrow canvas is a
     // broken test setup rather than nothing to check.
-    expect(window.matchMedia("(min-width: 768px)").matches).toBe(true);
+    await mountAtViewport(mount, DESKTOP_VIEWPORT);
 
     const menus: FirstCommitMenuRecord[] = readFirstCommitMenus(canvasElement);
-    expect(menus).toHaveLength(1);
-    expect(menus[0]?.display).not.toBe("none");
+    expect(
+      menus,
+      `Expected exactly one desktop sidebar <menu> at the layout's first commit on a desktop-sized canvas, found ${menus.length}.`,
+    ).toHaveLength(1);
+    expect(
+      menus[0]?.display,
+      "The desktop sidebar <menu> was hidden at the layout's first commit on a desktop-sized canvas. It must be on screen from the first paint, not only once an effect confirms it belongs there.",
+    ).not.toBe("none");
 
     // Collapsed to the icon-only width, as on every later render.
     const remInPx: number = parseFloat(
       getComputedStyle(document.documentElement).fontSize,
     );
-    expect(Math.round(menus[0]?.width ?? 0)).toBe(Math.round(4 * remInPx));
+    const firstCommitWidth: number = Math.round(menus[0]?.width ?? 0);
+    const collapsedWidth: number = Math.round(4 * remInPx);
+    expect(
+      firstCommitWidth,
+      `The desktop sidebar <menu> was ${firstCommitWidth}px wide at the layout's first commit. It should start collapsed to the 4rem (${collapsedWidth}px) icon-only width.`,
+    ).toBe(collapsedWidth);
   },
 };
