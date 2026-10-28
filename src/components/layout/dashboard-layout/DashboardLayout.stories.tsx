@@ -954,6 +954,395 @@ export const SidebarItemGroupFirst: Story = {
   },
 };
 
+// --- Collapsible groups --------------------------------------------------
+//
+// A group with `collapsible: true` gets a heading button that folds its links
+// away and brings them back, with a chevron that points down while the group
+// is open and right while it is collapsed. `defaultCollapsed` starts a group
+// folded, unless it holds the page being viewed: here "Team" asks to start
+// collapsed but holds the active "Members" page, so it opens anyway, while
+// "Integrations" starts folded. "Support" is an ordinary group for
+// comparison.
+//
+// Only the expanded menu folds. The collapsed desktop sidebar has no headings
+// to reopen a group with, so it lists every link in every group. Folded
+// groups stay folded while the sidebar is closed and reopened, the mobile
+// Sheet included.
+
+const collapsibleGroupChangeSpy = fn();
+
+const collapsibleGroupsSidebarItems = [
+  manyLinksItem("Overview", LayoutDashboard),
+  manyLinksItem("Inbox", Inbox),
+  {
+    ...manyLinksGroup("Analytics", [
+      manyLinksItem("Reports", BarChart3),
+      manyLinksItem("Trends", LineChart),
+      manyLinksItem("Segments", PieChart),
+    ]),
+    collapsible: true,
+    onCollapsedChange: collapsibleGroupChangeSpy,
+  },
+  {
+    ...manyLinksGroup("Team", [
+      manyLinksItem("Members", Users),
+      manyLinksItem("Roles", Shield),
+      manyLinksItem("API Keys", Key),
+    ]),
+    collapsible: true,
+    defaultCollapsed: true,
+  },
+  {
+    ...manyLinksGroup("Integrations", [
+      manyLinksItem("Email", Mail),
+      manyLinksItem("Webhooks", Webhook),
+      manyLinksItem("Plugins", Plug),
+    ]),
+    collapsible: true,
+    defaultCollapsed: true,
+  },
+  manyLinksGroup("Support", [
+    manyLinksItem("Help Center", LifeBuoy),
+    manyLinksItem("Documentation", BookOpen),
+  ]),
+] satisfies DashboardSidebarItemsAndGroupsDefinitions;
+
+/** A collapsible group's heading button, or `null` while it is not shown. */
+function findGroupToggle(title: string): HTMLButtonElement | null {
+  return document.querySelector<HTMLButtonElement>(
+    `button[aria-controls="sidebar-group-items-[${title}]"]`,
+  );
+}
+
+/** The element that folds a collapsible group's list away. */
+function findGroupFold(title: string): HTMLElement {
+  const fold: HTMLElement | null | undefined = document
+    .getElementById(`sidebar-group-items-[${title}]`)
+    ?.closest<HTMLElement>('[data-slot="dashboard-sidebar-group-items-fold"]');
+  expect(fold).toBeTruthy();
+  return fold as HTMLElement;
+}
+
+function groupFoldHeight(title: string): number {
+  return Math.round(findGroupFold(title).getBoundingClientRect().height);
+}
+
+/** Whether a group's links are out of the tab order. */
+function isGroupInert(title: string): boolean {
+  return (
+    document
+      .getElementById(`sidebar-group-items-[${title}]`)
+      ?.closest("[inert]") != null
+  );
+}
+
+// Three 2.5rem rows with the 8px gap between them.
+const THREE_ROW_GROUP_HEIGHT: number = 3 * 40 + 2 * 8;
+
+function sidebarTriggerIn(canvasElement: HTMLElement): HTMLElement {
+  const trigger: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
+    "#dashboard-layout-main-content-header button",
+  );
+  expect(trigger).not.toBeNull();
+  return trigger as HTMLElement;
+}
+
+export const CollapsibleGroups: Story = {
+  args: {
+    sidebarItems: collapsibleGroupsSidebarItems,
+    topBarTitle: "Members",
+    activeHref: "/many-links/members",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement }): Promise<void> => {
+    collapsibleGroupChangeSpy.mockClear();
+    const desktop: boolean = window.matchMedia("(min-width: 768px)").matches;
+
+    // The collapsed desktop sidebar has no headings, so nothing could reopen a
+    // folded group: every group lists its links, even one that starts
+    // collapsed.
+    if (desktop) {
+      expect(findGroupToggle("Integrations")).toBeNull();
+      expect(findGroupFold("Integrations")).toHaveAttribute(
+        "data-state",
+        "unfolded",
+      );
+      expect(groupFoldHeight("Integrations")).toBe(THREE_ROW_GROUP_HEIGHT);
+      expect(isGroupInert("Integrations")).toBe(false);
+    }
+
+    await userEvent.click(sidebarTriggerIn(canvasElement));
+    await waitFor(
+      (): void => {
+        expect(findGroupToggle("Integrations")).not.toBeNull();
+      },
+      { timeout: 3000 },
+    );
+
+    // `defaultCollapsed` folds the group as soon as it has a heading, and its
+    // links leave the tab order with it.
+    expect(findGroupToggle("Integrations")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    await waitFor(
+      (): void => {
+        expect(groupFoldHeight("Integrations")).toBe(0);
+      },
+      { timeout: 3000 },
+    );
+    expect(isGroupInert("Integrations")).toBe(true);
+
+    // ...but not when the group holds the page being viewed.
+    expect(findGroupToggle("Team")).toHaveAttribute("aria-expanded", "true");
+    expect(groupFoldHeight("Team")).toBe(THREE_ROW_GROUP_HEIGHT);
+
+    // An ordinary group keeps its plain heading.
+    expect(findGroupToggle("Support")).toBeNull();
+
+    // At rest, an open group does not clip its rows, so an active row's glow
+    // is not cropped at the edge of the group.
+    expect(getComputedStyle(findGroupFold("Team")).overflow).toBe("visible");
+
+    // Fold a group from its heading.
+    await userEvent.click(findGroupToggle("Analytics") as HTMLButtonElement);
+    expect(findGroupToggle("Analytics")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(collapsibleGroupChangeSpy).toHaveBeenLastCalledWith(true);
+    await waitFor(
+      (): void => {
+        expect(groupFoldHeight("Analytics")).toBe(0);
+      },
+      { timeout: 3000 },
+    );
+    expect(isGroupInert("Analytics")).toBe(true);
+
+    // And open one.
+    await userEvent.click(findGroupToggle("Integrations") as HTMLButtonElement);
+    expect(findGroupToggle("Integrations")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await waitFor(
+      (): void => {
+        expect(groupFoldHeight("Integrations")).toBe(THREE_ROW_GROUP_HEIGHT);
+        expect(getComputedStyle(findGroupFold("Integrations")).overflow).toBe(
+          "visible",
+        );
+      },
+      { timeout: 3000 },
+    );
+    expect(isGroupInert("Integrations")).toBe(false);
+
+    // Close the sidebar. On desktop it drops back to the icon column, which
+    // lists the folded group's links again; on mobile the Sheet unmounts
+    // altogether (and, being modal, is closed from the keyboard here: the
+    // page behind it does not take clicks while it is open).
+    if (desktop) {
+      await userEvent.click(sidebarTriggerIn(canvasElement));
+      await waitFor(
+        (): void => {
+          expect(findGroupToggle("Analytics")).toBeNull();
+          expect(groupFoldHeight("Analytics")).toBe(THREE_ROW_GROUP_HEIGHT);
+        },
+        { timeout: 3000 },
+      );
+      expect(isGroupInert("Analytics")).toBe(false);
+    } else {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(
+        (): void => {
+          expect(findGroupToggle("Analytics")).toBeNull();
+        },
+        { timeout: 3000 },
+      );
+    }
+
+    // Reopen it: each group is as the viewer left it.
+    await userEvent.click(sidebarTriggerIn(canvasElement));
+    await waitFor(
+      (): void => {
+        expect(findGroupToggle("Analytics")).toHaveAttribute(
+          "aria-expanded",
+          "false",
+        );
+        expect(groupFoldHeight("Analytics")).toBe(0);
+        expect(findGroupToggle("Integrations")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+      },
+      { timeout: 3000 },
+    );
+  },
+};
+
+// The same, in the mobile Sheet. The Sheet unmounts its content each time it
+// closes, so this is the story that shows a folded group surviving that.
+export const CollapsibleGroupsOnMobile: Story = {
+  ...CollapsibleGroups,
+  tags: ["!autodocs"],
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  // Spelled out rather than left to the spread: the test runner finds a
+  // story's `play` by reading the object literal, and runs only a smoke test
+  // for a story it cannot see one on.
+  play: CollapsibleGroups.play,
+};
+
+// --- Controlled collapsible groups ---------------------------------------
+//
+// Pass `collapsed` and `onCollapsedChange` to own a group's state: to persist
+// it (in localStorage, a cookie, a user preference), or to drive it from
+// elsewhere on the page, like the buttons in this story. The heading still
+// toggles the group; it does so by calling `onCollapsedChange`, and the group
+// shows whatever `collapsed` comes back.
+
+const controlledCollapsibleGroups = [
+  manyLinksGroup("Analytics", [
+    manyLinksItem("Reports", BarChart3),
+    manyLinksItem("Trends", LineChart),
+    manyLinksItem("Segments", PieChart),
+  ]),
+  manyLinksGroup("Team", [
+    manyLinksItem("Members", Users),
+    manyLinksItem("Roles", Shield),
+    manyLinksItem("API Keys", Key),
+  ]),
+] satisfies DashboardSidebarItemGroupDefinition[];
+
+function ControlledCollapsibleGroupsRender(
+  args: Partial<DashboardLayoutProps>,
+): ReactElement {
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Record<string, boolean>
+  >({ Analytics: false, Team: true });
+
+  const setAll = (collapsed: boolean): void => {
+    setCollapsedGroups(
+      Object.fromEntries(
+        controlledCollapsibleGroups.map(
+          (group: DashboardSidebarItemGroupDefinition): [string, boolean] => [
+            group.title,
+            collapsed,
+          ],
+        ),
+      ),
+    );
+  };
+
+  const sidebarItems: DashboardSidebarItemsAndGroupsDefinitions =
+    controlledCollapsibleGroups.map(
+      (
+        group: DashboardSidebarItemGroupDefinition,
+      ): DashboardSidebarItemGroupDefinition => ({
+        ...group,
+        collapsible: true,
+        collapsed: collapsedGroups[group.title] ?? false,
+        onCollapsedChange: (collapsed: boolean): void => {
+          setCollapsedGroups(
+            (previous: Record<string, boolean>): Record<string, boolean> => ({
+              ...previous,
+              [group.title]: collapsed,
+            }),
+          );
+        },
+      }),
+    );
+
+  return (
+    <DashboardLayout
+      {...(args as DashboardLayoutProps)}
+      sidebarItems={sidebarItems}
+    >
+      <PageColumnContainer>
+        <div className="flex flex-col gap-4 p-4 items-start">
+          <p className="text-sm text-muted-foreground max-w-prose">
+            The groups&rsquo; collapsed state lives in this page&rsquo;s React
+            state. Expand the sidebar, then fold groups from their headings or
+            from these buttons.
+          </p>
+          <div className="flex flex-row gap-2">
+            <Button variant="secondary" onClick={(): void => setAll(true)}>
+              Collapse all
+            </Button>
+            <Button variant="secondary" onClick={(): void => setAll(false)}>
+              Expand all
+            </Button>
+          </div>
+          <pre
+            data-testid="collapsed-groups"
+            className="text-xs bg-muted rounded-md p-2"
+          >
+            {JSON.stringify(collapsedGroups)}
+          </pre>
+        </div>
+      </PageColumnContainer>
+    </DashboardLayout>
+  );
+}
+
+export const ControlledCollapsibleGroups: Story = {
+  args: {
+    sidebarItems: controlledCollapsibleGroups,
+    topBarTitle: "Controlled collapsible groups",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => (
+    <ControlledCollapsibleGroupsRender {...args} />
+  ),
+  play: async ({ canvasElement }): Promise<void> => {
+    // The buttons are page content, which the modal mobile Sheet blocks while
+    // it is open; `CollapsibleGroups` covers the heading on mobile.
+    if (!window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+    const canvas = within(canvasElement);
+    const stateReadout = (): HTMLElement => canvas.getByTestId("collapsed-groups");
+
+    await userEvent.click(sidebarTriggerIn(canvasElement));
+    await waitFor(
+      (): void => {
+        expect(findGroupToggle("Team")).toHaveAttribute(
+          "aria-expanded",
+          "false",
+        );
+        expect(findGroupToggle("Analytics")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+      },
+      { timeout: 3000 },
+    );
+
+    // The heading reports the toggle, and the owner's state decides.
+    await userEvent.click(findGroupToggle("Analytics") as HTMLButtonElement);
+    await waitFor((): void => {
+      expect(stateReadout()).toHaveTextContent('"Analytics":true');
+      expect(findGroupToggle("Analytics")).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
+    });
+
+    // State driven from outside the sidebar reaches the groups.
+    await userEvent.click(canvas.getByRole("button", { name: "Expand all" }));
+    await waitFor(
+      (): void => {
+        expect(findGroupToggle("Analytics")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+        expect(findGroupToggle("Team")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+        expect(groupFoldHeight("Team")).toBe(THREE_ROW_GROUP_HEIGHT);
+      },
+      { timeout: 3000 },
+    );
+  },
+};
+
 // --- Full-screen Stepper page content ----------------------------------
 
 interface FullScreenStepperState extends BaseStepperState {
@@ -2313,7 +2702,10 @@ function readFirstCommitMenus(
   const probe: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
     `[${FIRST_COMMIT_MENUS_ATTRIBUTE}]`,
   );
-  expect(probe).not.toBeNull();
+  expect(
+    probe,
+    `FirstCommitProbe never wrote its ${FIRST_COMMIT_MENUS_ATTRIBUTE} record: the story did not render through renderWithFirstCommitProbe, or its layout effect did not run`,
+  ).not.toBeNull();
   return JSON.parse(
     (probe as HTMLElement).getAttribute(FIRST_COMMIT_MENUS_ATTRIBUTE) as string,
   ) as FirstCommitMenuRecord[];
@@ -2325,6 +2717,52 @@ function renderWithFirstCommitProbe(args: DashboardLayoutProps): ReactElement {
       <DashboardLayout {...args} />
     </FirstCommitProbe>
   );
+}
+
+/** The canvas width a first-paint story is about. */
+interface FirstPaintViewport {
+  /** A media query that matches only that side of the `md` breakpoint. */
+  query: string;
+  /** How a failure message describes it. */
+  description: string;
+}
+
+const PHONE_VIEWPORT: FirstPaintViewport = {
+  query: "(max-width: 767px)",
+  description: "phone-sized (below the 768px md breakpoint)",
+};
+
+const DESKTOP_VIEWPORT: FirstPaintViewport = {
+  query: "(min-width: 768px)",
+  description: "desktop-sized (at or above the 768px md breakpoint)",
+};
+
+/**
+ * Wait for the canvas to reach `viewport`, then render the story.
+ *
+ * Storybook only resizes the canvas to a story's pinned viewport after it has
+ * started rendering that story. Clicking from a wide story to a phone-sized
+ * one in the Storybook UI therefore rendered — and committed — the layout at
+ * the old width and shrank the frame afterwards, so the first-commit record
+ * described a desktop and the story failed for a reason that had nothing to
+ * do with the layout. Rendering from `play()` with `mount` holds the first
+ * commit back until the canvas is the width the story is about. The test
+ * runner sizes its page before the story loads, so there this mounts at once.
+ */
+async function mountAtViewport(
+  mount: () => Promise<unknown>,
+  viewport: FirstPaintViewport,
+): Promise<void> {
+  await waitFor(
+    (): void => {
+      expect(
+        window.matchMedia(viewport.query).matches,
+        `This story checks first paint on a ${viewport.description} canvas, but the canvas is ${window.innerWidth}px wide. Its viewport global did not take effect: the story must pin it, and Storybook's viewport tool or the test runner must apply it.`,
+      ).toBe(true);
+    },
+    { timeout: 3000 },
+  );
+  await mount();
 }
 
 // Regression test: on a phone, the desktop sidebar must not show for even a
@@ -2342,22 +2780,33 @@ export const MobileFirstPaintHidesDesktopSidebar: Story = {
     topBarTitle: "First paint on a phone",
   } satisfies Partial<DashboardLayoutProps>,
   render: renderWithFirstCommitProbe,
-  play: async ({ canvasElement }): Promise<void> => {
+  play: async ({ canvasElement, mount }): Promise<void> => {
     // Only a narrow viewport puts the media query under test into effect, so
     // a wide one is a broken test setup rather than nothing to check.
-    expect(window.matchMedia("(max-width: 767px)").matches).toBe(true);
+    await mountAtViewport(mount, PHONE_VIEWPORT);
 
     // Whatever React committed first, none of it may have been a visible
     // desktop sidebar.
-    for (const menu of readFirstCommitMenus(canvasElement)) {
-      expect(menu.display).toBe("none");
-      expect(menu.width).toBe(0);
-    }
+    readFirstCommitMenus(canvasElement).forEach(
+      (menu: FirstCommitMenuRecord, index: number): void => {
+        expect(
+          menu.display,
+          `Desktop sidebar <menu> #${index + 1} was displayed ("display: ${menu.display}") at the layout's first commit on a phone-sized canvas. It must be hidden below md ("max-md:hidden") until useIsMobile swaps in the mobile Sheet.`,
+        ).toBe("none");
+        expect(
+          menu.width,
+          `Desktop sidebar <menu> #${index + 1} took up ${menu.width}px at the layout's first commit on a phone-sized canvas. It must take up no space below md.`,
+        ).toBe(0);
+      },
+    );
 
     // Once `useIsMobile` has read the viewport, the desktop sidebar is gone
     // altogether: the mobile Sheet, closed, renders nothing.
     await waitFor((): void => {
-      expect(canvasElement.querySelector("menu")).toBeNull();
+      expect(
+        canvasElement.querySelector("menu"),
+        "The desktop sidebar <menu> is still mounted on a phone-sized canvas. Once useIsMobile reports a phone, the layout should render the closed mobile Sheet instead, which mounts nothing.",
+      ).toBeNull();
     });
   },
 };
@@ -2372,21 +2821,32 @@ export const DesktopFirstPaintShowsSidebar: Story = {
     topBarTitle: "First paint on a desktop",
   } satisfies Partial<DashboardLayoutProps>,
   render: renderWithFirstCommitProbe,
-  play: async ({ canvasElement }): Promise<void> => {
+  play: async ({ canvasElement, mount }): Promise<void> => {
     // The runner's default viewport is wide, and this story runs right after
     // one that pinned a phone-sized viewport for itself, so this also checks
     // that the runner has reset the page in between. A narrow canvas is a
     // broken test setup rather than nothing to check.
-    expect(window.matchMedia("(min-width: 768px)").matches).toBe(true);
+    await mountAtViewport(mount, DESKTOP_VIEWPORT);
 
     const menus: FirstCommitMenuRecord[] = readFirstCommitMenus(canvasElement);
-    expect(menus).toHaveLength(1);
-    expect(menus[0]?.display).not.toBe("none");
+    expect(
+      menus,
+      `Expected exactly one desktop sidebar <menu> at the layout's first commit on a desktop-sized canvas, found ${menus.length}.`,
+    ).toHaveLength(1);
+    expect(
+      menus[0]?.display,
+      "The desktop sidebar <menu> was hidden at the layout's first commit on a desktop-sized canvas. It must be on screen from the first paint, not only once an effect confirms it belongs there.",
+    ).not.toBe("none");
 
     // Collapsed to the icon-only width, as on every later render.
     const remInPx: number = parseFloat(
       getComputedStyle(document.documentElement).fontSize,
     );
-    expect(Math.round(menus[0]?.width ?? 0)).toBe(Math.round(4 * remInPx));
+    const firstCommitWidth: number = Math.round(menus[0]?.width ?? 0);
+    const collapsedWidth: number = Math.round(4 * remInPx);
+    expect(
+      firstCommitWidth,
+      `The desktop sidebar <menu> was ${firstCommitWidth}px wide at the layout's first commit. It should start collapsed to the 4rem (${collapsedWidth}px) icon-only width.`,
+    ).toBe(collapsedWidth);
   },
 };

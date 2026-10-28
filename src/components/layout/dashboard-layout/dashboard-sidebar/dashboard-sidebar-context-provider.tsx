@@ -6,6 +6,7 @@ import {
   type DashboardSidebarItemsAndGroupsDefinitions,
 } from "./dashboard-sidebar-items-and-groups-context";
 import DashboardSidebarOpenStateProvider from "./dashboard-sidebar-open-state-provider";
+import { DashboardSidebarToggledGroupsProvider } from "./dashboard-sidebar-item-group-collapsed-context";
 import {
   DashboardLayoutSidebarSizeContext,
   DEFAULT_DASHBOARD_SIDEBAR_SIZE,
@@ -49,9 +50,11 @@ export function DashboardSidebarContextProvider({
       onCloseSidebar={props.onCloseSidebar}
     >
       <DashboardSidebarItemsAndGroupsContext.Provider value={sidebarItems}>
-        <DashboardLayoutSidebarSizeContext.Provider value={sizing}>
-          {children}
-        </DashboardLayoutSidebarSizeContext.Provider>
+        <DashboardSidebarToggledGroupsProvider>
+          <DashboardLayoutSidebarSizeContext.Provider value={sizing}>
+            {children}
+          </DashboardLayoutSidebarSizeContext.Provider>
+        </DashboardSidebarToggledGroupsProvider>
       </DashboardSidebarItemsAndGroupsContext.Provider>
     </DashboardSidebarOpenStateProvider>
   );

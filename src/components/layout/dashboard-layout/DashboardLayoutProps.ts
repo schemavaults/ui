@@ -15,6 +15,15 @@ export interface DashboardLayoutProps extends PropsWithChildren {
   topBarTitle: string | CustomizableDashboardLayoutComponent;
   topBarButtons?: CustomizableDashboardLayoutComponent;
   sidebarFooterContent?: CustomizableDashboardLayoutComponent;
+  /**
+   * The sidebar menu: links, and groups of links under a heading, in the
+   * order they should appear.
+   *
+   * A group with `collapsible: true` can be folded away from its heading.
+   * `defaultCollapsed` starts it folded (unless it holds the active item),
+   * and `collapsed` with `onCollapsedChange` hands its state to the consumer,
+   * e.g. to persist it.
+   */
   sidebarItems: DashboardSidebarItemsAndGroupsDefinitions;
   sizing?: DashboardLayoutSidebarSizing;
   /**
