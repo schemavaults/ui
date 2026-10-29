@@ -2850,3 +2850,74 @@ export const DesktopFirstPaintShowsSidebar: Story = {
     ).toBe(collapsedWidth);
   },
 };
+
+// ---------------------------------------------------------------------------
+// The mobile sidebar fills its Sheet
+// ---------------------------------------------------------------------------
+//
+// The Sheet is pinned to the visible area, but on a phone `100vh` is not that
+// area: iOS measures it with its toolbars hidden, or shrunk to the keyboard.
+// The sidebar <menu> used to be `h-screen` inside the Sheet, so it ended above
+// or below the Sheet's bottom edge — clipping the menu links over a blank
+// strip of Sheet under the footer, or sliding the footer under the browser's
+// toolbar. A desktop browser's `100vh` always matches its visible area, so
+// this story resizes the open Sheet away from it, both ways, and checks that
+// the menu and its footer follow the Sheet rather than the viewport.
+export const MobileSidebarFillsSheet: Story = {
+  tags: ["!autodocs"],
+  globals: {
+    viewport: { value: "mobile1", isRotated: false },
+  },
+  args: {
+    sidebarItems: manyLinksSidebarItems,
+    topBarTitle: "Sidebar in a Sheet",
+  } satisfies Partial<DashboardLayoutProps>,
+  play: async ({ canvasElement }): Promise<void> => {
+    await waitFor(
+      (): void => {
+        expect(
+          window.matchMedia(PHONE_VIEWPORT.query).matches,
+          `This story checks the mobile Sheet, but the canvas is ${window.innerWidth}px wide. Its viewport global did not take effect.`,
+        ).toBe(true);
+      },
+      { timeout: 3000 },
+    );
+
+    await userEvent.click(sidebarTriggerIn(canvasElement));
+    const sheet: HTMLElement = await waitFor(
+      (): HTMLElement => {
+        const element: HTMLElement | null =
+          document.querySelector<HTMLElement>('[data-slot="sheet-content"]');
+        expect(element).not.toBeNull();
+        return element as HTMLElement;
+      },
+      { timeout: 3000 },
+    );
+    const menu: HTMLElement | null = sheet.querySelector<HTMLElement>("menu");
+    const footer: HTMLElement | null =
+      menu?.querySelector<HTMLElement>("footer") ?? null;
+    expect(menu).not.toBeNull();
+    expect(footer).not.toBeNull();
+
+    for (const scale of [0.7, 1.3]) {
+      const sheetHeight: number = Math.round(window.innerHeight * scale);
+      sheet.style.height = `${sheetHeight}px`;
+      const sheetBottom: number = Math.round(sheet.getBoundingClientRect().bottom);
+      const menuBottom: number = Math.round(
+        (menu as HTMLElement).getBoundingClientRect().bottom,
+      );
+      const footerBottom: number = Math.round(
+        (footer as HTMLElement).getBoundingClientRect().bottom,
+      );
+      expect(
+        menuBottom,
+        `With the Sheet ${sheetHeight}px tall on a ${window.innerHeight}px viewport, the sidebar <menu> ends at ${menuBottom}px instead of the Sheet's bottom edge (${sheetBottom}px). The mobile menu must fill its Sheet, not the viewport.`,
+      ).toBe(sheetBottom);
+      expect(
+        footerBottom,
+        `With the Sheet ${sheetHeight}px tall, the sidebar footer ends at ${footerBottom}px instead of the Sheet's bottom edge (${sheetBottom}px).`,
+      ).toBe(sheetBottom);
+    }
+    sheet.style.height = "";
+  },
+};
