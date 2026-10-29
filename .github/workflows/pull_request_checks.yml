@@ -106,7 +106,10 @@ jobs:
     needs:
       - Lint
       - Typecheck
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest: `playwright install --with-deps` only
+    # knows the system packages of the Ubuntu releases it supports, and
+    # ubuntu-latest moved to 26.04 before the pinned Playwright (1.60) did.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v6
