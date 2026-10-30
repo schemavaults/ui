@@ -122,7 +122,7 @@ export function DashboardSidebarItemRenderer({
         "w-full",
         sizes.sidebar_menu_item_height_classname,
         // The menu <nav> is a flex column with a definite height (it grows
-        // inside an h-screen sidebar) and its own scrollbar. Flex children
+        // inside a viewport-height sidebar) and its own scrollbar. Flex children
         // shrink by default, so once the menu overflowed, rows squashed
         // below their configured height instead of scrolling — and because
         // grouped rows sit one level deeper, inside their group's <ul>, only

@@ -65,14 +65,18 @@ export function DashboardLayoutSidebarLayout({
         // same `md` breakpoint the hook tests, and the one the main content
         // container's `max-md:*` classes already follow.
         //
-        // The mobile sidebar fills the Sheet it is rendered in rather than
-        // the viewport. The Sheet is pinned to the visible area, while
-        // `100vh` on a phone is whatever the browser measures it against —
-        // iOS reports it with its toolbars hidden, or shrunk to the
-        // keyboard — so a `h-screen` menu ended above or below the Sheet's
-        // bottom edge: the menu links were clipped with blank Sheet under
-        // the footer, or the footer slid under the browser's toolbar.
-        desktop ? "h-screen max-h-screen absolute max-md:hidden" : "h-full",
+        // Neither sidebar is `h-screen`. `100vh` on a mobile browser is
+        // whatever the browser measures it against — iOS reports it with its
+        // toolbars hidden, or shrunk to the keyboard — so a `h-screen` menu
+        // ended above or below the visible area: the menu links were clipped
+        // over blank space under the footer, or the footer slid under the
+        // browser's toolbar.
+        //
+        // The desktop sidebar is `h-dvh`, the same height as the layout
+        // container: `md` and up still includes tablets, and phones in
+        // landscape. The mobile sidebar fills the Sheet it is rendered in,
+        // which is pinned to the visible area.
+        desktop ? "h-dvh max-h-dvh absolute max-md:hidden" : "h-full",
         "transition-[width] ease-linear will-change-[width]",
         // Reduced motion: snap between the collapsed and expanded widths.
         reducedMotionClassName(reducedMotion),
