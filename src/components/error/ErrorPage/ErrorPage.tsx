@@ -45,7 +45,10 @@ export function ErrorPage(props: ErrorPageProps): ReactElement {
   return (
     <div
       className={cn(
-        "w-full grow min-h-screen",
+        // `dvh` rather than `screen` (`100vh`): on a phone `100vh` is the
+        // height with the browser's toolbars hidden, which centred the
+        // message below the middle of the visible area.
+        "w-full grow min-h-dvh",
         "flex flex-col justify-center items-center",
         "p-2 md:p-4 lg:p-8",
       )}
