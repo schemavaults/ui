@@ -110,7 +110,7 @@ component is *for*:
 | `Overlays` | Anything portalled above the page (Dialog, Popover, Tooltip, Sheet) |
 | `Feedback` | Status and messaging (Alert, Toast, EmptyState, Skeleton, Spinner) |
 | `Developer Tools` | Code/API surfaces (CodeBlock, JsonViewer, DiffViewer, SecretReveal) |
-| `AI & Chat` | AI-facing surfaces (AgentChatMessages, PromptInput) |
+| `AI & Chat` | AI-facing surfaces (AgentChatMessages, PromptInput, AgentSessions) |
 | `Media & Frames` | Images and device/browser chrome (BrowserFrame, Carousel, AspectRatio) |
 | `Layout` | Page structure and content containers (DashboardLayout, Accordion, Separator) |
 | `Motion & Effects` | Animation and decorative effects (Marquee, TypewriterEffect, BackgroundBlur) |
