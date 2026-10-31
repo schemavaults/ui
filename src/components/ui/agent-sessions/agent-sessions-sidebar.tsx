@@ -3,8 +3,10 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type ChangeEvent,
   type HTMLAttributes,
   type InputHTMLAttributes,
@@ -57,6 +59,25 @@ function AgentSessionsSidebar({
   const open: boolean = ctx.sidebarOpen;
   const sidebarRef = useRef<HTMLElement | null>(null);
   const mergedRef = useMemo(() => mergeRefs<HTMLElement>(sidebarRef, ref), [ref]);
+
+  // The sidebar's layout can change without anyone opening or closing it:
+  // the first measurement turns the unmeasured inline guess into a closed
+  // drawer (in a small dialog, say), and resizing across `overlayBelowPx`
+  // swaps modes. Apply such a change with transitions off, so the drawer
+  // does not visibly slide shut as the dialog opens; only real opens and
+  // closes animate.
+  const layoutKey: string = `${ctx.isMeasured ? "measured" : "unmeasured"}:${ctx.sidebarMode}`;
+  const [settledLayoutKey, setSettledLayoutKey] = useState<string>(layoutKey);
+  const settlingLayout: boolean = settledLayoutKey !== layoutKey;
+  useLayoutEffect((): void => {
+    if (!settlingLayout) return;
+    // Have the browser compute the new layout's styles while transitions are
+    // still off. Turning them back on before it has would animate the change
+    // anyway, from whatever style it last computed.
+    const sidebar: HTMLElement | null = sidebarRef.current;
+    if (sidebar !== null) void window.getComputedStyle(sidebar).transform;
+    setSettledLayoutKey(layoutKey);
+  }, [layoutKey, settlingLayout]);
 
   // Opening the drawer moves focus into it (onto the active session if it
   // is listed); closing it hands focus back to whatever opened it.
@@ -118,6 +139,7 @@ function AgentSessionsSidebar({
         data-slot="agent-sessions-sidebar"
         data-mode={ctx.sidebarMode}
         data-state={open ? "open" : "closed"}
+        data-settling={settlingLayout ? "true" : undefined}
         className={cn(
           "flex shrink-0 flex-col overflow-hidden bg-muted/40 outline-none motion-reduce:transition-none",
           isOverlay
@@ -136,6 +158,7 @@ function AgentSessionsSidebar({
           // phone does not flash an inline sidebar.
           !ctx.isMeasured && "max-md:hidden",
           className,
+          settlingLayout && "transition-none",
         )}
         {...props}
       >

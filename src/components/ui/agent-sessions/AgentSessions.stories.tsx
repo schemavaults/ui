@@ -1208,8 +1208,9 @@ export const ChatWidget: Story = {
       description: {
         story:
           "`placement=\"bottom-right\"` opens a chat-widget panel above the " +
-          "button. At that width the sidebar is a drawer; Escape closes the " +
-          "drawer first and only then the dialog.",
+          "button. At that width the sidebar is a drawer, which opens " +
+          "already closed (it does not slide shut as the dialog appears); " +
+          "Escape closes the drawer first and only then the dialog.",
       },
     },
   },
@@ -1225,15 +1226,47 @@ export const ChatWidget: Story = {
   ),
   play: async ({ canvasElement }): Promise<void> => {
     const canvas = within(canvasElement);
-    const body = within(canvasElement.ownerDocument.body);
+    const doc: Document = canvasElement.ownerDocument;
+    const body = within(doc.body);
 
-    await userEvent.click(canvas.getByRole("button", { name: "Open assistant" }));
-    const dialog = await body.findByRole("dialog", { name: "Assistant" });
-    const nav = within(dialog).getByRole("navigation", { name: "Sessions" });
-    await waitFor((): void => {
-      expect(nav).toHaveAttribute("data-mode", "overlay");
-      expect(within(dialog).getByRole("textbox", { name: "Message" })).toHaveFocus();
-    });
+    // Record every CSS transition the sidebar starts while the dialog opens.
+    // Before it has measured itself, the component guesses an inline, open
+    // sidebar; becoming a closed drawer must not animate (a visible "slide
+    // shut" as the dialog appears).
+    const sidebarTransitions: string[] = [];
+    const recordSidebarTransition = (event: TransitionEvent): void => {
+      const target: EventTarget | null = event.target;
+      if (
+        target instanceof Element &&
+        target.getAttribute("data-slot") === "agent-sessions-sidebar"
+      ) {
+        sidebarTransitions.push(event.propertyName);
+      }
+    };
+    doc.addEventListener("transitionrun", recordSidebarTransition);
+    let dialog: HTMLElement;
+    let nav: HTMLElement;
+    try {
+      await userEvent.click(
+        canvas.getByRole("button", { name: "Open assistant" }),
+      );
+      dialog = await body.findByRole("dialog", { name: "Assistant" });
+      nav = within(dialog).getByRole("navigation", { name: "Sessions" });
+      await waitFor((): void => {
+        expect(nav).toHaveAttribute("data-mode", "overlay");
+        expect(nav).toHaveAttribute("data-state", "closed");
+        expect(
+          within(dialog).getByRole("textbox", { name: "Message" }),
+        ).toHaveFocus();
+      });
+      // Give a transition the frames it needs to be reported.
+      await new Promise<void>((resolve): void => {
+        setTimeout(resolve, 250);
+      });
+      await expect(sidebarTransitions).toEqual([]);
+    } finally {
+      doc.removeEventListener("transitionrun", recordSidebarTransition);
+    }
 
     await userEvent.click(
       within(dialog).getByRole("button", { name: "Show sessions" }),
