@@ -386,3 +386,6 @@ export type * from "./attachment-card";
 
 export * from "./key-value-editor";
 export type * from "./key-value-editor";
+
+export * from "./relative-time";
+export type * from "./relative-time";
