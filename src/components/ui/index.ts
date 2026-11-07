@@ -392,3 +392,6 @@ export type * from "./key-value-editor";
 
 export * from "./relative-time";
 export type * from "./relative-time";
+
+export * from "./onboarding-checklist";
+export type * from "./onboarding-checklist";
