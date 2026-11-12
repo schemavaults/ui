@@ -25,7 +25,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "SVG line chart for trend data. Plots one or more named series sharing a single x/y domain. Series take the chart palette in slot order (`--chart-1` …, never cycled; pass `seriesOrder` so colour follows the series id), with a legend for two or more. A crosshair snaps to the nearest x and one readout lists every series there, on hover or with the arrow keys. Also: `width=\"auto\"`, `formatX` / `formatY`, point markers, gaps (`y: NaN`), smoothing, area fills, gridlines, and `onPointClick` handlers.",
+          "SVG line chart for trend data. Plots one or more named series sharing a single x/y domain. Series take the chart palette in slot order (`--chart-1` …, never cycled; pass `seriesOrder` so colour follows the series id), with a legend for two or more. A crosshair snaps to the nearest x and one readout lists every series there, on hover or with the arrow keys. Also: `width=\"auto\"`, `formatX` / `formatY`, point markers, gaps (`y: NaN`), smoothing, area fills, gridlines, vertical reference lines (`xReferenceLines`, e.g. a \"today\" marker), and `onPointClick` handlers.",
       },
     },
   },
@@ -392,6 +392,144 @@ export const TimeAxis: Story = {
           "`formatX` formats the x-axis ticks and the readout heading, so a timestamp axis reads as times rather than epoch milliseconds; `formatY` does the same for values, and y ticks land on round numbers. `xTickValues` puts the x ticks on whole hours. A gap (`NaN`) shows as a dash in the readout.",
       },
     },
+  },
+};
+
+const DAY_MS: number = 24 * HOUR_MS;
+const SPRINT_START_UTC: number = Date.UTC(2026, 10, 2);
+/** "Today" for the story: fixed, so the render is the same every day. */
+const SPRINT_TODAY_UTC: number = SPRINT_START_UTC + 8.5 * DAY_MS;
+const DATE_FORMAT: Intl.DateTimeFormat = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+const ACTUAL_OPEN_ISSUES: ReadonlyArray<number> = [
+  96, 91, 88, 80, 77, 71, 64, 60, 52,
+];
+
+const BURNDOWN: ReadonlyArray<LineChartSeries> = [
+  {
+    id: "actual",
+    label: "Actual",
+    points: ACTUAL_OPEN_ISSUES.map(
+      (y, day): LineChartPoint => ({ x: SPRINT_START_UTC + day * DAY_MS, y }),
+    ),
+  },
+  {
+    id: "forecast",
+    label: "Forecast",
+    color: "other",
+    strokeDasharray: "5 4",
+    points: [52, 44, 35, 27, 18, 9, 0].map(
+      (y, i): LineChartPoint => ({
+        x: SPRINT_START_UTC + (i + 8) * DAY_MS,
+        y,
+      }),
+    ),
+  },
+];
+
+export const TodayLine: Story = {
+  args: {
+    label: "Open issues this sprint",
+    series: BURNDOWN,
+    size: "xl",
+    yMin: 0,
+    showYAxisLabels: true,
+    gridLineCount: 3,
+    xTickValues: Array.from(
+      { length: 8 },
+      (_, i): number => SPRINT_START_UTC + i * 2 * DAY_MS,
+    ),
+    formatX: (x: number): string => DATE_FORMAT.format(x),
+    xReferenceLines: [{ value: SPRINT_TODAY_UTC, label: "Today" }],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`xReferenceLines` draws a dashed vertical rule at any x in domain units, with an optional label: pass `Date.now()` on a timestamp axis for a \"today\" line between actuals and a forecast. The value need not match a data point. In categorical mode it is a point index (fractions allowed). Restyle a line with `className` / `strokeDasharray`; a line outside the x domain is not drawn.",
+      },
+    },
+  },
+  play: async ({ canvasElement }): Promise<void> => {
+    const svg = canvasElement.querySelector<SVGSVGElement>(
+      '[data-slot="line-chart"] svg',
+    )!;
+    const group = svg.querySelector(
+      '[data-slot="line-chart-x-reference-lines"]',
+    )!;
+    const rule = group.querySelector("line")!;
+    const labelText = group.querySelector("text")!;
+    expect(labelText).toHaveTextContent("Today");
+
+    // The rule is vertical and sits between the ninth and tenth day's points.
+    expect(rule.getAttribute("x1")).toBe(rule.getAttribute("x2"));
+    const x: number = Number(rule.getAttribute("x1"));
+    const actualPath: string =
+      svg
+        .querySelector('[data-series-id="actual"] path')
+        ?.getAttribute("d") ?? "";
+    const forecastPath: string =
+      svg
+        .querySelector('[data-series-id="forecast"] path')
+        ?.getAttribute("d") ?? "";
+    const xsOf = (d: string): number[] =>
+      Array.from(d.matchAll(/[ML] (-?[\d.]+) /g), (m) => Number(m[1]));
+    const lastActualX: number = xsOf(actualPath).at(-1)!;
+    const secondForecastX: number = xsOf(forecastPath)[1]!;
+    expect(x).toBeGreaterThan(lastActualX);
+    expect(x).toBeLessThan(secondForecastX);
+    expect(x - lastActualX).toBeCloseTo(secondForecastX - x, 0);
+
+    // Screen readers get it through the table view's caption.
+    expect(
+      canvasElement.querySelector('[data-slot="chart-data-table"] caption'),
+    ).toHaveTextContent("Open issues this sprint (Today at Nov 10)");
+  },
+};
+
+export const ReferenceLinesOnCategories: Story = {
+  args: {
+    series: SINGLE_SERIES,
+    categories: WEEK_LABELS,
+    size: "lg",
+    showPoints: true,
+    xReferenceLines: [
+      { value: 1, label: "v2.4 deployed" },
+      {
+        value: 4.5,
+        label: "Weekend",
+        strokeDasharray: "none",
+        className: "stroke-destructive",
+        labelClassName: "fill-destructive",
+      },
+      // Outside the x domain (0 – 6): not drawn.
+      { value: 9, label: "Next week" },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Without explicit `x` values, a reference line's `value` is a point index: `1` lands on Tue, `4.5` halfway between Fri and Sat. A label past the middle of the plot hangs to the left of its line so it stays inside the chart.",
+      },
+    },
+  },
+  play: async ({ canvasElement }): Promise<void> => {
+    const lines = canvasElement.querySelectorAll(
+      '[data-slot="line-chart-x-reference-line"]',
+    );
+    expect(lines).toHaveLength(2);
+    expect(lines[0]!.querySelector("text")).toHaveAttribute(
+      "text-anchor",
+      "start",
+    );
+    expect(lines[1]!.querySelector("text")).toHaveAttribute(
+      "text-anchor",
+      "end",
+    );
   },
 };
 

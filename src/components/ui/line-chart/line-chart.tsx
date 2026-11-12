@@ -176,6 +176,25 @@ export interface LineChartTooltipContext {
   values: ReadonlyArray<LineChartTooltipValue>;
 }
 
+export interface LineChartReferenceLine {
+  /**
+   * Position of the line on the x-axis, in domain units: the same units as a
+   * point's `x` (e.g. `Date.now()` on a timestamp axis), or a point index in
+   * categorical mode (`2.5` sits halfway between the third and fourth
+   * points). A value outside the x domain is not drawn; widen the domain with
+   * `xMin` / `xMax` to bring it in.
+   */
+  value: number;
+  /** Optional label rendered at the top of the line (e.g. `"Today"`). */
+  label?: string;
+  /** Stroke dash pattern. Defaults to `"4 3"`; pass `"none"` for a solid line. */
+  strokeDasharray?: string;
+  /** Extra classes applied to the line element (e.g. `"stroke-destructive"`). */
+  className?: string;
+  /** Extra classes applied to the label `<text>` element. */
+  labelClassName?: string;
+}
+
 export interface LineChartProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "onClick">,
     VariantProps<typeof lineChartVariants> {
@@ -210,6 +229,12 @@ export interface LineChartProps
   xMin?: number;
   /** Upper bound of the x-axis (numeric mode). Defaults to the largest x. */
   xMax?: number;
+  /**
+   * Vertical reference line(s) at fixed x positions, drawn above the series:
+   * a "today" marker on a time axis, a deploy, a cutoff. Each is a dashed
+   * rule spanning the plot, with an optional label at its top.
+   */
+  xReferenceLines?: ReadonlyArray<LineChartReferenceLine>;
   /** Default interpolation for every series. Defaults to `"linear"`. */
   curve?: LineChartCurveId;
   /** Render point markers for every series. Defaults to `false`. */
@@ -485,6 +510,7 @@ function LineChart({
   yMax,
   xMin,
   xMax,
+  xReferenceLines,
   curve = "linear",
   showPoints = false,
   showAxis = true,
@@ -786,6 +812,21 @@ function LineChart({
             .map((tick) => tick.y)
             .filter((y) => y > plotY0 + 0.5 && y < plotY0 + plotH - 0.5)
         : gridLines.map((t) => plotY0 + plotH - t * plotH);
+
+  // Reference lines inside the x domain (the rest have nowhere to be drawn).
+  const visibleReferenceLines: ReadonlyArray<LineChartReferenceLine> = hasData
+    ? (xReferenceLines ?? []).filter(
+        (line) =>
+          isFiniteNumber(line.value) &&
+          line.value >= effectiveXMin &&
+          line.value <= effectiveXMax,
+      )
+    : [];
+  /** The labelled lines in words, for the table view of the chart. */
+  const referenceLineSummary: string = visibleReferenceLines
+    .filter((line) => line.label)
+    .map((line) => `${line.label} at ${describeX(line.value)}`)
+    .join(", ");
 
   const hasInteractivePoints: boolean = resolved.some(
     (rs) =>
@@ -1100,6 +1141,59 @@ function LineChart({
           })
         )}
 
+        {/* Reference lines sit above the series, their labels on a halo in
+            the surface colour so they stay legible over the lines. */}
+        {visibleReferenceLines.length > 0 ? (
+          <g
+            aria-hidden="true"
+            data-slot="line-chart-x-reference-lines"
+            className="pointer-events-none select-none"
+          >
+            {visibleReferenceLines.map((line, index) => {
+              const x: number = projectX(line.value);
+              // The label hangs off the side of the line with more room.
+              const labelOnLeft: boolean = x > plotX0 + plotW / 2;
+              return (
+                <g
+                  key={`x-ref-${index}-${line.value}`}
+                  data-slot="line-chart-x-reference-line"
+                >
+                  <line
+                    x1={x}
+                    y1={plotY0}
+                    x2={x}
+                    y2={plotY0 + plotH}
+                    strokeWidth={1}
+                    strokeDasharray={line.strokeDasharray ?? "4 3"}
+                    className={cn(
+                      "stroke-muted-foreground/70",
+                      line.className,
+                    )}
+                  />
+                  {line.label ? (
+                    <text
+                      x={labelOnLeft ? x - 4 : x + 4}
+                      y={plotY0 + 2}
+                      textAnchor={labelOnLeft ? "end" : "start"}
+                      dominantBaseline="hanging"
+                      paintOrder="stroke"
+                      stroke="hsl(var(--background))"
+                      strokeWidth={3}
+                      strokeLinejoin="round"
+                      className={cn(
+                        "fill-muted-foreground",
+                        line.labelClassName,
+                      )}
+                    >
+                      {line.label}
+                    </text>
+                  ) : null}
+                </g>
+              );
+            })}
+          </g>
+        ) : null}
+
         {xTicks.length > 0 ? (
           <g
             aria-hidden="true"
@@ -1290,7 +1384,11 @@ function LineChart({
       </div>
       {W !== null && hasData ? (
         <ChartDataTable
-          caption={label}
+          caption={
+            referenceLineSummary === ""
+              ? label
+              : `${label} (${referenceLineSummary})`
+          }
           columns={[
             "x",
             ...series.map((s) => s.label ?? s.id),
