@@ -178,14 +178,18 @@ export interface LineChartTooltipContext {
 
 export interface LineChartReferenceLine {
   /**
-   * Position of the line on the x-axis, in domain units: the same units as a
-   * point's `x` (e.g. `Date.now()` on a timestamp axis), or a point index in
-   * categorical mode (`2.5` sits halfway between the third and fourth
-   * points). A value outside the x domain is not drawn; widen the domain with
-   * `xMin` / `xMax` to bring it in.
+   * Position of the line in domain units. For `xReferenceLines`: the same
+   * units as a point's `x` (e.g. `Date.now()` on a timestamp axis), or a
+   * point index in categorical mode (`2.5` sits halfway between the third and
+   * fourth points). For `yReferenceLines`: a y value. A value outside the
+   * axis' domain is not drawn; widen the domain with `xMin` / `xMax` or
+   * `yMin` / `yMax` to bring it in.
    */
   value: number;
-  /** Optional label rendered at the top of the line (e.g. `"Today"`). */
+  /**
+   * Optional label (e.g. `"Today"`, `"Target"`): at the top of a vertical
+   * line, at the right end of a horizontal one.
+   */
   label?: string;
   /** Stroke dash pattern. Defaults to `"4 3"`; pass `"none"` for a solid line. */
   strokeDasharray?: string;
@@ -235,6 +239,12 @@ export interface LineChartProps
    * rule spanning the plot, with an optional label at its top.
    */
   xReferenceLines?: ReadonlyArray<LineChartReferenceLine>;
+  /**
+   * Horizontal reference line(s) at fixed y values, drawn above the series:
+   * a target, a threshold, an average. The y domain is not stretched to
+   * reach a line; set `yMin` / `yMax` if the data may not get there.
+   */
+  yReferenceLines?: ReadonlyArray<LineChartReferenceLine>;
   /** Default interpolation for every series. Defaults to `"linear"`. */
   curve?: LineChartCurveId;
   /** Render point markers for every series. Defaults to `false`. */
@@ -511,6 +521,7 @@ function LineChart({
   xMin,
   xMax,
   xReferenceLines,
+  yReferenceLines,
   curve = "linear",
   showPoints = false,
   showAxis = true,
@@ -822,11 +833,23 @@ function LineChart({
           line.value <= effectiveXMax,
       )
     : [];
+  const visibleYReferenceLines: ReadonlyArray<LineChartReferenceLine> = hasData
+    ? (yReferenceLines ?? []).filter(
+        (line) =>
+          isFiniteNumber(line.value) &&
+          line.value >= effectiveYMin &&
+          line.value <= effectiveYMax,
+      )
+    : [];
   /** The labelled lines in words, for the table view of the chart. */
-  const referenceLineSummary: string = visibleReferenceLines
-    .filter((line) => line.label)
-    .map((line) => `${line.label} at ${describeX(line.value)}`)
-    .join(", ");
+  const referenceLineSummary: string = [
+    ...visibleReferenceLines
+      .filter((line) => line.label)
+      .map((line) => `${line.label} at ${describeX(line.value)}`),
+    ...visibleYReferenceLines
+      .filter((line) => line.label)
+      .map((line) => `${line.label} at ${formatY(line.value)}`),
+  ].join(", ");
 
   const hasInteractivePoints: boolean = resolved.some(
     (rs) =>
@@ -1176,6 +1199,58 @@ function LineChart({
                       y={plotY0 + 2}
                       textAnchor={labelOnLeft ? "end" : "start"}
                       dominantBaseline="hanging"
+                      paintOrder="stroke"
+                      stroke="hsl(var(--background))"
+                      strokeWidth={3}
+                      strokeLinejoin="round"
+                      className={cn(
+                        "fill-muted-foreground",
+                        line.labelClassName,
+                      )}
+                    >
+                      {line.label}
+                    </text>
+                  ) : null}
+                </g>
+              );
+            })}
+          </g>
+        ) : null}
+
+        {visibleYReferenceLines.length > 0 ? (
+          <g
+            aria-hidden="true"
+            data-slot="line-chart-y-reference-lines"
+            className="pointer-events-none select-none"
+          >
+            {visibleYReferenceLines.map((line, index) => {
+              const y: number = projectY(line.value);
+              // The label sits above the line unless that would leave the plot.
+              const labelBelow: boolean =
+                y - plotY0 < SIZE_TO_FONT_PX[resolvedSize] + 6;
+              return (
+                <g
+                  key={`y-ref-${index}-${line.value}`}
+                  data-slot="line-chart-y-reference-line"
+                >
+                  <line
+                    x1={plotX0}
+                    y1={y}
+                    x2={plotX0 + plotW}
+                    y2={y}
+                    strokeWidth={1}
+                    strokeDasharray={line.strokeDasharray ?? "4 3"}
+                    className={cn(
+                      "stroke-muted-foreground/70",
+                      line.className,
+                    )}
+                  />
+                  {line.label ? (
+                    <text
+                      x={plotX0 + plotW - 4}
+                      y={labelBelow ? y + 4 : y - 4}
+                      textAnchor="end"
+                      dominantBaseline={labelBelow ? "hanging" : "auto"}
                       paintOrder="stroke"
                       stroke="hsl(var(--background))"
                       strokeWidth={3}

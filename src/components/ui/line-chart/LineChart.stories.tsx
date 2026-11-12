@@ -25,7 +25,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "SVG line chart for trend data. Plots one or more named series sharing a single x/y domain. Series take the chart palette in slot order (`--chart-1` …, never cycled; pass `seriesOrder` so colour follows the series id), with a legend for two or more. A crosshair snaps to the nearest x and one readout lists every series there, on hover or with the arrow keys. Also: `width=\"auto\"`, `formatX` / `formatY`, point markers, gaps (`y: NaN`), smoothing, area fills, gridlines, vertical reference lines (`xReferenceLines`, e.g. a \"today\" marker), and `onPointClick` handlers.",
+          "SVG line chart for trend data. Plots one or more named series sharing a single x/y domain. Series take the chart palette in slot order (`--chart-1` …, never cycled; pass `seriesOrder` so colour follows the series id), with a legend for two or more. A crosshair snaps to the nearest x and one readout lists every series there, on hover or with the arrow keys. Also: `width=\"auto\"`, `formatX` / `formatY`, point markers, gaps (`y: NaN`), smoothing, area fills, gridlines, reference lines (`xReferenceLines` for e.g. a \"today\" marker, `yReferenceLines` for a target or threshold), and `onPointClick` handlers.",
       },
     },
   },
@@ -529,6 +529,95 @@ export const ReferenceLinesOnCategories: Story = {
     expect(lines[1]!.querySelector("text")).toHaveAttribute(
       "text-anchor",
       "end",
+    );
+  },
+};
+
+export const TargetAndThresholdLines: Story = {
+  args: {
+    label: "p95 latency this week",
+    categories: WEEK_LABELS,
+    size: "lg",
+    showPoints: true,
+    yMin: 0,
+    yMax: 400,
+    formatY: (y: number): string => `${y} ms`,
+    yTickLabelWidth: 48,
+    series: [
+      {
+        id: "latency",
+        label: "p95 latency",
+        points: [
+          { y: 182 },
+          { y: 204 },
+          { y: 240 },
+          { y: 318 },
+          { y: 210 },
+          { y: 140 },
+          { y: 120 },
+        ],
+      },
+    ],
+    yReferenceLines: [
+      { value: 200, label: "Target · 200 ms" },
+      {
+        value: 300,
+        label: "SLO · 300 ms",
+        className: "stroke-destructive",
+        labelClassName: "fill-destructive",
+      },
+      // At the top of the plot: its label hangs below the line.
+      { value: 400, label: "Timeout" },
+      // Outside the y domain (0 – 400): not drawn.
+      { value: 1_000, label: "Hard limit" },
+    ],
+    xReferenceLines: [{ value: 3, label: "Incident" }],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`yReferenceLines` draws dashed horizontal rules at fixed y values, labelled at the right end: a target, an SLO, an average. The y domain is not stretched to reach a line, so set `yMin` / `yMax` when the data may not get there. It combines with `xReferenceLines`.",
+      },
+    },
+  },
+  play: async ({ canvasElement }): Promise<void> => {
+    const svg = canvasElement.querySelector<SVGSVGElement>(
+      '[data-slot="line-chart"] svg',
+    )!;
+    const lines = svg.querySelectorAll(
+      '[data-slot="line-chart-y-reference-line"]',
+    );
+    expect(lines).toHaveLength(3);
+
+    // Each rule is horizontal and sits on its y-axis tick's height.
+    const tickYOf = (text: string): number => {
+      const tick = Array.from(
+        svg.querySelectorAll('[data-slot="line-chart-y-ticks"] text'),
+      ).find((el) => el.textContent === text)!;
+      return Number(tick.getAttribute("y"));
+    };
+    const target = lines[0]!.querySelector("line")!;
+    expect(target.getAttribute("y1")).toBe(target.getAttribute("y2"));
+    expect(Number(target.getAttribute("y1"))).toBeCloseTo(tickYOf("200 ms"), 5);
+    expect(
+      Number(lines[1]!.querySelector("line")!.getAttribute("y1")),
+    ).toBeCloseTo(tickYOf("300 ms"), 5);
+
+    // Labels sit above their line, except at the top edge of the plot.
+    expect(lines[0]!.querySelector("text")).toHaveAttribute(
+      "dominant-baseline",
+      "auto",
+    );
+    expect(lines[2]!.querySelector("text")).toHaveAttribute(
+      "dominant-baseline",
+      "hanging",
+    );
+
+    expect(
+      canvasElement.querySelector('[data-slot="chart-data-table"] caption'),
+    ).toHaveTextContent(
+      "p95 latency this week (Incident at Thu, Target · 200 ms at 200 ms, SLO · 300 ms at 300 ms, Timeout at 400 ms)",
     );
   },
 };
