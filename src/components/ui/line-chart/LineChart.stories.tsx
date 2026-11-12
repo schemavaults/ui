@@ -622,6 +622,111 @@ export const TargetAndThresholdLines: Story = {
   },
 };
 
+const MONTH_MS: number = 30 * DAY_MS;
+/** "Today" for the story: fixed, so the render is the same every day. */
+const NET_WORTH_TODAY_UTC: number = Date.UTC(2026, 10, 12);
+const LONG_DATE_FORMAT: Intl.DateTimeFormat = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const USD_FORMAT: Intl.NumberFormat = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+const NET_WORTH_ACTUALS: ReadonlyArray<number> = [
+  18_240, 19_105, 19_870, 20_412, 21_890, 22_604, 23_950, 24_710, 25_985,
+  27_120, 28_430, 29_749.3,
+];
+const NET_WORTH_FORECAST: ReadonlyArray<number> = [
+  29_749.3, 30_900, 32_050, 33_200, 34_350, 35_500, 36_650,
+];
+const NET_WORTH: ReadonlyArray<LineChartSeries> = [
+  {
+    id: "actual",
+    label: "Net Worth",
+    points: NET_WORTH_ACTUALS.map(
+      (y, i): LineChartPoint => ({
+        x: NET_WORTH_TODAY_UTC - (NET_WORTH_ACTUALS.length - 1 - i) * MONTH_MS,
+        y,
+      }),
+    ),
+  },
+  {
+    id: "forecast",
+    label: "Forecast",
+    color: "other",
+    strokeDasharray: "5 4",
+    points: NET_WORTH_FORECAST.map(
+      (y, i): LineChartPoint => ({ x: NET_WORTH_TODAY_UTC + i * MONTH_MS, y }),
+    ),
+  },
+];
+
+/**
+ * Regression: the hidden table view must not widen a phone-width page. Its
+ * caption runs on one unwrapped line (`sr-only` sets `white-space: nowrap`),
+ * and a `<table>` never renders narrower than its content, so it has to be
+ * clipped by a wrapper that does honour `width: 1px` and `overflow: hidden`.
+ */
+export const ReferenceLinesOnAPhone: Story = {
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  args: {
+    label: "Net Worth over time, with the forecast ahead",
+    series: NET_WORTH,
+    width: "auto",
+    height: 200,
+    showYAxisLabels: true,
+    yTickLabelWidth: 52,
+    formatX: (x: number): string => LONG_DATE_FORMAT.format(x),
+    formatY: (y: number): string => USD_FORMAT.format(y),
+    xReferenceLines: [
+      {
+        value: NET_WORTH_TODAY_UTC,
+        label: `Today · ${USD_FORMAT.format(29_749.3)}`,
+      },
+    ],
+  },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story:
+          "On a 320px phone, a chart with a long label and a labelled reference line still fits the page: its table view (caption included) is clipped out of the layout, so the page never scrolls sideways, while screen readers still read the whole table.",
+      },
+    },
+  },
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect(
+        canvasElement.querySelector('[data-slot="chart-data-table"]'),
+      ).not.toBeNull();
+    });
+
+    // The caption is far wider than the phone once unwrapped…
+    const caption = canvasElement.querySelector(
+      '[data-slot="chart-data-table"] caption',
+    )!;
+    expect(caption).toHaveTextContent(
+      "Net Worth over time, with the forecast ahead (Today · $29,749.30 at Nov 12, 2026)",
+    );
+
+    // …but the page does not scroll sideways.
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      document.documentElement.clientWidth,
+    );
+
+    // The table is still in the accessibility tree, named by its caption.
+    expect(
+      canvas.getByRole("table", {
+        name: /^Net Worth over time, with the forecast ahead \(Today/,
+      }),
+    ).toBeInTheDocument();
+  },
+};
+
 export const FillsContainer: Story = {
   args: {
     series: REQUESTS_BY_HOUR,
