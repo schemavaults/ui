@@ -227,6 +227,51 @@ export const FillsContainer: Story = {
   },
 };
 
+const LONG_LABEL: string =
+  "Monthly recurring revenue across every region and plan, before refunds and credits";
+
+/**
+ * Regression: the hidden table view must not widen a phone-width page. Its
+ * caption (here, the chart's label) runs on one unwrapped line, wider than
+ * the phone; the shared `ChartDataTable` clips it out of the layout.
+ */
+export const LongLabelOnAPhone: Story = {
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  args: {
+    label: LONG_LABEL,
+    bars: MONTHLY_BARS,
+    width: "auto",
+    height: 200,
+  },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story:
+          "On a 320px phone, a label longer than the page is wide does not make the page scroll sideways: the table view it captions is clipped out of the layout, while screen readers still read it.",
+      },
+    },
+  },
+  play: async ({ canvasElement }): Promise<void> => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect(
+        canvasElement.querySelector('[data-slot="chart-data-table"]'),
+      ).not.toBeNull();
+    });
+    expect(
+      canvasElement.querySelector('[data-slot="chart-data-table"] caption'),
+    ).toHaveTextContent(LONG_LABEL);
+
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      document.documentElement.clientWidth,
+    );
+
+    // The table is still in the accessibility tree, named by its caption.
+    expect(canvas.getByRole("table", { name: LONG_LABEL })).toBeInTheDocument();
+  },
+};
+
 export const WithGridlines: Story = {
   args: {
     bars: SAMPLE_BARS,
