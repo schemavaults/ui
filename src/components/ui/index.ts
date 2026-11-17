@@ -204,6 +204,9 @@ export type * from "./gauge";
 export * from "./meter";
 export type * from "./meter";
 
+export * from "./bullet-chart";
+export type * from "./bullet-chart";
+
 export * from "./segmented-bar";
 export type * from "./segmented-bar";
 
