@@ -58,12 +58,14 @@ export function DashboardLayoutSidebarLayout({
   return (
     <menu
       className={cn(
-        // The persistent desktop sidebar. `useIsMobile` can only read the
-        // viewport from an effect, so the first client render and the server
-        // render both take this branch even on a phone; `max-md:hidden` keeps
-        // that render off screen until the mobile Sheet replaces it. It is the
-        // same `md` breakpoint the hook tests, and the one the main content
-        // container's `max-md:*` classes already follow.
+        // The persistent desktop sidebar. The server cannot know the
+        // viewport, so `useIsMobile` answers `false` there, and again while
+        // hydrating, which has to match the server's markup: on a phone the
+        // server HTML and the hydration render both take this branch.
+        // `max-md:hidden` keeps them off screen until the mobile Sheet
+        // replaces them. It is the same `md` breakpoint the hook tests, and
+        // the one the main content container's `max-md:*` classes already
+        // follow.
         //
         // Neither sidebar is `h-screen`. `100vh` on a mobile browser is
         // whatever the browser measures it against — iOS reports it with its

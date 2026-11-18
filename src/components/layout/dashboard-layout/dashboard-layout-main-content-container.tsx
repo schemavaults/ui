@@ -1,10 +1,8 @@
 "use client";
 
 import type { PropsWithChildren, ReactElement } from "react";
-import {
-  useDashboardSidebarSizing,
-  useDashboardSidebarOpenState,
-} from "./dashboard-sidebar";
+import { useDashboardSidebarSizing } from "./dashboard-sidebar";
+import useDashboardSidebarOpen from "./dashboard-sidebar/useDashboardSidebarOpen";
 import { cn } from "@/lib/utils";
 import {
   reducedMotionClassName,
@@ -27,7 +25,10 @@ export function DashboardLayoutMainContentContainer({
   children,
   printHidden = false,
 }: DashboardLayoutMainContentContainerProps): ReactElement {
-  const openState = useDashboardSidebarOpenState();
+  // Only whether the sidebar is open, not `mobile`: the page is rendered in
+  // here, so this must not re-render when the viewport is read after
+  // hydration (its own `max-md:` classes handle the phone layout).
+  const open: boolean = useDashboardSidebarOpen();
   const size = useDashboardSidebarSizing();
   const reducedMotion: DashboardLayoutReducedMotionSetting =
     useDashboardLayoutReducedMotionSetting();
@@ -47,11 +48,11 @@ export function DashboardLayoutMainContentContainer({
         // Reduced motion: jump to the new width/offset instead of sliding the
         // whole page across as the sidebar opens.
         reducedMotionClassName(reducedMotion),
-        openState.open
+        open
           ? size.content_container_desktop_sidebar_open_width_classname
           : size.content_container_desktop_sidebar_closed_width_classname,
         "max-md:left-0",
-        openState.open
+        open
           ? size.content_container_desktop_sidebar_open_left_classname
           : size.content_container_desktop_sidebar_closed_left_classname,
         // For print, expand to the full page (the sidebar/header are hidden)

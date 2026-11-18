@@ -25,12 +25,6 @@ import { useResolvedDashboardLayoutReducedMotionSetting } from "./useDashboardLa
 
 export type { DashboardLayoutProps };
 
-/**
- *
- * @param param0 DashboardLayoutProps
- *
- * @returns A layout component wrapping the page content of 'children'
- */
 // Sibling component that subscribes to `usePathname` and closes the mobile
 // sidebar on navigation. Rendered conditionally only when consumers opt in
 // by passing `usePathname` — keeping the hook call out of the parent avoids
@@ -44,6 +38,38 @@ function AutoCloseSidebarOnNavigation({
   return null;
 }
 
+interface DashboardLayoutTopBarTitleProps {
+  topBarTitle: DashboardLayoutProps["topBarTitle"];
+  Link: DashboardLayoutProps["Link"];
+}
+
+// The page title in the top bar. Declared out here rather than inside
+// `DashboardLayout`'s render: a component declared in a render is a new
+// component type on every render, so the title used to be unmounted and
+// mounted afresh each time the layout re-rendered.
+function DashboardLayoutTopBarTitle({
+  topBarTitle,
+  Link,
+}: DashboardLayoutTopBarTitleProps): ReactNode {
+  if (typeof topBarTitle === "string") {
+    return <h2 className="font-bold text-lg">{topBarTitle}</h2>;
+  }
+  const CustomTopBarHeaderComponent = topBarTitle;
+  return (
+    <CustomTopBarHeaderComponent
+      useDashboardSidebarSizing={useDashboardSidebarSizing}
+      useDashboardSidebarOpenState={useDashboardSidebarOpenState}
+      Link={Link}
+    />
+  );
+}
+
+/**
+ *
+ * @param param0 DashboardLayoutProps
+ *
+ * @returns A layout component wrapping the page content of 'children'
+ */
 export function DashboardLayout({
   children,
   wordmark,
@@ -78,21 +104,6 @@ export function DashboardLayout({
         } as CSSProperties)
       : undefined;
 
-  function HeaderBarPageIdentifierComponent(): ReactNode {
-    if (typeof topBarTitle === "string") {
-      return <h2 className="font-bold text-lg">{topBarTitle}</h2>;
-    } else {
-      const CustomTopBarHeaderComponent = topBarTitle;
-      return (
-        <CustomTopBarHeaderComponent
-          useDashboardSidebarSizing={useDashboardSidebarSizing}
-          useDashboardSidebarOpenState={useDashboardSidebarOpenState}
-          Link={Link}
-        />
-      );
-    }
-  }
-
   const TopBarButtonsComponent:
     | FC<ICustomizableDashboardLayoutComponentProps>
     | undefined = props.topBarButtons;
@@ -115,6 +126,17 @@ export function DashboardLayout({
     // this to "never", i.e. it ignores `prefers-reduced-motion` until asked
     // not to, so the layout has to opt in on its subtree's behalf.
     <MotionConfig reducedMotion={reducedMotionSetting}>
+      {/*
+        Every provider between the layout's root and `children` sits above
+        the page, and must not publish a new value while the page hydrates: a
+        Suspense boundary in the page that is still waiting to hydrate when
+        one does (a streamed `loading.tsx`, say) has its server HTML thrown
+        away and is rendered again on the client. So each value — here and in
+        `MotionConfig` above, which memoizes its own — is either a prop passed
+        through, memoized, or state that only an interaction changes.
+        Anything that differs between the server and the client (`mobile`,
+        for one) is read by the components that need it instead.
+      */}
       <DashboardSidebarContextProvider
         sidebarItems={props.sidebarItems}
         sizing={props.sizing}
@@ -178,7 +200,10 @@ export function DashboardLayout({
                   orientation="vertical"
                   className="mr-2 data-[orientation=vertical]:h-4"
                 />
-                <HeaderBarPageIdentifierComponent />
+                <DashboardLayoutTopBarTitle
+                  topBarTitle={topBarTitle}
+                  Link={Link}
+                />
                 <div role="none" className="grow" />
                 {typeof TopBarButtonsComponent === "function" && (
                   <TopBarButtonsComponent
