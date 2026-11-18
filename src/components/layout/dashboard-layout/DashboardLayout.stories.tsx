@@ -3,8 +3,11 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import {
   createContext,
+  Suspense,
+  use,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -14,6 +17,8 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import { renderToString } from "react-dom/server";
+import { hydrateRoot, type Root } from "react-dom/client";
 
 import DashboardLayout, { type DashboardLayoutProps } from "./dashboard-layout";
 import LoremIpsumText from "@/stories/LoremImpsumText";
@@ -80,7 +85,7 @@ import { Stepper, type Step } from "@/components/ui/stepper";
 import type { BaseStepperState } from "@/components/ui/stepper/base-stepper-state-type";
 import Toaster from "@/components/ui/toaster";
 import { useToast } from "@/components/hooks/use-toast";
-import { AnimatePresence, m } from "@/framer-motion";
+import { AnimatePresence, m, MotionConfigContext } from "@/framer-motion";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
 import type {
@@ -88,7 +93,18 @@ import type {
   DashboardSidebarItemGroupDefinition,
   DashboardSidebarItemsAndGroupsDefinitions,
 } from "./dashboard-sidebar";
-import { DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING } from "./dashboard-sidebar";
+import {
+  DEFAULT_LEADING_SIDEBAR_MENU_GROUP_LABEL_TOP_PADDING,
+  useDashboardSidebarOpenState,
+  useDashboardSidebarOpenStateDispatch,
+} from "./dashboard-sidebar";
+import {
+  DashboardSidebarOpenContext,
+  DashboardSidebarOpenStateDispatchContext,
+} from "./dashboard-sidebar/dashboard-sidebar-open-state";
+import { DashboardSidebarItemsAndGroupsContext } from "./dashboard-sidebar/dashboard-sidebar-items-and-groups-context";
+import { DashboardSidebarToggledGroupsContext } from "./dashboard-sidebar/dashboard-sidebar-item-group-collapsed-context";
+import { DashboardLayoutSidebarSizeContext } from "./dashboard-sidebar/dashboard-sidebar-sizing";
 import type {
   CustomizableDashboardLayoutComponent,
   ICustomizableDashboardLayoutComponentProps,
@@ -2642,12 +2658,15 @@ export const ActiveItemFollowsNavigation: Story = {
 // ---------------------------------------------------------------------------
 //
 // Which sidebar the layout renders — the persistent desktop <menu> or the
-// mobile Sheet — follows `useIsMobile`, and that hook can only read the
-// viewport from an effect. The first client render, and the server render,
-// therefore always take the desktop branch, even on a phone, and the desktop
-// sidebar used to be visible there for a frame (or until hydration) before the
-// Sheet replaced it. It is now hidden below `md` in CSS, which the browser
-// applies from the first paint.
+// mobile Sheet — follows `useIsMobile`. That hook used to read the viewport
+// from an effect, so every first render took the desktop branch, even on a
+// phone, and the desktop sidebar was visible for a frame (or until hydration)
+// before the Sheet replaced it. It is now hidden below `md` in CSS, which the
+// browser applies from the first paint. The hook now reads the viewport during
+// render, so a client render on a phone mounts the Sheet straight away; the
+// server render, and the hydration render that has to match it, still take
+// the desktop branch — `StreamedPageHydratesInPlaceOnMobile` checks that the
+// server's desktop sidebar is hidden.
 //
 // A `play()` test starts long after that first render, so these stories record
 // what the DOM looked like at the moment React first committed it — before any
@@ -2667,8 +2686,8 @@ const FIRST_COMMIT_MENUS_ATTRIBUTE = "data-first-commit-menus";
  * Records every desktop sidebar <menu> inside it as of the first commit.
  *
  * A parent's layout effect runs once its descendants are in the DOM but before
- * any passive effect anywhere in the tree — `useIsMobile`'s included — so it
- * sees the layout exactly as the browser first paints it. The record is
+ * any passive effect anywhere in the tree, so it sees the layout exactly as
+ * the browser first paints it. The record is
  * written onto the wrapper as JSON for the `play()` function to read back.
  */
 function FirstCommitProbe({ children }: PropsWithChildren): ReactElement {
@@ -2766,8 +2785,7 @@ async function mountAtViewport(
 }
 
 // Regression test: on a phone, the desktop sidebar must not show for even a
-// single frame before `useIsMobile` catches up and the mobile Sheet replaces
-// it. The story pins a phone-sized viewport through its globals: Storybook's
+// single frame before the mobile Sheet replaces it. The story pins a phone-sized viewport through its globals: Storybook's
 // viewport tool applies it in the UI and `.storybook/test-runner.ts` in the
 // test runner.
 export const MobileFirstPaintHidesDesktopSidebar: Story = {
@@ -2791,7 +2809,7 @@ export const MobileFirstPaintHidesDesktopSidebar: Story = {
       (menu: FirstCommitMenuRecord, index: number): void => {
         expect(
           menu.display,
-          `Desktop sidebar <menu> #${index + 1} was displayed ("display: ${menu.display}") at the layout's first commit on a phone-sized canvas. It must be hidden below md ("max-md:hidden") until useIsMobile swaps in the mobile Sheet.`,
+          `Desktop sidebar <menu> #${index + 1} was displayed ("display: ${menu.display}") at the layout's first commit on a phone-sized canvas. It must be hidden below md ("max-md:hidden") until the mobile Sheet replaces it.`,
         ).toBe("none");
         expect(
           menu.width,
@@ -2800,7 +2818,7 @@ export const MobileFirstPaintHidesDesktopSidebar: Story = {
       },
     );
 
-    // Once `useIsMobile` has read the viewport, the desktop sidebar is gone
+    // Once the layout has read the viewport, the desktop sidebar is gone
     // altogether: the mobile Sheet, closed, renders nothing.
     await waitFor((): void => {
       expect(
@@ -2919,5 +2937,550 @@ export const MobileSidebarFillsSheet: Story = {
       ).toBe(sheetBottom);
     }
     sheet.style.height = "";
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Streamed pages hydrate instead of being client-rendered
+// ---------------------------------------------------------------------------
+//
+// A page that streams in behind a Suspense boundary inside the layout (a
+// Next.js `loading.tsx`, or any `<Suspense>`) arrives as server HTML, but
+// React only hydrates the boundary in a pass of its own after the shell — and,
+// when streamed, not before the server has revealed it, up to 300ms after the
+// shell's first paint. Until then the boundary is *dehydrated*: React has not
+// looked inside it, so it cannot tell which contexts its content reads. If any
+// context provider above it publishes a new value in the meantime, React gives
+// up on the server HTML and renders the page again on the client, silently —
+// React 19 reports no error for it. For a moment the document then holds two
+// copies of the page, the visible client-rendered one and React's hidden
+// server copy, and strict test locators match both.
+//
+// The layout used to do exactly that on every load: its sidebar open-state
+// provider handed out a new value object and a new dispatch function on every
+// render, and re-rendered once right after mount, when `useIsMobile` read the
+// viewport from an effect. On a phone, where the viewport really does change
+// the answer after hydration, it re-rendered with a new `mobile` too.
+//
+// These stories reproduce that window without a server. `play()` renders the
+// layout around a Suspense boundary to HTML with `renderToString`, then
+// hydrates the HTML while the page inside the boundary is still suspended on
+// the client, so the boundary stays dehydrated for as long as the story
+// wants. Once every effect has run, the page is let through, and the
+// `<main>` in the document must still be the server-rendered one.
+
+const HYDRATION_HOST_TEST_ID = "streamed-page-hydration-host";
+const STREAMED_PAGE_TEST_ID = "streamed-page";
+const STREAMED_PAGE_FALLBACK_TEST_ID = "streamed-page-fallback";
+const SHELL_HYDRATED_ATTRIBUTE = "data-shell-hydrated";
+
+/**
+ * The page inside the Suspense boundary. The server render passes no `gate`;
+ * the client waits on one, which keeps the boundary dehydrated until the
+ * story opens it. Both render the same markup, so the page can hydrate.
+ */
+function StreamedPage({ gate }: { gate: Promise<void> | null }): ReactElement {
+  if (gate !== null) {
+    use(gate);
+  }
+  return (
+    <main data-testid={STREAMED_PAGE_TEST_ID} className="p-4">
+      <h1 className="text-2xl font-bold">Streamed page</h1>
+      <p className="text-muted-foreground max-w-prose">
+        This page was server-rendered behind a Suspense boundary. It should be
+        hydrated in place, not rendered a second time on the client.
+      </p>
+    </main>
+  );
+}
+
+/**
+ * Marks the host once the shell has hydrated. Passive effects run for the
+ * whole commit in one flush, so by the time this one has, the layout's own
+ * post-mount effects have run too.
+ */
+function ShellHydratedMarker(): null {
+  useEffect((): void => {
+    document
+      .querySelector(`[data-testid="${HYDRATION_HOST_TEST_ID}"]`)
+      ?.setAttribute(SHELL_HYDRATED_ATTRIBUTE, "true");
+  }, []);
+  return null;
+}
+
+/**
+ * Stands in for the components a framework puts between a layout and a
+ * page's Suspense boundary — Next.js's `LayoutRouter` and friends. It matters:
+ * React pushes a context change down into a dehydrated boundary from the
+ * nearest component above it that bails out of re-rendering, and a boundary
+ * placed directly in the layout's `children` has none.
+ */
+function PageSegment({ children }: PropsWithChildren): ReactElement {
+  return <>{children}</>;
+}
+
+type StreamedPageLayoutProps = Omit<DashboardLayoutProps, "children">;
+
+/**
+ * Everything from the document root down: the same providers an app wraps
+ * its pages in, the layout, and the page behind its boundary. A separate
+ * React root, so the story's decorators do not apply.
+ */
+function StreamedPageApp({
+  layoutProps,
+  gate,
+}: {
+  layoutProps: StreamedPageLayoutProps;
+  gate: Promise<void> | null;
+}): ReactElement {
+  return (
+    <LazyFramerMotionProvider>
+      <TooltipProvider>
+        <DashboardLayout {...layoutProps}>
+          <PageSegment>
+            <Suspense
+              fallback={
+                <p data-testid={STREAMED_PAGE_FALLBACK_TEST_ID} className="p-4">
+                  Loading page…
+                </p>
+              }
+            >
+              <StreamedPage gate={gate} />
+            </Suspense>
+          </PageSegment>
+        </DashboardLayout>
+        <ShellHydratedMarker />
+      </TooltipProvider>
+    </LazyFramerMotionProvider>
+  );
+}
+
+/** The roots hydrated into each host, to unmount along with the story. */
+const hydratedStreamedPageRoots: WeakMap<HTMLElement, Root> = new WeakMap<
+  HTMLElement,
+  Root
+>();
+
+/** The element `play()` server-renders into and then hydrates. */
+function StreamedPageHydrationHost(): ReactElement {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect((): (() => void) => {
+    const host: HTMLDivElement | null = ref.current;
+    return (): void => {
+      if (!host) {
+        return;
+      }
+      const root: Root | undefined = hydratedStreamedPageRoots.get(host);
+      hydratedStreamedPageRoots.delete(host);
+      // A root cannot be unmounted synchronously from inside another root's
+      // commit, so leave it until this one has finished.
+      if (root) {
+        setTimeout((): void => root.unmount(), 0);
+      }
+    };
+  }, []);
+  return <div ref={ref} data-testid={HYDRATION_HOST_TEST_ID} />;
+}
+
+function wait(milliseconds: number): Promise<void> {
+  return new Promise<void>((resolve: () => void): void => {
+    setTimeout(resolve, milliseconds);
+  });
+}
+
+/**
+ * Server-render the layout around a suspended page, hydrate it, hold the
+ * boundary dehydrated until every effect has run, then let the page through
+ * and check it was hydrated rather than rendered again.
+ *
+ * `beforeHydration` runs against the server HTML, before React has touched it.
+ */
+async function expectStreamedPageHydratesInPlace({
+  canvasElement,
+  args,
+  beforeHydration,
+}: {
+  canvasElement: HTMLElement;
+  args: DashboardLayoutProps;
+  beforeHydration?: (host: HTMLElement) => void;
+}): Promise<HTMLElement> {
+  const host: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
+    `[data-testid="${HYDRATION_HOST_TEST_ID}"]`,
+  );
+  expect(host, "The hydration host did not render").not.toBeNull();
+  const hostElement: HTMLElement = host as HTMLElement;
+
+  const { children: _children, ...layoutProps } = args;
+  void _children;
+
+  hostElement.innerHTML = renderToString(
+    <StreamedPageApp layoutProps={layoutProps} gate={null} />,
+  );
+  const serverPage: HTMLElement | null = hostElement.querySelector<HTMLElement>(
+    `[data-testid="${STREAMED_PAGE_TEST_ID}"]`,
+  );
+  expect(
+    serverPage,
+    "The server render did not include the page: its Suspense boundary showed the fallback instead",
+  ).not.toBeNull();
+  beforeHydration?.(hostElement);
+
+  // Every time React puts the boundary's fallback in the document, it has
+  // thrown the server HTML away. The fallback can come and go between two
+  // checks, so watch for it rather than look for it afterwards.
+  let fallbackShown: boolean = false;
+  const observer: MutationObserver = new MutationObserver((): void => {
+    if (
+      hostElement.querySelector(
+        `[data-testid="${STREAMED_PAGE_FALLBACK_TEST_ID}"]`,
+      )
+    ) {
+      fallbackShown = true;
+    }
+  });
+  observer.observe(hostElement, { childList: true, subtree: true });
+
+  const recoverableErrors: unknown[] = [];
+  let openGate: () => void = (): void => {};
+  const gate: Promise<void> = new Promise<void>(
+    (resolve: () => void): void => {
+      openGate = resolve;
+    },
+  );
+  hydratedStreamedPageRoots.set(
+    hostElement,
+    hydrateRoot(
+      hostElement,
+      <StreamedPageApp layoutProps={layoutProps} gate={gate} />,
+      {
+        onRecoverableError: (error: unknown): void => {
+          recoverableErrors.push(error);
+        },
+      },
+    ),
+  );
+
+  try {
+    // The shell hydrates and its effects run while the page is still
+    // dehydrated: the window in which the layout used to re-render.
+    await waitFor(
+      (): void => {
+        expect(
+          hostElement.getAttribute(SHELL_HYDRATED_ATTRIBUTE),
+          "The layout's shell never finished hydrating",
+        ).toBe("true");
+      },
+      { timeout: 3000 },
+    );
+    // Give any update those effects scheduled time to render and commit.
+    await wait(250);
+
+    openGate();
+    await waitFor(
+      (): void => {
+        expect(
+          hostElement.querySelector(`[data-testid="${STREAMED_PAGE_TEST_ID}"]`),
+        ).not.toBeNull();
+      },
+      { timeout: 3000 },
+    );
+    await wait(100);
+  } finally {
+    observer.disconnect();
+  }
+
+  expect(
+    recoverableErrors.map(String),
+    "React reported errors while hydrating. A hydration mismatch makes React client-render for a reason of its own, so the result below would not be about the layout.",
+  ).toEqual([]);
+  expect(
+    fallbackShown,
+    "React showed the page's Suspense fallback after hydration began, so it threw the server-rendered page away and rendered it again on the client. A context provider above the page published a new value while the page's boundary was still dehydrated.",
+  ).toBe(false);
+  const pages: HTMLElement[] = Array.from(
+    hostElement.querySelectorAll<HTMLElement>(
+      `[data-testid="${STREAMED_PAGE_TEST_ID}"]`,
+    ),
+  );
+  expect(
+    pages,
+    `Expected exactly one copy of the page in the document after hydration, found ${pages.length}.`,
+  ).toHaveLength(1);
+  expect(
+    pages[0] === serverPage,
+    "The page's <main> was replaced by a new element: React rendered the page again on the client instead of hydrating the server HTML.",
+  ).toBe(true);
+  return hostElement;
+}
+
+// Regression test: on a desktop, nothing above the page changes during
+// hydration, so a page streamed in behind a Suspense boundary is hydrated in
+// place. The layout's re-render right after mount used to discard it.
+export const StreamedPageHydratesInPlace: Story = {
+  tags: ["!autodocs"],
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Streamed page",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (): ReactElement => <StreamedPageHydrationHost />,
+  play: async ({ canvasElement, args, mount }): Promise<void> => {
+    await mountAtViewport(mount, DESKTOP_VIEWPORT);
+    const host: HTMLElement = await expectStreamedPageHydratesInPlace({
+      canvasElement,
+      args,
+    });
+    // The hydrated layout still works: the sidebar opens.
+    await userEvent.click(sidebarTriggerIn(host));
+    expect(args.onOpenSidebar).toHaveBeenCalledTimes(1);
+  },
+};
+
+// The phone counterpart. Here something does change during hydration: the
+// server cannot know the viewport, so the layout hydrates with the desktop
+// sidebar and swaps in the mobile Sheet once it has read the viewport. That
+// swap must stay in the sidebar, away from the page beside it.
+export const StreamedPageHydratesInPlaceOnMobile: Story = {
+  tags: ["!autodocs"],
+  globals: {
+    viewport: { value: "mobile1", isRotated: false },
+  },
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Streamed page",
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (): ReactElement => <StreamedPageHydrationHost />,
+  play: async ({ canvasElement, args, mount }): Promise<void> => {
+    await mountAtViewport(mount, PHONE_VIEWPORT);
+    const host: HTMLElement = await expectStreamedPageHydratesInPlace({
+      canvasElement,
+      args,
+      // The server HTML holds the desktop sidebar, which must be hidden
+      // below md from the first paint, before any script has run.
+      beforeHydration: (serverHtml: HTMLElement): void => {
+        const menus: HTMLElement[] = Array.from(
+          serverHtml.querySelectorAll<HTMLElement>("menu"),
+        );
+        expect(
+          menus,
+          "Expected the server HTML to hold the desktop sidebar <menu>: the server cannot know the viewport, so it renders the desktop layout.",
+        ).toHaveLength(1);
+        expect(
+          getComputedStyle(menus[0] as HTMLElement).display,
+          "The server-rendered desktop sidebar is displayed on a phone-sized canvas. It must be hidden below md until hydration swaps in the mobile Sheet.",
+        ).toBe("none");
+      },
+    });
+    // And the swap did happen: the closed mobile Sheet mounts nothing.
+    await waitFor((): void => {
+      expect(
+        host.querySelector("menu"),
+        "The desktop sidebar <menu> is still mounted after hydration on a phone-sized canvas.",
+      ).toBeNull();
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// The contexts above the page keep their identity
+// ---------------------------------------------------------------------------
+//
+// The focused version of the check above: a component in the page reads every
+// context the layout provides and counts its own commits. It should commit
+// once when it mounts, again only when the sidebar is actually opened or
+// closed — not after the layout's post-mount effects, and not when the layout
+// re-renders with props that change nothing, even if the consumer hands it new
+// inline `onOpenSidebar` / `onCloseSidebar` callbacks every time.
+
+const LAYOUT_CONTEXT_PROBE_TEST_ID = "layout-context-probe";
+const LAYOUT_CONTEXT_PROBE_RECORD_ATTRIBUTE = "data-probe-record";
+
+/** What the probe saw, written onto its element after every commit. */
+interface LayoutContextProbeRecord {
+  /** How many times the probe has committed. */
+  commits: number;
+  /** For each commit after the first, the values that changed identity. */
+  changes: string[][];
+}
+
+function LayoutContextProbe(): ReactElement {
+  // Each context the layout provides above its `children`, read raw, and the
+  // public hooks a page would use.
+  const values: Record<string, unknown> = {
+    MotionConfigContext: useContext(MotionConfigContext),
+    DashboardSidebarOpenContext: useContext(DashboardSidebarOpenContext),
+    DashboardSidebarOpenStateDispatchContext: useContext(
+      DashboardSidebarOpenStateDispatchContext,
+    ),
+    DashboardSidebarItemsAndGroupsContext: useContext(
+      DashboardSidebarItemsAndGroupsContext,
+    ),
+    DashboardSidebarToggledGroupsContext: useContext(
+      DashboardSidebarToggledGroupsContext,
+    ),
+    DashboardLayoutSidebarSizeContext: useContext(
+      DashboardLayoutSidebarSizeContext,
+    ),
+    "useDashboardSidebarOpenState()": useDashboardSidebarOpenState(),
+    "useDashboardSidebarOpenStateDispatch()":
+      useDashboardSidebarOpenStateDispatch(),
+  };
+
+  const ref = useRef<HTMLElement>(null);
+  const previousValues = useRef<Record<string, unknown> | null>(null);
+  const record = useRef<LayoutContextProbeRecord>({ commits: 0, changes: [] });
+  // No dependency list: runs after every commit of this component, and only
+  // then, so it counts exactly the times the page re-rendered.
+  useLayoutEffect((): void => {
+    const current: LayoutContextProbeRecord = record.current;
+    current.commits += 1;
+    const previous: Record<string, unknown> | null = previousValues.current;
+    if (previous !== null) {
+      current.changes.push(
+        Object.keys(values).filter(
+          (name: string): boolean => !Object.is(previous[name], values[name]),
+        ),
+      );
+    }
+    previousValues.current = values;
+    ref.current?.setAttribute(
+      LAYOUT_CONTEXT_PROBE_RECORD_ATTRIBUTE,
+      JSON.stringify(current),
+    );
+  });
+
+  return (
+    <main ref={ref} data-testid={LAYOUT_CONTEXT_PROBE_TEST_ID} className="p-4">
+      <h1 className="text-2xl font-bold">Context probe</h1>
+      <p className="text-muted-foreground max-w-prose">
+        This page reads every context the layout provides and records each time
+        it renders. Re-rendering the layout should not render it again; opening
+        or closing the sidebar should, once.
+      </p>
+    </main>
+  );
+}
+
+function readLayoutContextProbe(
+  canvasElement: HTMLElement,
+): LayoutContextProbeRecord {
+  const probe: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
+    `[data-testid="${LAYOUT_CONTEXT_PROBE_TEST_ID}"]`,
+  );
+  const json: string | null =
+    probe?.getAttribute(LAYOUT_CONTEXT_PROBE_RECORD_ATTRIBUTE) ?? null;
+  expect(json, "The context probe never recorded a commit").not.toBeNull();
+  return JSON.parse(json as string) as LayoutContextProbeRecord;
+}
+
+/**
+ * Re-renders the layout on demand, with the same props every time — except
+ * for the sidebar callbacks, which are new inline functions on every render,
+ * as a consumer might well write them. Each records which render it came
+ * from, so the story can tell whether the layout calls the latest ones.
+ */
+function RerenderingDashboardLayout(args: DashboardLayoutProps): ReactElement {
+  const [renders, setRenders] = useState<number>(1);
+  const [openedByRender, setOpenedByRender] = useState<number | null>(null);
+  return (
+    <>
+      <DashboardLayout
+        {...args}
+        onOpenSidebar={(): void => {
+          setOpenedByRender(renders);
+          args.onOpenSidebar?.();
+        }}
+        onCloseSidebar={(): void => {
+          args.onCloseSidebar?.();
+        }}
+      />
+      <div className="fixed bottom-4 right-4 z-[2000] flex flex-col items-end gap-2 rounded-md border bg-background p-3 text-sm shadow">
+        <Button
+          type="button"
+          data-testid="rerender-layout"
+          onClick={(): void => setRenders((count: number): number => count + 1)}
+        >
+          Re-render layout
+        </Button>
+        <p>
+          Layout renders: <output data-testid="layout-renders">{renders}</output>
+        </p>
+        <p>
+          Sidebar opened by the callbacks from render:{" "}
+          <output data-testid="opened-by-render">{openedByRender ?? "—"}</output>
+        </p>
+      </div>
+    </>
+  );
+}
+
+export const ContextsAbovePageStayStable: Story = {
+  tags: ["!autodocs"],
+  args: {
+    sidebarItems: exampleSidebarItems,
+    topBarTitle: "Context probe",
+    children: <LayoutContextProbe />,
+  } satisfies Partial<DashboardLayoutProps>,
+  render: (args): ReactElement => <RerenderingDashboardLayout {...args} />,
+  play: async ({ canvasElement, args, mount }): Promise<void> => {
+    await mountAtViewport(mount, DESKTOP_VIEWPORT);
+    const canvas = within(canvasElement);
+    const rerender = async (times: number): Promise<void> => {
+      for (let i = 0; i < times; i++) {
+        await userEvent.click(canvas.getByTestId("rerender-layout"));
+      }
+    };
+
+    // Long enough for every post-mount effect, and any update it schedules.
+    await wait(250);
+    expect(
+      readLayoutContextProbe(canvasElement),
+      "The page re-rendered after mounting, with nothing changed: a context above it published a new value. `changes` names which.",
+    ).toEqual({ commits: 1, changes: [] });
+
+    const title: HTMLElement | null = canvasElement.querySelector<HTMLElement>(
+      "#dashboard-layout-main-content-header h2",
+    );
+    expect(title).not.toBeNull();
+
+    await rerender(3);
+    await waitFor((): void => {
+      expect(canvas.getByTestId("layout-renders")).toHaveTextContent("4");
+    });
+    expect(
+      readLayoutContextProbe(canvasElement),
+      "The page re-rendered when the layout did, with the same props: a context above it published a new value. `changes` names which.",
+    ).toEqual({ commits: 1, changes: [] });
+    expect(
+      canvasElement.querySelector("#dashboard-layout-main-content-header h2") ===
+        title,
+      "The top bar title was mounted afresh when the layout re-rendered.",
+    ).toBe(true);
+
+    // Opening the sidebar is a real change, and the page hears about it once:
+    // the open state changes, the dispatch function does not.
+    await userEvent.click(sidebarTriggerIn(canvasElement));
+    await waitFor((): void => {
+      expect(readLayoutContextProbe(canvasElement).commits).toBe(2);
+    });
+    expect(readLayoutContextProbe(canvasElement).changes).toEqual([
+      ["DashboardSidebarOpenContext", "useDashboardSidebarOpenState()"],
+    ]);
+    expect(args.onOpenSidebar).toHaveBeenCalledTimes(1);
+    // And it called the callbacks the layout was last rendered with.
+    expect(canvas.getByTestId("opened-by-render")).toHaveTextContent("4");
+
+    // Opening the sidebar re-rendered the consumer, so the layout got new
+    // callbacks once more; the page still does not hear about it.
+    await rerender(2);
+    await waitFor((): void => {
+      expect(canvas.getByTestId("layout-renders")).toHaveTextContent("6");
+    });
+    expect(readLayoutContextProbe(canvasElement).commits).toBe(2);
+
+    await userEvent.click(sidebarTriggerIn(canvasElement));
+    await waitFor((): void => {
+      expect(readLayoutContextProbe(canvasElement).commits).toBe(3);
+    });
+    expect(args.onCloseSidebar).toHaveBeenCalledTimes(1);
   },
 };
