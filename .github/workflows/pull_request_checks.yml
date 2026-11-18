@@ -6,10 +6,7 @@ on:
       - main
   push:
     branches:
-      - claude/*
-      - feature/*
-      - fix/*
-      - bug/*
+      - main
 
 env:
   BUN_VERSION: 1.3.14
