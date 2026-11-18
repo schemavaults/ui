@@ -2,7 +2,7 @@
 
 ## About
 
-SchemaVaults React.js UI component library package. [Here's the @schemavaults/ui Storybook.js site](https://ui.schemavaults.com) which previews some of the utilities and UI components avaialble.
+SchemaVaults React.js UI component library package, published to NPM as [@schemavaults/ui](https://www.npmjs.com/package/@schemavaults/ui). [Here's the @schemavaults/ui Storybook.js site](https://ui.schemavaults.com) which previews some of the utilities and UI components avaialble.
 
 ## Usage
 
