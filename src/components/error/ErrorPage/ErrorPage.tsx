@@ -11,6 +11,13 @@ type ErrorPageCommonProps = {
   resetButtonLabel?: string;
   additionalButtons?: ReactNode[];
   wordmarkProps?: WordmarkProps;
+  /**
+   * @description Optional logo rendered just before the wordmark in the page
+   * heading (e.g. an `<img />` or an inline SVG component). It sits inside the
+   * `<h1>`, so give an `<img />` an empty `alt` when the wordmark already names
+   * the brand, or the heading is read out as "<alt> <wordmark> Error".
+   */
+  logo?: ReactNode;
 };
 
 export type ErrorPageProps = (
@@ -53,8 +60,16 @@ export function ErrorPage(props: ErrorPageProps): ReactElement {
         "p-2 md:p-4 lg:p-8",
       )}
     >
-      <h1 className="text-xl flex flex-row gap-4">
-        <Wordmark {...props.wordmarkProps} /> Error
+      <h1 className="text-xl flex flex-row items-center gap-4">
+        {props.logo ? (
+          <span className="flex flex-row items-center gap-2">
+            <span className="flex shrink-0 items-center">{props.logo}</span>
+            <Wordmark {...props.wordmarkProps} />
+          </span>
+        ) : (
+          <Wordmark {...props.wordmarkProps} />
+        )}{" "}
+        Error
       </h1>
 
       <p className={cn("text-md", "mx-2 md:mx-4 lg:mx-8")}>{errorMsg}</p>

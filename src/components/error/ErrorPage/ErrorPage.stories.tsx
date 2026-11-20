@@ -6,6 +6,7 @@ import {
   type ErrorInfo,
 } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, within } from "storybook/test";
 import { Bomb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ErrorPage, { type ErrorPageProps } from "./ErrorPage";
@@ -136,6 +137,16 @@ const meta = {
       description:
         "Props forwarded to the <Wordmark /> in the page heading, e.g. to customize the wordmark text and gradient theming.",
     },
+    logo: {
+      control: false,
+      table: {
+        type: {
+          summary: "ReactNode | undefined",
+        },
+      },
+      description:
+        "Optional logo rendered just before the <Wordmark /> in the page heading, e.g. an `<img />` or an inline SVG component. It sits inside the `<h1>`, so give an `<img />` an empty `alt` when the wordmark already names the brand.",
+    },
   },
   args: {} satisfies Partial<ErrorPageProps>,
 } satisfies Meta<typeof ErrorPage>;
@@ -211,6 +222,49 @@ export const WithCustomWordmark: Story = {
           "Pass `wordmarkProps` to customize the wordmark rendered in the page heading — for example a different wordmark text and gradient colors.",
       },
     },
+  },
+};
+
+export const WithLogo: Story = {
+  args: {
+    error: 404,
+    message: "Page not found",
+    reset: () => {},
+    logo: (
+      <img
+        src="/media/icon.png"
+        // Decorative: the wordmark beside it already names the brand.
+        alt=""
+        width={32}
+        height={32}
+        className="h-8 w-8"
+      />
+    ),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Pass a `logo` to render it next to the wordmark in the page heading — here the SchemaVaults logo. Any `ReactNode` works, such as an `<img />` or an inline SVG component.",
+      },
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    await step("the logo renders inside the page heading", async () => {
+      const heading = canvas.getByRole("heading", { level: 1 });
+      // `getByRole("img")` skips decorative (`alt=""`) images, so query the
+      // element directly.
+      const logo = heading.querySelector("img");
+      await expect(logo).not.toBeNull();
+      await expect(logo).toHaveAttribute("src", "/media/icon.png");
+      await expect(logo).toBeVisible();
+    });
+    await step("the decorative logo stays out of the heading's name", async () => {
+      await expect(
+        canvas.getByRole("heading", { level: 1, name: "SchemaVaults Error" }),
+      ).toBeInTheDocument();
+    });
   },
 };
 
