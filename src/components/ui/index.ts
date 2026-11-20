@@ -398,3 +398,6 @@ export type * from "./relative-time";
 
 export * from "./onboarding-checklist";
 export type * from "./onboarding-checklist";
+
+export * from "./log-viewer";
+export type * from "./log-viewer";
