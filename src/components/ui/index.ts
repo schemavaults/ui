@@ -401,3 +401,6 @@ export type * from "./onboarding-checklist";
 
 export * from "./log-viewer";
 export type * from "./log-viewer";
+
+export * from "./permission-matrix";
+export type * from "./permission-matrix";
